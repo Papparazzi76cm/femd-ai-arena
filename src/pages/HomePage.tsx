@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Trophy, Users, Calendar, TrendingUp, Newspaper, ArrowRight } from "lucide-react";
@@ -6,7 +7,6 @@ import { sponsorService } from "@/services/sponsorService";
 import { postService } from "@/services/postService";
 import { Sponsor, Post } from "@/types/database";
 import { TournamentCarousel } from "@/components/TournamentCarousel";
-import { PosterGallery3D } from "@/components/PosterGallery3D";
 import { AudioPlayer } from "@/components/AudioPlayer";
 
 export function HomePage() {
@@ -114,10 +114,10 @@ export function HomePage() {
           
           <div className="flex flex-col sm:flex-row gap-4 justify-center animate-scale-in mt-4">
             <Button size="lg" className="gradient-emerald text-white hover:opacity-90" asChild>
-              <a href="/torneos">Ver Torneos</a>
+              <Link to="/torneos">Ver Torneos</Link>
             </Button>
             <Button size="lg" variant="outline" className="bg-white/10 border-white text-white hover:bg-white hover:text-primary" asChild>
-              <a href="/contacto">Contactar</a>
+              <Link to="/contacto">Contactar</Link>
             </Button>
           </div>
         </div>
@@ -290,10 +290,10 @@ export function HomePage() {
 
             <div className="text-center">
               <Button size="lg" className="gradient-emerald group" asChild>
-                <a href="/blog" className="flex items-center gap-2">
+                <Link to="/noticias" className="flex items-center gap-2">
                   Ver todas las noticias
                   <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                </a>
+                </Link>
               </Button>
             </div>
           </div>
