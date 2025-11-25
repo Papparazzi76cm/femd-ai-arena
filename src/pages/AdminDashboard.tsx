@@ -13,7 +13,7 @@ import { Team } from '@/types/database';
 import { Loader2, LogOut, Calendar, Trophy, AlertCircle, ArrowLeft } from 'lucide-react';
 import { MatchCard } from '@/components/referee/MatchCard';
 
-export const RefereeDashboard = () => {
+export const AdminDashboard = () => {
   const { user, signOut, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
