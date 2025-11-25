@@ -12,6 +12,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { ArrowLeft, Users, Trophy, Calendar, Palette, Loader2, Image, TrendingUp, Target, Shield } from 'lucide-react';
+import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
 export const TeamDetailPage = () => {
   const { id } = useParams<{ id: string }>();
@@ -263,6 +264,157 @@ export const TeamDetailPage = () => {
 
           {/* Estadísticas Detalladas Tab */}
           <TabsContent value="estadisticas" className="space-y-6">
+            {/* Gráficos de Rendimiento */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Evolución de Resultados */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Evolución de Resultados</CardTitle>
+                  <CardDescription>Resultados por partido</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <ResponsiveContainer width="100%" height={300}>
+                    <LineChart data={matches.slice(0, 10).map((match, idx) => {
+                      const isHome = match.home_team_id === id;
+                      const teamScore = isHome ? match.home_score : match.away_score;
+                      const opponentScore = isHome ? match.away_score : match.home_score;
+                      let result = 'Empate';
+                      if (match.status === 'finished' && teamScore !== undefined && opponentScore !== undefined) {
+                        if (teamScore > opponentScore) result = 'Victoria';
+                        else if (teamScore < opponentScore) result = 'Derrota';
+                      }
+                      return {
+                        partido: `P${idx + 1}`,
+                        resultado: result === 'Victoria' ? 3 : result === 'Empate' ? 1 : 0,
+                        label: result
+                      };
+                    })}>
+                      <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                      <XAxis dataKey="partido" className="text-xs" />
+                      <YAxis domain={[0, 3]} ticks={[0, 1, 3]} className="text-xs" />
+                      <Tooltip 
+                        contentStyle={{ backgroundColor: 'hsl(var(--background))', border: '1px solid hsl(var(--border))' }}
+                        formatter={(value: any, name: any, props: any) => [props.payload.label, 'Resultado']}
+                      />
+                      <Line type="monotone" dataKey="resultado" stroke="hsl(var(--primary))" strokeWidth={2} dot={{ fill: 'hsl(var(--primary))' }} />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </CardContent>
+              </Card>
+
+              {/* Goles por Partido */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Goles por Partido</CardTitle>
+                  <CardDescription>A favor y en contra</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <ResponsiveContainer width="100%" height={300}>
+                    <BarChart data={matches.slice(0, 10).map((match, idx) => {
+                      const isHome = match.home_team_id === id;
+                      return {
+                        partido: `P${idx + 1}`,
+                        aFavor: isHome ? (match.home_score || 0) : (match.away_score || 0),
+                        enContra: isHome ? (match.away_score || 0) : (match.home_score || 0)
+                      };
+                    })}>
+                      <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                      <XAxis dataKey="partido" className="text-xs" />
+                      <YAxis className="text-xs" />
+                      <Tooltip 
+                        contentStyle={{ backgroundColor: 'hsl(var(--background))', border: '1px solid hsl(var(--border))' }}
+                      />
+                      <Legend />
+                      <Bar dataKey="aFavor" fill="hsl(var(--primary))" name="A favor" />
+                      <Bar dataKey="enContra" fill="hsl(var(--destructive))" name="En contra" />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </CardContent>
+              </Card>
+
+              {/* Distribución de Tarjetas */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Distribución de Tarjetas</CardTitle>
+                  <CardDescription>Total de la temporada</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <ResponsiveContainer width="100%" height={300}>
+                    <PieChart>
+                      <Pie
+                        data={[
+                          { 
+                            name: 'Amarillas', 
+                            value: participants.reduce((sum, p) => sum + (p.yellow_cards || 0), 0),
+                            color: 'hsl(45, 93%, 47%)'
+                          },
+                          { 
+                            name: 'Rojas', 
+                            value: participants.reduce((sum, p) => sum + (p.red_cards || 0), 0),
+                            color: 'hsl(var(--destructive))'
+                          }
+                        ]}
+                        cx="50%"
+                        cy="50%"
+                        labelLine={false}
+                        label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                        outerRadius={80}
+                        fill="#8884d8"
+                        dataKey="value"
+                      >
+                        {[
+                          { name: 'Amarillas', value: participants.reduce((sum, p) => sum + (p.yellow_cards || 0), 0) },
+                          { name: 'Rojas', value: participants.reduce((sum, p) => sum + (p.red_cards || 0), 0) }
+                        ].map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={index === 0 ? 'hsl(45, 93%, 47%)' : 'hsl(var(--destructive))'} />
+                        ))}
+                      </Pie>
+                      <Tooltip 
+                        contentStyle={{ backgroundColor: 'hsl(var(--background))', border: '1px solid hsl(var(--border))' }}
+                      />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </CardContent>
+              </Card>
+
+              {/* Promedio de Goles */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Promedio de Goles</CardTitle>
+                  <CardDescription>Por partido jugado</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <div className="p-4 bg-primary/10 rounded-lg">
+                      <p className="text-sm text-muted-foreground mb-1">Goles a Favor</p>
+                      <p className="text-3xl font-bold text-primary">
+                        {matches.length > 0 
+                          ? (matches.reduce((sum, m) => {
+                              const isHome = m.home_team_id === id;
+                              return sum + (isHome ? (m.home_score || 0) : (m.away_score || 0));
+                            }, 0) / matches.length).toFixed(2)
+                          : '0.00'
+                        }
+                      </p>
+                    </div>
+                    <div className="p-4 bg-destructive/10 rounded-lg">
+                      <p className="text-sm text-muted-foreground mb-1">Goles en Contra</p>
+                      <p className="text-3xl font-bold text-destructive">
+                        {matches.length > 0 
+                          ? (matches.reduce((sum, m) => {
+                              const isHome = m.home_team_id === id;
+                              return sum + (isHome ? (m.away_score || 0) : (m.home_score || 0));
+                            }, 0) / matches.length).toFixed(2)
+                          : '0.00'
+                        }
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Top Jugadores */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <Card>
                 <CardHeader>
