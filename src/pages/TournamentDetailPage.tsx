@@ -607,27 +607,26 @@ export function TournamentDetailPage() {
                       <Table>
                         <TableHeader>
                           <TableRow>
-                            <TableHead className="w-12">#</TableHead>
-                            <TableHead>Equipo</TableHead>
-                            <TableHead className="text-center">PJ</TableHead>
+                            <TableHead className="w-16">EQUIPOS</TableHead>
+                            <TableHead></TableHead>
+                            <TableHead className="text-center font-bold">PTS</TableHead>
+                            <TableHead className="text-center">J</TableHead>
                             <TableHead className="text-center">G</TableHead>
                             <TableHead className="text-center">E</TableHead>
                             <TableHead className="text-center">P</TableHead>
                             <TableHead className="text-center">GF</TableHead>
                             <TableHead className="text-center">GC</TableHead>
                             <TableHead className="text-center">DG</TableHead>
-                            <TableHead className="text-center font-bold">Pts</TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
                           {teams.map((team, index) => (
                             <TableRow 
                               key={team.team_id}
-                              className={index < 2 ? "bg-green-500/10" : ""}
+                              className={index < 2 ? "border-l-4 border-l-primary" : index === teams.length - 1 ? "border-l-4 border-l-destructive" : ""}
                             >
-                              <TableCell className="font-medium">
-                                {index < 2 && <Badge variant="default" className="mr-1 bg-green-600">C</Badge>}
-                                {index + 1}
+                              <TableCell className="font-medium text-muted-foreground">
+                                {String(index + 1).padStart(2, '0')}
                               </TableCell>
                               <TableCell>
                                 <Link to={`/equipos/${team.team_id}`} className="flex items-center gap-2 hover:text-primary transition-colors">
@@ -641,16 +640,16 @@ export function TournamentDetailPage() {
                                   <span className="font-medium">{team.teams.name}</span>
                                 </Link>
                               </TableCell>
+                              <TableCell className="text-center font-bold">{team.points}</TableCell>
                               <TableCell className="text-center">{team.matches_played}</TableCell>
-                              <TableCell className="text-center text-green-600 font-medium">{team.wins}</TableCell>
-                              <TableCell className="text-center text-muted-foreground">{team.draws}</TableCell>
-                              <TableCell className="text-center text-red-600">{team.losses}</TableCell>
-                              <TableCell className="text-center">{team.goals_for}</TableCell>
-                              <TableCell className="text-center">{team.goals_against}</TableCell>
+                              <TableCell className="text-center">{team.wins}</TableCell>
+                              <TableCell className="text-center">{team.draws}</TableCell>
+                              <TableCell className="text-center">{team.losses}</TableCell>
+                              <TableCell className="text-center text-primary">{team.goals_for}</TableCell>
+                              <TableCell className="text-center text-destructive">{team.goals_against}</TableCell>
                               <TableCell className={`text-center font-medium ${team.goal_difference > 0 ? 'text-green-600' : team.goal_difference < 0 ? 'text-red-600' : ''}`}>
                                 {team.goal_difference > 0 ? `+${team.goal_difference}` : team.goal_difference}
                               </TableCell>
-                              <TableCell className="text-center font-bold text-primary">{team.points}</TableCell>
                             </TableRow>
                           ))}
                         </TableBody>
