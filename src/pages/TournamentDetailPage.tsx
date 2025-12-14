@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Calendar, MapPin, Trophy, ArrowLeft, Medal, Target, AlertTriangle } from "lucide-react";
+import { Calendar, MapPin, Trophy, ArrowLeft, Medal, Target, AlertTriangle, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
@@ -271,8 +271,12 @@ export function TournamentDetailPage() {
         </div>
 
         {/* Tabs */}
-        <Tabs defaultValue="standings" className="w-full">
-          <TabsList className="grid w-full grid-cols-3 mb-8">
+        <Tabs defaultValue="teams" className="w-full">
+          <TabsList className="grid w-full grid-cols-4 mb-8">
+            <TabsTrigger value="teams">
+              <Users className="h-4 w-4 mr-2" />
+              Equipos participantes
+            </TabsTrigger>
             <TabsTrigger value="standings">
               <Trophy className="h-4 w-4 mr-2" />
               Posiciones
@@ -286,6 +290,51 @@ export function TournamentDetailPage() {
               Estadísticas
             </TabsTrigger>
           </TabsList>
+
+          {/* Participating Teams Tab */}
+          <TabsContent value="teams" className="space-y-6">
+            <Card className="animate-fade-in">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Users className="h-5 w-5 text-primary" />
+                  Equipos participantes ({eventTeams.length})
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                  {eventTeams.map((eventTeam) => (
+                    <Link
+                      key={eventTeam.id}
+                      to={`/equipos/${eventTeam.team_id}`}
+                      className="flex flex-col items-center p-4 rounded-lg border bg-card hover:bg-accent/50 hover:border-primary/50 transition-all group"
+                    >
+                      <div className="w-16 h-16 mb-3 flex items-center justify-center">
+                        {eventTeam.teams.logo_url ? (
+                          <img
+                            src={eventTeam.teams.logo_url}
+                            alt={eventTeam.teams.name}
+                            className="w-full h-full object-contain group-hover:scale-110 transition-transform"
+                          />
+                        ) : (
+                          <div className="w-full h-full rounded-full bg-muted flex items-center justify-center">
+                            <Users className="h-8 w-8 text-muted-foreground" />
+                          </div>
+                        )}
+                      </div>
+                      <span className="text-sm font-medium text-center line-clamp-2 group-hover:text-primary transition-colors">
+                        {eventTeam.teams.name}
+                      </span>
+                      {eventTeam.group_name && (
+                        <Badge variant="outline" className="mt-2 text-xs">
+                          {eventTeam.group_name}
+                        </Badge>
+                      )}
+                    </Link>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
 
           {/* Standings Tab */}
           <TabsContent value="standings" className="space-y-6">
