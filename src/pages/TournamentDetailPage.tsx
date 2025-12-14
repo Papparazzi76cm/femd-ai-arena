@@ -1,10 +1,11 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useParams, Link } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Calendar, MapPin, Trophy, ArrowLeft, Medal, Target, AlertTriangle, Users } from "lucide-react";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { Calendar, MapPin, Trophy, ArrowLeft, Medal, Target, AlertTriangle, Users, ChevronDown, Crown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
@@ -44,6 +45,8 @@ interface Match {
   home_red_cards: number;
   away_yellow_cards: number;
   away_red_cards: number;
+  home_team_id: string;
+  away_team_id: string;
   home_team: {
     id: string;
     name: string;
@@ -65,12 +68,43 @@ interface Event {
   poster_url: string | null;
 }
 
+interface CalculatedTeamStats {
+  team_id: string;
+  group_name: string | null;
+  matches_played: number;
+  wins: number;
+  draws: number;
+  losses: number;
+  goals_for: number;
+  goals_against: number;
+  goal_difference: number;
+  points: number;
+  yellow_cards: number;
+  red_cards: number;
+  teams: {
+    id: string;
+    name: string;
+    logo_url: string | null;
+  };
+}
+
+const PHASE_ORDER = ['group', 'round_of_16', 'quarter_final', 'semi_final', 'third_place', 'final'];
+const PHASE_LABELS: Record<string, string> = {
+  'group': 'Fase de Grupos',
+  'round_of_16': 'Octavos de Final',
+  'quarter_final': 'Cuartos de Final',
+  'semi_final': 'Semifinales',
+  'third_place': 'Tercer Puesto',
+  'final': 'Final'
+};
+
 export function TournamentDetailPage() {
   const { id } = useParams<{ id: string }>();
   const [event, setEvent] = useState<Event | null>(null);
   const [eventTeams, setEventTeams] = useState<EventTeam[]>([]);
   const [matches, setMatches] = useState<Match[]>([]);
   const [loading, setLoading] = useState(true);
+  const [openPhases, setOpenPhases] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     if (!id) return;
@@ -98,9 +132,7 @@ export function TournamentDetailPage() {
               logo_url
             )
           `)
-          .eq("event_id", id)
-          .order("points", { ascending: false })
-          .order("goal_difference", { ascending: false });
+          .eq("event_id", id);
 
         if (teamsError) throw teamsError;
         setEventTeams(teamsData || []);
@@ -174,6 +206,150 @@ export function TournamentDetailPage() {
     };
   }, [id]);
 
+  // Calculate team statistics from match results
+  const calculatedStandings = useMemo(() => {
+    const groupMatches = matches.filter(m => m.phase === 'group' && m.status === 'completed');
+    
+    // Initialize stats for each team
+    const statsMap = new Map<string, CalculatedTeamStats>();
+    eventTeams.forEach(et => {
+      statsMap.set(et.team_id, {
+        team_id: et.team_id,
+        group_name: et.group_name,
+        matches_played: 0,
+        wins: 0,
+        draws: 0,
+        losses: 0,
+        goals_for: 0,
+        goals_against: 0,
+        goal_difference: 0,
+        points: 0,
+        yellow_cards: 0,
+        red_cards: 0,
+        teams: et.teams
+      });
+    });
+
+    // Calculate stats from matches
+    groupMatches.forEach(match => {
+      const homeStats = statsMap.get(match.home_team_id);
+      const awayStats = statsMap.get(match.away_team_id);
+
+      if (!homeStats || !awayStats) return;
+      if (match.home_score === null || match.away_score === null) return;
+
+      homeStats.matches_played++;
+      awayStats.matches_played++;
+
+      homeStats.goals_for += match.home_score;
+      homeStats.goals_against += match.away_score;
+      awayStats.goals_for += match.away_score;
+      awayStats.goals_against += match.home_score;
+
+      homeStats.yellow_cards += match.home_yellow_cards || 0;
+      homeStats.red_cards += match.home_red_cards || 0;
+      awayStats.yellow_cards += match.away_yellow_cards || 0;
+      awayStats.red_cards += match.away_red_cards || 0;
+
+      if (match.home_score > match.away_score) {
+        homeStats.wins++;
+        homeStats.points += 3;
+        awayStats.losses++;
+      } else if (match.home_score < match.away_score) {
+        awayStats.wins++;
+        awayStats.points += 3;
+        homeStats.losses++;
+      } else {
+        homeStats.draws++;
+        awayStats.draws++;
+        homeStats.points += 1;
+        awayStats.points += 1;
+      }
+
+      homeStats.goal_difference = homeStats.goals_for - homeStats.goals_against;
+      awayStats.goal_difference = awayStats.goals_for - awayStats.goals_against;
+    });
+
+    return Array.from(statsMap.values());
+  }, [eventTeams, matches]);
+
+  // Group calculated standings by group_name and sort
+  const groupedCalculatedStandings = useMemo(() => {
+    const grouped = calculatedStandings.reduce((acc, team) => {
+      const groupName = team.group_name || "General";
+      if (!acc[groupName]) {
+        acc[groupName] = [];
+      }
+      acc[groupName].push(team);
+      return acc;
+    }, {} as Record<string, CalculatedTeamStats[]>);
+
+    // Sort each group by standings criteria
+    Object.keys(grouped).forEach(groupName => {
+      grouped[groupName].sort((a, b) => {
+        // 1. Points
+        if (b.points !== a.points) return b.points - a.points;
+        // 2. Goal difference
+        if (b.goal_difference !== a.goal_difference) return b.goal_difference - a.goal_difference;
+        // 3. Goals for
+        if (b.goals_for !== a.goals_for) return b.goals_for - a.goals_for;
+        // 4. Goals against (fewer is better)
+        if (a.goals_against !== b.goals_against) return a.goals_against - b.goals_against;
+        // 5. Red cards (fewer is better)
+        if (a.red_cards !== b.red_cards) return a.red_cards - b.red_cards;
+        // 6. Yellow cards (fewer is better)
+        return a.yellow_cards - b.yellow_cards;
+      });
+    });
+
+    // Sort groups alphabetically
+    return Object.fromEntries(
+      Object.entries(grouped).sort(([a], [b]) => a.localeCompare(b))
+    );
+  }, [calculatedStandings]);
+
+  // Group matches by phase with proper ordering
+  const groupedMatchesByPhase = useMemo(() => {
+    const grouped = matches.reduce((acc, match) => {
+      const phase = match.phase || "group";
+      if (!acc[phase]) {
+        acc[phase] = [];
+      }
+      acc[phase].push(match);
+      return acc;
+    }, {} as Record<string, Match[]>);
+
+    // Sort phases by defined order
+    const sortedPhases = Object.entries(grouped).sort(([a], [b]) => {
+      const indexA = PHASE_ORDER.indexOf(a);
+      const indexB = PHASE_ORDER.indexOf(b);
+      return (indexA === -1 ? 999 : indexA) - (indexB === -1 ? 999 : indexB);
+    });
+
+    return sortedPhases;
+  }, [matches]);
+
+  // Get tournament winner
+  const tournamentWinner = useMemo(() => {
+    const finalMatch = matches.find(m => m.phase === 'final' && m.status === 'completed');
+    if (!finalMatch || finalMatch.home_score === null || finalMatch.away_score === null) return null;
+    
+    if (finalMatch.home_score > finalMatch.away_score) {
+      return finalMatch.home_team;
+    } else if (finalMatch.away_score > finalMatch.home_score) {
+      return finalMatch.away_team;
+    }
+    return null;
+  }, [matches]);
+
+  // Toggle phase visibility
+  const togglePhase = (phase: string) => {
+    setOpenPhases(prev => ({
+      ...prev,
+      [phase]: !prev[phase]
+    }));
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -190,28 +366,8 @@ export function TournamentDetailPage() {
     );
   }
 
-  // Group teams by group_name
-  const groupedTeams = eventTeams.reduce((acc, team) => {
-    const groupName = team.group_name || "General";
-    if (!acc[groupName]) {
-      acc[groupName] = [];
-    }
-    acc[groupName].push(team);
-    return acc;
-  }, {} as Record<string, EventTeam[]>);
-
-  // Group matches by phase
-  const groupedMatches = matches.reduce((acc, match) => {
-    const phase = match.phase || "Fase de Grupos";
-    if (!acc[phase]) {
-      acc[phase] = [];
-    }
-    acc[phase].push(match);
-    return acc;
-  }, {} as Record<string, Match[]>);
-
   // Top scorers (mock data - would need a goals table in real implementation)
-  const topScorers = eventTeams
+  const topScorers = calculatedStandings
     .flatMap(team => [{
       team: team.teams.name,
       goals: team.goals_for
@@ -229,6 +385,31 @@ export function TournamentDetailPage() {
             Volver a Torneos
           </Button>
         </Link>
+
+        {/* Tournament Winner Banner */}
+        {tournamentWinner && (
+          <Card className="mb-8 bg-gradient-to-r from-yellow-500/20 via-yellow-400/10 to-yellow-500/20 border-yellow-500/50 animate-fade-in">
+            <CardContent className="py-6">
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+                <Crown className="h-10 w-10 text-yellow-500" />
+                <div className="text-center sm:text-left">
+                  <p className="text-sm text-muted-foreground">Campeón del Torneo</p>
+                  <div className="flex items-center gap-3 mt-1">
+                    {tournamentWinner.logo_url && (
+                      <img
+                        src={tournamentWinner.logo_url}
+                        alt={tournamentWinner.name}
+                        className="h-12 w-12 object-contain"
+                      />
+                    )}
+                    <h2 className="text-2xl font-bold text-foreground">{tournamentWinner.name}</h2>
+                  </div>
+                </div>
+                <Crown className="h-10 w-10 text-yellow-500" />
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Hero Section */}
         <div className="mb-12 animate-fade-in">
@@ -271,25 +452,93 @@ export function TournamentDetailPage() {
         </div>
 
         {/* Tabs */}
-        <Tabs defaultValue="teams" className="w-full">
+        <Tabs defaultValue="bracket" className="w-full">
           <TabsList className="grid w-full grid-cols-4 mb-8">
+            <TabsTrigger value="bracket">
+              <Trophy className="h-4 w-4 mr-2" />
+              Cuadro del Torneo
+            </TabsTrigger>
             <TabsTrigger value="teams">
               <Users className="h-4 w-4 mr-2" />
-              Equipos participantes
+              Equipos
             </TabsTrigger>
             <TabsTrigger value="standings">
-              <Trophy className="h-4 w-4 mr-2" />
-              Posiciones
-            </TabsTrigger>
-            <TabsTrigger value="matches">
-              <Calendar className="h-4 w-4 mr-2" />
-              Partidos
+              <Target className="h-4 w-4 mr-2" />
+              Clasificación
             </TabsTrigger>
             <TabsTrigger value="stats">
               <Medal className="h-4 w-4 mr-2" />
               Estadísticas
             </TabsTrigger>
           </TabsList>
+
+          {/* Tournament Bracket Tab with Collapsible Phases */}
+          <TabsContent value="bracket" className="space-y-4">
+            {groupedMatchesByPhase.length === 0 ? (
+              <Card>
+                <CardContent className="py-8 text-center text-muted-foreground">
+                  No hay partidos registrados para este torneo.
+                </CardContent>
+              </Card>
+            ) : (
+              groupedMatchesByPhase.map(([phase, phaseMatches]) => {
+                const isOpen = openPhases[phase] ?? (phase === 'final' || phase === 'semi_final');
+                const phaseLabel = PHASE_LABELS[phase] || phase;
+                
+                // For group phase, organize by groups
+                const isGroupPhase = phase === 'group';
+                const matchesByGroup = isGroupPhase
+                  ? phaseMatches.reduce((acc, match) => {
+                      const group = match.group_name || 'Sin grupo';
+                      if (!acc[group]) acc[group] = [];
+                      acc[group].push(match);
+                      return acc;
+                    }, {} as Record<string, Match[]>)
+                  : null;
+
+                return (
+                  <Collapsible key={phase} open={isOpen} onOpenChange={() => togglePhase(phase)}>
+                    <Card className="animate-fade-in">
+                      <CollapsibleTrigger asChild>
+                        <CardHeader className="cursor-pointer hover:bg-accent/50 transition-colors rounded-t-lg">
+                          <div className="flex items-center justify-between">
+                            <CardTitle className="flex items-center gap-2">
+                              {phase === 'final' && <Crown className="h-5 w-5 text-yellow-500" />}
+                              {phaseLabel}
+                              <Badge variant="secondary" className="ml-2">
+                                {phaseMatches.length} partido{phaseMatches.length !== 1 ? 's' : ''}
+                              </Badge>
+                            </CardTitle>
+                            <ChevronDown className={`h-5 w-5 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+                          </div>
+                        </CardHeader>
+                      </CollapsibleTrigger>
+                      <CollapsibleContent>
+                        <CardContent className="space-y-4">
+                          {isGroupPhase && matchesByGroup ? (
+                            Object.entries(matchesByGroup).sort(([a], [b]) => a.localeCompare(b)).map(([group, groupMatches]) => (
+                              <div key={group} className="space-y-2">
+                                <h4 className="font-semibold text-sm text-muted-foreground">Grupo {group}</h4>
+                                <div className="space-y-2">
+                                  {groupMatches.map((match) => (
+                                    <MatchCard key={match.id} match={match} />
+                                  ))}
+                                </div>
+                              </div>
+                            ))
+                          ) : (
+                            phaseMatches.map((match) => (
+                              <MatchCard key={match.id} match={match} isFinal={phase === 'final'} />
+                            ))
+                          )}
+                        </CardContent>
+                      </CollapsibleContent>
+                    </Card>
+                  </Collapsible>
+                );
+              })
+            )}
+          </TabsContent>
 
           {/* Participating Teams Tab */}
           <TabsContent value="teams" className="space-y-6">
@@ -326,7 +575,7 @@ export function TournamentDetailPage() {
                       </span>
                       {eventTeam.group_name && (
                         <Badge variant="outline" className="mt-2 text-xs">
-                          {eventTeam.group_name}
+                          Grupo {eventTeam.group_name}
                         </Badge>
                       )}
                     </Link>
@@ -336,137 +585,85 @@ export function TournamentDetailPage() {
             </Card>
           </TabsContent>
 
-          {/* Standings Tab */}
+          {/* Standings Tab - Calculated from match results */}
           <TabsContent value="standings" className="space-y-6">
-            {Object.entries(groupedTeams).map(([groupName, teams]) => (
-              <Card key={groupName} className="animate-fade-in">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Trophy className="h-5 w-5 text-primary" />
-                    {groupName}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="overflow-x-auto">
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead className="w-12">#</TableHead>
-                          <TableHead>Equipo</TableHead>
-                          <TableHead className="text-center">PJ</TableHead>
-                          <TableHead className="text-center">G</TableHead>
-                          <TableHead className="text-center">E</TableHead>
-                          <TableHead className="text-center">P</TableHead>
-                          <TableHead className="text-center">GF</TableHead>
-                          <TableHead className="text-center">GC</TableHead>
-                          <TableHead className="text-center">DG</TableHead>
-                          <TableHead className="text-center font-bold">Pts</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {teams.map((team, index) => (
-                          <TableRow key={team.id}>
-                            <TableCell className="font-medium">{index + 1}</TableCell>
-                            <TableCell>
-                              <div className="flex items-center gap-2">
-                                {team.teams.logo_url && (
-                                  <img
-                                    src={team.teams.logo_url}
-                                    alt={team.teams.name}
-                                    className="h-6 w-6 object-contain"
-                                  />
-                                )}
-                                <span className="font-medium">{team.teams.name}</span>
-                              </div>
-                            </TableCell>
-                            <TableCell className="text-center">{team.matches_played}</TableCell>
-                            <TableCell className="text-center">{team.wins}</TableCell>
-                            <TableCell className="text-center">{team.draws}</TableCell>
-                            <TableCell className="text-center">{team.losses}</TableCell>
-                            <TableCell className="text-center">{team.goals_for}</TableCell>
-                            <TableCell className="text-center">{team.goals_against}</TableCell>
-                            <TableCell className="text-center">{team.goal_difference}</TableCell>
-                            <TableCell className="text-center font-bold">{team.points}</TableCell>
+            {Object.entries(groupedCalculatedStandings).length === 0 ? (
+              <Card>
+                <CardContent className="py-8 text-center text-muted-foreground">
+                  No hay datos de clasificación disponibles.
+                </CardContent>
+              </Card>
+            ) : (
+              Object.entries(groupedCalculatedStandings).map(([groupName, teams]) => (
+                <Card key={groupName} className="animate-fade-in">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Trophy className="h-5 w-5 text-primary" />
+                      Grupo {groupName}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="overflow-x-auto">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead className="w-12">#</TableHead>
+                            <TableHead>Equipo</TableHead>
+                            <TableHead className="text-center">PJ</TableHead>
+                            <TableHead className="text-center">G</TableHead>
+                            <TableHead className="text-center">E</TableHead>
+                            <TableHead className="text-center">P</TableHead>
+                            <TableHead className="text-center">GF</TableHead>
+                            <TableHead className="text-center">GC</TableHead>
+                            <TableHead className="text-center">DG</TableHead>
+                            <TableHead className="text-center font-bold">Pts</TableHead>
                           </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </TabsContent>
-
-          {/* Matches Tab */}
-          <TabsContent value="matches" className="space-y-6">
-            {Object.entries(groupedMatches).map(([phase, phaseMatches]) => (
-              <Card key={phase} className="animate-fade-in">
-                <CardHeader>
-                  <CardTitle>{phase}</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  {phaseMatches.map((match) => (
-                    <div
-                      key={match.id}
-                      className="flex items-center justify-between p-4 rounded-lg border bg-card hover:bg-accent/50 transition-colors"
-                    >
-                      <div className="flex-1">
-                        <div className="flex items-center justify-between mb-2">
-                          <div className="flex items-center gap-3 flex-1">
-                            {match.home_team.logo_url && (
-                              <img
-                                src={match.home_team.logo_url}
-                                alt={match.home_team.name}
-                                className="h-8 w-8 object-contain"
-                              />
-                            )}
-                            <span className="font-medium">{match.home_team.name}</span>
-                          </div>
-                          {match.status === "completed" ? (
-                            <span className="text-2xl font-bold mx-4">{match.home_score}</span>
-                          ) : (
-                            <span className="text-muted-foreground mx-4">vs</span>
-                          )}
-                        </div>
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-3 flex-1">
-                            {match.away_team.logo_url && (
-                              <img
-                                src={match.away_team.logo_url}
-                                alt={match.away_team.name}
-                                className="h-8 w-8 object-contain"
-                              />
-                            )}
-                            <span className="font-medium">{match.away_team.name}</span>
-                          </div>
-                          {match.status === "completed" && (
-                            <span className="text-2xl font-bold mx-4">{match.away_score}</span>
-                          )}
-                        </div>
-                      </div>
-                      <div className="text-right ml-4">
-                        {match.match_date && (
-                          <p className="text-sm text-muted-foreground">
-                            {format(new Date(match.match_date), "d MMM, HH:mm", { locale: es })}
-                          </p>
-                        )}
-                        {match.group_name && (
-                          <Badge variant="outline" className="mt-1">
-                            {match.group_name}
-                          </Badge>
-                        )}
-                        <Badge
-                          variant={match.status === "completed" ? "default" : "secondary"}
-                          className="mt-1 ml-2"
-                        >
-                          {match.status === "completed" ? "Finalizado" : "Pendiente"}
-                        </Badge>
-                      </div>
+                        </TableHeader>
+                        <TableBody>
+                          {teams.map((team, index) => (
+                            <TableRow 
+                              key={team.team_id}
+                              className={index < 2 ? "bg-green-500/10" : ""}
+                            >
+                              <TableCell className="font-medium">
+                                {index < 2 && <Badge variant="default" className="mr-1 bg-green-600">C</Badge>}
+                                {index + 1}
+                              </TableCell>
+                              <TableCell>
+                                <Link to={`/equipos/${team.team_id}`} className="flex items-center gap-2 hover:text-primary transition-colors">
+                                  {team.teams.logo_url && (
+                                    <img
+                                      src={team.teams.logo_url}
+                                      alt={team.teams.name}
+                                      className="h-6 w-6 object-contain"
+                                    />
+                                  )}
+                                  <span className="font-medium">{team.teams.name}</span>
+                                </Link>
+                              </TableCell>
+                              <TableCell className="text-center">{team.matches_played}</TableCell>
+                              <TableCell className="text-center text-green-600 font-medium">{team.wins}</TableCell>
+                              <TableCell className="text-center text-muted-foreground">{team.draws}</TableCell>
+                              <TableCell className="text-center text-red-600">{team.losses}</TableCell>
+                              <TableCell className="text-center">{team.goals_for}</TableCell>
+                              <TableCell className="text-center">{team.goals_against}</TableCell>
+                              <TableCell className={`text-center font-medium ${team.goal_difference > 0 ? 'text-green-600' : team.goal_difference < 0 ? 'text-red-600' : ''}`}>
+                                {team.goal_difference > 0 ? `+${team.goal_difference}` : team.goal_difference}
+                              </TableCell>
+                              <TableCell className="text-center font-bold text-primary">{team.points}</TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
                     </div>
-                  ))}
-                </CardContent>
-              </Card>
-            ))}
+                    <p className="text-xs text-muted-foreground mt-3">
+                      <Badge variant="default" className="mr-1 bg-green-600 text-[10px]">C</Badge>
+                      = Clasificado a siguiente fase
+                    </p>
+                  </CardContent>
+                </Card>
+              ))
+            )}
           </TabsContent>
 
           {/* Stats Tab */}
@@ -477,66 +674,174 @@ export function TournamentDetailPage() {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Target className="h-5 w-5 text-primary" />
-                    Equipos Goleadores
+                    Equipos más goleadores
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-3">
-                    {topScorers.map((scorer, index) => (
-                      <div
-                        key={index}
-                        className="flex items-center justify-between p-3 rounded-lg bg-muted/50"
-                      >
-                        <div className="flex items-center gap-3">
-                          <span className="font-bold text-lg text-primary">{index + 1}</span>
-                          <span className="font-medium">{scorer.team}</span>
+                  {topScorers.length > 0 ? (
+                    <div className="space-y-3">
+                      {topScorers.map((scorer, index) => (
+                        <div key={index} className="flex items-center justify-between p-3 rounded-lg bg-accent/50">
+                          <div className="flex items-center gap-3">
+                            <span className="text-lg font-bold text-primary">{index + 1}</span>
+                            <span className="font-medium">{scorer.team}</span>
+                          </div>
+                          <Badge variant="secondary">
+                            {scorer.goals} goles
+                          </Badge>
                         </div>
-                        <Badge variant="secondary">{scorer.goals} goles</Badge>
-                      </div>
-                    ))}
-                  </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-muted-foreground text-center py-4">
+                      Sin datos disponibles
+                    </p>
+                  )}
                 </CardContent>
               </Card>
 
-              {/* Discipline Stats */}
+              {/* Cards Statistics */}
               <Card className="animate-fade-in">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
-                    <AlertTriangle className="h-5 w-5 text-yellow-500" />
+                    <AlertTriangle className="h-5 w-5 text-primary" />
                     Tarjetas
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-3">
-                    {eventTeams
-                      .sort((a, b) => (b.yellow_cards + b.red_cards * 2) - (a.yellow_cards + a.red_cards * 2))
-                      .slice(0, 5)
-                      .map((team, index) => (
-                        <div
-                          key={team.id}
-                          className="flex items-center justify-between p-3 rounded-lg bg-muted/50"
-                        >
-                          <div className="flex items-center gap-3">
-                            <span className="font-bold text-lg text-primary">{index + 1}</span>
-                            <span className="font-medium">{team.teams.name}</span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <Badge variant="outline" className="bg-yellow-100 text-yellow-800 border-yellow-300">
-                              {team.yellow_cards} 🟨
-                            </Badge>
-                            <Badge variant="outline" className="bg-red-100 text-red-800 border-red-300">
-                              {team.red_cards} 🟥
-                            </Badge>
-                          </div>
-                        </div>
-                      ))}
-                  </div>
+                  {calculatedStandings.length > 0 ? (
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between p-3 rounded-lg bg-yellow-500/10">
+                        <span className="font-medium">Tarjetas amarillas</span>
+                        <Badge variant="outline" className="bg-yellow-500/20 text-yellow-700 border-yellow-500">
+                          {calculatedStandings.reduce((sum, t) => sum + t.yellow_cards, 0)}
+                        </Badge>
+                      </div>
+                      <div className="flex items-center justify-between p-3 rounded-lg bg-red-500/10">
+                        <span className="font-medium">Tarjetas rojas</span>
+                        <Badge variant="outline" className="bg-red-500/20 text-red-700 border-red-500">
+                          {calculatedStandings.reduce((sum, t) => sum + t.red_cards, 0)}
+                        </Badge>
+                      </div>
+                    </div>
+                  ) : (
+                    <p className="text-muted-foreground text-center py-4">
+                      Sin datos disponibles
+                    </p>
+                  )}
                 </CardContent>
               </Card>
             </div>
+
+            {/* Tournament Summary */}
+            <Card className="animate-fade-in">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Medal className="h-5 w-5 text-primary" />
+                  Resumen del Torneo
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div className="text-center p-4 rounded-lg bg-accent/50">
+                    <p className="text-3xl font-bold text-primary">{eventTeams.length}</p>
+                    <p className="text-sm text-muted-foreground">Equipos</p>
+                  </div>
+                  <div className="text-center p-4 rounded-lg bg-accent/50">
+                    <p className="text-3xl font-bold text-primary">{matches.length}</p>
+                    <p className="text-sm text-muted-foreground">Partidos</p>
+                  </div>
+                  <div className="text-center p-4 rounded-lg bg-accent/50">
+                    <p className="text-3xl font-bold text-primary">
+                      {matches.filter(m => m.status === 'completed').reduce((sum, m) => sum + (m.home_score || 0) + (m.away_score || 0), 0)}
+                    </p>
+                    <p className="text-sm text-muted-foreground">Goles</p>
+                  </div>
+                  <div className="text-center p-4 rounded-lg bg-accent/50">
+                    <p className="text-3xl font-bold text-primary">
+                      {Object.keys(groupedCalculatedStandings).length}
+                    </p>
+                    <p className="text-sm text-muted-foreground">Grupos</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
           </TabsContent>
         </Tabs>
       </div>
     </div>
   );
 }
+
+// Match Card Component
+function MatchCard({ match, isFinal = false }: { match: Match; isFinal?: boolean }) {
+  const isCompleted = match.status === 'completed';
+  const hasHomeWon = isCompleted && match.home_score !== null && match.away_score !== null && match.home_score > match.away_score;
+  const hasAwayWon = isCompleted && match.home_score !== null && match.away_score !== null && match.away_score > match.home_score;
+
+  return (
+    <div
+      className={`flex items-center justify-between p-4 rounded-lg border bg-card hover:bg-accent/30 transition-colors ${isFinal ? 'border-yellow-500/50 bg-yellow-500/5' : ''}`}
+    >
+      <div className="flex-1">
+        {/* Home Team */}
+        <div className="flex items-center justify-between mb-2">
+          <div className={`flex items-center gap-3 flex-1 ${hasHomeWon ? 'font-bold' : ''}`}>
+            {match.home_team.logo_url && (
+              <img
+                src={match.home_team.logo_url}
+                alt={match.home_team.name}
+                className="h-8 w-8 object-contain"
+              />
+            )}
+            <span className={hasHomeWon ? 'text-primary' : ''}>{match.home_team.name}</span>
+            {hasHomeWon && isFinal && <Crown className="h-4 w-4 text-yellow-500" />}
+          </div>
+          {isCompleted ? (
+            <span className={`text-2xl font-bold mx-4 ${hasHomeWon ? 'text-primary' : 'text-muted-foreground'}`}>
+              {match.home_score}
+            </span>
+          ) : (
+            <span className="text-muted-foreground mx-4">-</span>
+          )}
+        </div>
+        {/* Away Team */}
+        <div className="flex items-center justify-between">
+          <div className={`flex items-center gap-3 flex-1 ${hasAwayWon ? 'font-bold' : ''}`}>
+            {match.away_team.logo_url && (
+              <img
+                src={match.away_team.logo_url}
+                alt={match.away_team.name}
+                className="h-8 w-8 object-contain"
+              />
+            )}
+            <span className={hasAwayWon ? 'text-primary' : ''}>{match.away_team.name}</span>
+            {hasAwayWon && isFinal && <Crown className="h-4 w-4 text-yellow-500" />}
+          </div>
+          {isCompleted ? (
+            <span className={`text-2xl font-bold mx-4 ${hasAwayWon ? 'text-primary' : 'text-muted-foreground'}`}>
+              {match.away_score}
+            </span>
+          ) : (
+            <span className="text-muted-foreground mx-4">-</span>
+          )}
+        </div>
+      </div>
+      <div className="text-right ml-4 flex flex-col items-end gap-1">
+        {match.match_date && (
+          <p className="text-xs text-muted-foreground">
+            {format(new Date(match.match_date), "d MMM, HH:mm", { locale: es })}
+          </p>
+        )}
+        <Badge
+          variant={isCompleted ? "default" : "secondary"}
+          className="text-xs"
+        >
+          {isCompleted ? "Finalizado" : "Pendiente"}
+        </Badge>
+      </div>
+    </div>
+  );
+}
+
+export default TournamentDetailPage;
