@@ -208,7 +208,11 @@ export function TournamentDetailPage() {
 
   // Calculate team statistics from match results
   const calculatedStandings = useMemo(() => {
-    const groupMatches = matches.filter(m => m.phase === 'group' && m.status === 'completed');
+    // Filter group stage matches - check for both 'group' and 'Fase de Grupos' phases
+    const groupMatches = matches.filter(m => 
+      (m.phase === 'group' || m.phase === 'Fase de Grupos' || m.phase?.toLowerCase().includes('grupo')) && 
+      m.status === 'completed'
+    );
     
     // Initialize stats for each team
     const statsMap = new Map<string, CalculatedTeamStats>();
@@ -314,8 +318,10 @@ export function TournamentDetailPage() {
 
   // Group calculated standings by group_name and sort
   const groupedCalculatedStandings = useMemo(() => {
-    const groupMatches = matches.filter(m => m.phase === 'group' && m.status === 'completed');
-    
+    const groupMatches = matches.filter(m => 
+      (m.phase === 'group' || m.phase === 'Fase de Grupos' || m.phase?.toLowerCase().includes('grupo')) && 
+      m.status === 'completed'
+    );
     const grouped = calculatedStandings.reduce((acc, team) => {
       const groupName = team.group_name || "General";
       if (!acc[groupName]) {
