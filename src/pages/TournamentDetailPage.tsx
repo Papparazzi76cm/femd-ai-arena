@@ -273,8 +273,49 @@ export function TournamentDetailPage() {
     return Array.from(statsMap.values());
   }, [eventTeams, matches]);
 
+  // Helper function to get head-to-head result between two teams
+  const getHeadToHeadResult = (teamAId: string, teamBId: string, groupMatches: Match[]): number => {
+    // Find direct matches between the two teams
+    const directMatches = groupMatches.filter(m => 
+      (m.home_team_id === teamAId && m.away_team_id === teamBId) ||
+      (m.home_team_id === teamBId && m.away_team_id === teamAId)
+    );
+
+    if (directMatches.length === 0) return 0;
+
+    let teamAGoals = 0;
+    let teamBGoals = 0;
+    let teamAPoints = 0;
+    let teamBPoints = 0;
+
+    directMatches.forEach(match => {
+      if (match.home_score === null || match.away_score === null) return;
+
+      if (match.home_team_id === teamAId) {
+        teamAGoals += match.home_score;
+        teamBGoals += match.away_score;
+        if (match.home_score > match.away_score) teamAPoints += 3;
+        else if (match.home_score < match.away_score) teamBPoints += 3;
+        else { teamAPoints += 1; teamBPoints += 1; }
+      } else {
+        teamBGoals += match.home_score;
+        teamAGoals += match.away_score;
+        if (match.home_score > match.away_score) teamBPoints += 3;
+        else if (match.home_score < match.away_score) teamAPoints += 3;
+        else { teamAPoints += 1; teamBPoints += 1; }
+      }
+    });
+
+    // First compare points in head-to-head
+    if (teamAPoints !== teamBPoints) return teamBPoints - teamAPoints;
+    // Then compare goal difference in head-to-head
+    return (teamBGoals - teamAGoals) - (teamAGoals - teamBGoals);
+  };
+
   // Group calculated standings by group_name and sort
   const groupedCalculatedStandings = useMemo(() => {
+    const groupMatches = matches.filter(m => m.phase === 'group' && m.status === 'completed');
+    
     const grouped = calculatedStandings.reduce((acc, team) => {
       const groupName = team.group_name || "General";
       if (!acc[groupName]) {
@@ -284,20 +325,23 @@ export function TournamentDetailPage() {
       return acc;
     }, {} as Record<string, CalculatedTeamStats[]>);
 
-    // Sort each group by standings criteria
+    // Sort each group by standings criteria with head-to-head
     Object.keys(grouped).forEach(groupName => {
       grouped[groupName].sort((a, b) => {
         // 1. Points
         if (b.points !== a.points) return b.points - a.points;
-        // 2. Goal difference
+        // 2. Head-to-head result (when points are equal)
+        const h2h = getHeadToHeadResult(a.team_id, b.team_id, groupMatches);
+        if (h2h !== 0) return h2h;
+        // 3. Goal difference
         if (b.goal_difference !== a.goal_difference) return b.goal_difference - a.goal_difference;
-        // 3. Goals for
+        // 4. Goals for
         if (b.goals_for !== a.goals_for) return b.goals_for - a.goals_for;
-        // 4. Goals against (fewer is better)
+        // 5. Goals against (fewer is better)
         if (a.goals_against !== b.goals_against) return a.goals_against - b.goals_against;
-        // 5. Red cards (fewer is better)
+        // 6. Red cards (fewer is better)
         if (a.red_cards !== b.red_cards) return a.red_cards - b.red_cards;
-        // 6. Yellow cards (fewer is better)
+        // 7. Yellow cards (fewer is better)
         return a.yellow_cards - b.yellow_cards;
       });
     });
@@ -306,7 +350,7 @@ export function TournamentDetailPage() {
     return Object.fromEntries(
       Object.entries(grouped).sort(([a], [b]) => a.localeCompare(b))
     );
-  }, [calculatedStandings]);
+  }, [calculatedStandings, matches]);
 
   // Group matches by phase with proper ordering
   const groupedMatchesByPhase = useMemo(() => {
