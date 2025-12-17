@@ -570,12 +570,12 @@ export function TournamentDetailPage() {
                               {selectedPhase === "Fase de Grupos" || selectedPhase === "all" ? (
                                 // Show group letters for group phase
                                 Array.from(new Set(matches
-                                  .filter(m => m.group_name && (m.phase === "group" || m.phase === "Fase de Grupos" || m.phase?.toLowerCase().includes("grupo")))
+                                  .filter(m => m.group_name && (m.phase === "group" || m.phase === "Fase de Grupos" || m.phase?.toLowerCase().includes("grupo") || m.phase?.startsWith("Jornada")))
                                   .map(m => m.group_name)))
                                   .sort()
                                   .map((group) => (
                                     <SelectItem key={group} value={group || ""}>
-                                      Grupo {group}
+                                      {group}
                                     </SelectItem>
                                   ))
                               ) : (
