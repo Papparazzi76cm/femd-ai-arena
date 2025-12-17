@@ -109,6 +109,7 @@ export function TournamentDetailPage() {
   const [selectedGroup, setSelectedGroup] = useState<string>("all");
   const [selectedPhase, setSelectedPhase] = useState<string>("all");
   const [selectedBracketGroup, setSelectedBracketGroup] = useState<string>("all");
+  const [selectedJornada, setSelectedJornada] = useState<string>("all");
 
   useEffect(() => {
     if (!id) return;
@@ -576,6 +577,21 @@ export function TournamentDetailPage() {
                             </SelectContent>
                           </Select>
                         </div>
+
+                        <div className="space-y-2">
+                          <label className="text-sm font-medium text-muted-foreground">JORNADA</label>
+                          <Select value={selectedJornada} onValueChange={setSelectedJornada}>
+                            <SelectTrigger className="w-full bg-background">
+                              <SelectValue placeholder="Seleccionar jornada" />
+                            </SelectTrigger>
+                            <SelectContent className="bg-background z-50">
+                              <SelectItem value="all">Todas</SelectItem>
+                              <SelectItem value="1">Jornada 1</SelectItem>
+                              <SelectItem value="2">Jornada 2</SelectItem>
+                              <SelectItem value="3">Jornada 3</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
                       </div>
                     </div>
 
@@ -586,34 +602,54 @@ export function TournamentDetailPage() {
                       </div>
 
                       <div className="space-y-2">
-                        {matches
-                          .filter(match => {
-                            const phaseMatch = selectedPhase === "all" || 
-                              match.phase === selectedPhase || 
-                              (selectedPhase === "group" && (match.phase === "group" || match.phase === "Fase de Grupos" || match.phase?.toLowerCase().includes("grupo")));
-                            const groupMatch = selectedBracketGroup === "all" || match.group_name === selectedBracketGroup;
-                            return phaseMatch && groupMatch;
-                          })
-                          .sort((a, b) => {
-                            if (a.match_date && b.match_date) {
-                              return new Date(a.match_date).getTime() - new Date(b.match_date).getTime();
-                            }
-                            return (a.match_number || 0) - (b.match_number || 0);
-                          })
-                          .map((match) => (
-                            <ResultRow key={match.id} match={match} />
-                          ))}
-                        {matches.filter(match => {
-                          const phaseMatch = selectedPhase === "all" || 
-                            match.phase === selectedPhase || 
-                            (selectedPhase === "group" && (match.phase === "group" || match.phase === "Fase de Grupos" || match.phase?.toLowerCase().includes("grupo")));
-                          const groupMatch = selectedBracketGroup === "all" || match.group_name === selectedBracketGroup;
-                          return phaseMatch && groupMatch;
-                        }).length === 0 && (
-                          <p className="text-center text-muted-foreground py-8">
-                            No hay partidos con los filtros seleccionados.
-                          </p>
-                        )}
+                        {(() => {
+                          // Helper function to determine jornada based on match position within group
+                          const getMatchJornada = (match: Match, allMatches: Match[]): number => {
+                            if (!match.group_name) return 0;
+                            const groupMatches = allMatches
+                              .filter(m => m.group_name === match.group_name && 
+                                (m.phase === "group" || m.phase === "Fase de Grupos" || m.phase?.toLowerCase().includes("grupo")))
+                              .sort((a, b) => (a.match_number || 0) - (b.match_number || 0));
+                            const index = groupMatches.findIndex(m => m.id === match.id);
+                            // Assuming 2 matches per jornada for 4-team groups, adjust based on group size
+                            const matchesPerJornada = Math.ceil(groupMatches.length / 3);
+                            return Math.floor(index / matchesPerJornada) + 1;
+                          };
+
+                          const filteredMatches = matches
+                            .filter(match => {
+                              const isGroupPhase = match.phase === "group" || match.phase === "Fase de Grupos" || match.phase?.toLowerCase().includes("grupo");
+                              const phaseMatch = selectedPhase === "all" || 
+                                match.phase === selectedPhase || 
+                                (selectedPhase === "group" && isGroupPhase);
+                              const groupMatch = selectedBracketGroup === "all" || match.group_name === selectedBracketGroup;
+                              
+                              // Jornada filter only applies to group phase
+                              let jornadaMatch = true;
+                              if (selectedJornada !== "all" && isGroupPhase) {
+                                const matchJornada = getMatchJornada(match, matches);
+                                jornadaMatch = matchJornada === parseInt(selectedJornada);
+                              }
+                              
+                              return phaseMatch && groupMatch && jornadaMatch;
+                            })
+                            .sort((a, b) => {
+                              if (a.match_date && b.match_date) {
+                                return new Date(a.match_date).getTime() - new Date(b.match_date).getTime();
+                              }
+                              return (a.match_number || 0) - (b.match_number || 0);
+                            });
+
+                          return filteredMatches.length > 0 ? (
+                            filteredMatches.map((match) => (
+                              <ResultRow key={match.id} match={match} />
+                            ))
+                          ) : (
+                            <p className="text-center text-muted-foreground py-8">
+                              No hay partidos con los filtros seleccionados.
+                            </p>
+                          );
+                        })()}
                       </div>
                     </div>
                   </div>
