@@ -11,3 +11,6 @@ verify_jwt = false
 
 [functions.list-storage-files]
 verify_jwt = false
+
+[functions.create-mesa-user]
+verify_jwt = false

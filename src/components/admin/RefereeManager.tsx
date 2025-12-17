@@ -9,9 +9,10 @@ import { roleService } from '@/services/roleService';
 import { teamService } from '@/services/teamService';
 import { Match } from '@/types/tournament';
 import { Team } from '@/types/database';
-import { UserCog, Calendar, MapPin, Trash2 } from 'lucide-react';
+import { UserCog, Calendar, MapPin, Trash2, UserPlus, Eye, EyeOff } from 'lucide-react';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
+import { supabase } from '@/integrations/supabase/client';
 
 interface RefereeManagerProps {
   eventId: string;
@@ -26,9 +27,17 @@ export const RefereeManager = ({ eventId }: RefereeManagerProps) => {
   const [matches, setMatches] = useState<Match[]>([]);
   const [teams, setTeams] = useState<Team[]>([]);
   const [referees, setReferees] = useState<RefereeUser[]>([]);
-  const [newRefereeEmail, setNewRefereeEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [assignDialogOpen, setAssignDialogOpen] = useState(false);
+  const [selectedMatch, setSelectedMatch] = useState<Match | null>(null);
+  
+  // Form state for new mesa
+  const [newEmail, setNewEmail] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [creating, setCreating] = useState(false);
+  
   const { toast } = useToast();
 
   useEffect(() => {
@@ -65,6 +74,8 @@ export const RefereeManager = ({ eventId }: RefereeManagerProps) => {
         title: 'Mesa asignada',
         description: 'Mesa asignada correctamente al partido',
       });
+      setAssignDialogOpen(false);
+      setSelectedMatch(null);
       loadData();
     } catch (error) {
       console.error('Error asignando mesa:', error);
@@ -94,39 +105,86 @@ export const RefereeManager = ({ eventId }: RefereeManagerProps) => {
     }
   };
 
-  const handleAddReferee = async () => {
-    if (!newRefereeEmail.trim()) {
+  const handleCreateMesa = async () => {
+    if (!newEmail.trim() || !newPassword.trim()) {
       toast({
         title: 'Atención',
-        description: 'Debes ingresar un email',
+        description: 'Debes ingresar email y contraseña',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (newPassword.length < 6) {
+      toast({
+        title: 'Atención',
+        description: 'La contraseña debe tener al menos 6 caracteres',
         variant: 'destructive',
       });
       return;
     }
 
     try {
-      setLoading(true);
-      // In a real implementation, you would need to:
-      // 1. Check if user exists in auth.users
-      // 2. If yes, assign role
-      // 3. If no, invite them first
+      setCreating(true);
       
-      toast({
-        title: 'Información',
-        description: 'El usuario debe estar registrado primero. Luego puedes asignarle el rol de mesa desde la gestión de usuarios.',
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        toast({
+          title: 'Error',
+          description: 'Debes estar autenticado',
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      const { data, error } = await supabase.functions.invoke('create-mesa-user', {
+        body: { email: newEmail, password: newPassword },
       });
+
+      if (error) {
+        console.error('Error creating mesa:', error);
+        toast({
+          title: 'Error',
+          description: error.message || 'No se pudo crear el usuario mesa',
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      if (data?.error) {
+        toast({
+          title: 'Error',
+          description: data.error,
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      toast({
+        title: 'Mesa creada',
+        description: `Usuario mesa ${newEmail} creado correctamente. Puede cambiar su contraseña al acceder por primera vez.`,
+      });
+      
       setDialogOpen(false);
-      setNewRefereeEmail('');
+      setNewEmail('');
+      setNewPassword('');
+      loadData();
     } catch (error) {
-      console.error('Error añadiendo mesa:', error);
+      console.error('Error creating mesa:', error);
       toast({
         title: 'Error',
-        description: 'No se pudo añadir la mesa',
+        description: 'No se pudo crear el usuario mesa',
         variant: 'destructive',
       });
     } finally {
-      setLoading(false);
+      setCreating(false);
     }
+  };
+
+  const openAssignDialog = (match: Match) => {
+    setSelectedMatch(match);
+    setAssignDialogOpen(true);
   };
 
   const getTeamName = (teamId: string) => {
@@ -144,6 +202,10 @@ export const RefereeManager = ({ eventId }: RefereeManagerProps) => {
     return labels[phase] || phase;
   };
 
+  const getRefereeEmail = (refereeId: string) => {
+    return referees.find(r => r.id === refereeId)?.email || 'Mesa desconocida';
+  };
+
   const groupedMatches = matches.reduce((acc, match) => {
     const phase = match.phase;
     if (!acc[phase]) {
@@ -159,7 +221,7 @@ export const RefereeManager = ({ eventId }: RefereeManagerProps) => {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-4">
         <div className="flex items-center gap-2">
           <UserCog className="w-6 h-6 text-primary" />
           <h3 className="text-2xl font-bold">Asignación de Mesas</h3>
@@ -168,34 +230,77 @@ export const RefereeManager = ({ eventId }: RefereeManagerProps) => {
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger asChild>
             <Button className="gradient-emerald">
-              Añadir Mesa
+              <UserPlus className="w-4 h-4 mr-2" />
+              Registrar Nueva Mesa
             </Button>
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Añadir Mesa</DialogTitle>
+              <DialogTitle>Registrar Nuevo Usuario Mesa</DialogTitle>
             </DialogHeader>
             <div className="space-y-4">
               <div>
-                <Label htmlFor="referee-email">Email del Usuario</Label>
+                <Label htmlFor="mesa-email">Email</Label>
                 <Input
-                  id="referee-email"
+                  id="mesa-email"
                   type="email"
                   placeholder="mesa@ejemplo.com"
-                  value={newRefereeEmail}
-                  onChange={(e) => setNewRefereeEmail(e.target.value)}
+                  value={newEmail}
+                  onChange={(e) => setNewEmail(e.target.value)}
                 />
+              </div>
+              <div>
+                <Label htmlFor="mesa-password">Contraseña Provisional</Label>
+                <div className="relative">
+                  <Input
+                    id="mesa-password"
+                    type={showPassword ? 'text' : 'password'}
+                    placeholder="Mínimo 6 caracteres"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                  />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="absolute right-0 top-0 h-full px-3"
+                    onClick={() => setShowPassword(!showPassword)}
+                  >
+                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </Button>
+                </div>
                 <p className="text-xs text-muted-foreground mt-2">
-                  El usuario debe estar registrado en el sistema
+                  El usuario podrá cambiar esta contraseña cuando acceda por primera vez
                 </p>
               </div>
-              <Button onClick={handleAddReferee} className="w-full">
-                Añadir
+              <Button 
+                onClick={handleCreateMesa} 
+                className="w-full"
+                disabled={creating}
+              >
+                {creating ? 'Creando...' : 'Registrar Mesa'}
               </Button>
             </div>
           </DialogContent>
         </Dialog>
       </div>
+
+      {/* Lista de mesas registradas */}
+      {referees.length > 0 && (
+        <Card className="p-4">
+          <h4 className="font-semibold mb-3">Mesas Registradas ({referees.length})</h4>
+          <div className="flex flex-wrap gap-2">
+            {referees.map((referee) => (
+              <div 
+                key={referee.id}
+                className="bg-muted px-3 py-1.5 rounded-full text-sm"
+              >
+                {referee.email}
+              </div>
+            ))}
+          </div>
+        </Card>
+      )}
 
       {matches.length === 0 ? (
         <Card className="p-8 text-center">
@@ -211,7 +316,11 @@ export const RefereeManager = ({ eventId }: RefereeManagerProps) => {
               <h4 className="text-xl font-bold mb-4">{getPhaseLabel(phase)}</h4>
               <div className="grid gap-4">
                 {phaseMatches.map((match) => (
-                  <Card key={match.id} className="p-4">
+                  <Card 
+                    key={match.id} 
+                    className="p-4 cursor-pointer hover:bg-muted/50 transition-colors"
+                    onClick={() => !match.referee_user_id && openAssignDialog(match)}
+                  >
                     <div className="flex items-center justify-between">
                       <div className="flex-1">
                         <div className="flex items-center gap-4 mb-2">
@@ -237,11 +346,11 @@ export const RefereeManager = ({ eventId }: RefereeManagerProps) => {
                         )}
                       </div>
 
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
                         {match.referee_user_id ? (
                           <>
                             <div className="text-sm bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 px-3 py-1 rounded-full">
-                              Mesa asignada
+                              {getRefereeEmail(match.referee_user_id)}
                             </div>
                             <Button
                               variant="ghost"
@@ -252,26 +361,9 @@ export const RefereeManager = ({ eventId }: RefereeManagerProps) => {
                             </Button>
                           </>
                         ) : (
-                          <Select
-                            onValueChange={(value) => handleAssignReferee(match.id, value)}
-                          >
-                            <SelectTrigger className="w-[200px]">
-                              <SelectValue placeholder="Asignar mesa" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {referees.length === 0 ? (
-                                <div className="p-2 text-sm text-muted-foreground">
-                                  No hay mesas disponibles
-                                </div>
-                              ) : (
-                                referees.map((referee) => (
-                                  <SelectItem key={referee.id} value={referee.id}>
-                                    {referee.email}
-                                  </SelectItem>
-                                ))
-                              )}
-                            </SelectContent>
-                          </Select>
+                          <div className="text-sm text-muted-foreground px-3 py-1 rounded-full border border-dashed">
+                            Sin asignar - Clic para asignar
+                          </div>
                         )}
                       </div>
                     </div>
@@ -282,6 +374,52 @@ export const RefereeManager = ({ eventId }: RefereeManagerProps) => {
           ))}
         </div>
       )}
+
+      {/* Dialog para asignar mesa a partido */}
+      <Dialog open={assignDialogOpen} onOpenChange={setAssignDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Asignar Mesa al Partido</DialogTitle>
+          </DialogHeader>
+          {selectedMatch && (
+            <div className="space-y-4">
+              <div className="p-4 bg-muted rounded-lg">
+                <div className="font-semibold text-center mb-2">
+                  {getTeamName(selectedMatch.home_team_id)} vs {getTeamName(selectedMatch.away_team_id)}
+                </div>
+                {selectedMatch.group_name && (
+                  <div className="text-sm text-muted-foreground text-center">
+                    Grupo {selectedMatch.group_name}
+                  </div>
+                )}
+              </div>
+              
+              <div>
+                <Label>Seleccionar Mesa</Label>
+                {referees.length === 0 ? (
+                  <p className="text-sm text-muted-foreground mt-2">
+                    No hay mesas registradas. Registra una mesa primero.
+                  </p>
+                ) : (
+                  <div className="grid gap-2 mt-2">
+                    {referees.map((referee) => (
+                      <Button
+                        key={referee.id}
+                        variant="outline"
+                        className="justify-start"
+                        onClick={() => handleAssignReferee(selectedMatch.id, referee.id)}
+                      >
+                        <UserCog className="w-4 h-4 mr-2" />
+                        {referee.email}
+                      </Button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
