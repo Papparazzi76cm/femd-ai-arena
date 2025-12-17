@@ -10,15 +10,16 @@ import { tournamentService } from '@/services/tournamentService';
 import { teamService } from '@/services/teamService';
 import { Match } from '@/types/tournament';
 import { Team } from '@/types/database';
-import { Loader2, LogOut, Calendar, Trophy, AlertCircle } from 'lucide-react';
+import { Loader2, LogOut, Calendar, Trophy, AlertCircle, ArrowLeft } from 'lucide-react';
 import { MatchCard } from '@/components/referee/MatchCard';
 
-export const RefereeDashboard = () => {
+export const MesaDashboard = () => {
   const { user, signOut, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [loading, setLoading] = useState(true);
   const [isMesa, setIsMesa] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [matches, setMatches] = useState<Match[]>([]);
   const [teams, setTeams] = useState<Team[]>([]);
 
@@ -40,7 +41,11 @@ export const RefereeDashboard = () => {
       setLoading(true);
       const roles = await roleService.getUserRoles(user.id);
       
-      if (!roles.includes('mesa')) {
+      const hasMesaRole = roles.includes('mesa');
+      const hasAdminRole = roles.includes('admin');
+
+      // PERMITIR ACCESO SI ES MESA O ADMIN
+      if (!hasMesaRole && !hasAdminRole) {
         toast({
           title: 'Acceso denegado',
           description: 'No tienes permisos para acceder a este panel',
@@ -51,7 +56,9 @@ export const RefereeDashboard = () => {
       }
 
       setIsMesa(true);
-      await loadData();
+      setIsAdmin(hasAdminRole);
+      // Pasamos el flag de admin a loadData
+      await loadData(hasAdminRole);
     } catch (error) {
       console.error('Error verificando acceso:', error);
       toast({
@@ -65,16 +72,22 @@ export const RefereeDashboard = () => {
     }
   };
 
-  const loadData = async () => {
+  const loadData = async (userIsAdmin: boolean) => {
     if (!user) return;
 
     try {
-      // Get all matches assigned to this referee
-      const { data: allMatches, error } = await supabase
+      let query = supabase
         .from('matches')
         .select('*')
-        .eq('referee_user_id', user.id)
         .order('match_date', { ascending: true });
+
+      // Si NO es admin, filtramos solo sus partidos asignados.
+      // Si ES admin, no aplicamos filtro (ve todo).
+      if (!userIsAdmin) {
+        query = query.eq('referee_user_id', user.id);
+      }
+
+      const { data: allMatches, error } = await query;
 
       if (error) throw error;
 
@@ -108,7 +121,8 @@ export const RefereeDashboard = () => {
         description: 'Los datos del partido se guardaron correctamente',
       });
       
-      loadData();
+      // Recargar datos manteniendo el contexto (si es admin o no)
+      loadData(isAdmin);
     } catch (error) {
       console.error('Error actualizando partido:', error);
       toast({
@@ -139,7 +153,7 @@ export const RefereeDashboard = () => {
     );
   }
 
-  if (!isMesa) {
+  if (!isMesa && !isAdmin) {
     return null;
   }
 
@@ -151,22 +165,37 @@ export const RefereeDashboard = () => {
       {/* Header */}
       <div className="bg-gradient-to-r from-emerald-600 to-blue-600 text-white py-6 px-4">
         <div className="container mx-auto">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
             <div className="min-w-0 flex-1">
-              <h1 className="text-2xl sm:text-3xl font-bold mb-1 truncate">Panel de Mesa</h1>
-              <p className="text-emerald-100 text-sm sm:text-base truncate">
+              <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold mb-1">
+                Panel de Mesa
+              </h1>
+              <p className="text-emerald-100 text-sm truncate">
                 Bienvenido, {user?.email}
               </p>
             </div>
-            <Button
-              variant="outline"
-              size="sm"
-              className="bg-white/10 border-white/20 text-white hover:bg-white/20 shrink-0"
-              onClick={handleSignOut}
-            >
-              <LogOut className="w-4 h-4 mr-2" />
-              Cerrar Sesión
-            </Button>
+            <div className="flex flex-wrap gap-2 shrink-0">
+              {isAdmin && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="bg-white/10 border-white/20 text-white hover:bg-white/20"
+                  onClick={() => navigate('/admin')}
+                >
+                  <ArrowLeft className="w-4 h-4 mr-2" />
+                  Volver al Admin
+                </Button>
+              )}
+              <Button
+                variant="outline"
+                size="sm"
+                className="bg-white/10 border-white/20 text-white hover:bg-white/20"
+                onClick={handleSignOut}
+              >
+                <LogOut className="w-4 h-4 mr-2" />
+                Cerrar Sesión
+              </Button>
+            </div>
           </div>
         </div>
       </div>
@@ -215,9 +244,11 @@ export const RefereeDashboard = () => {
         {matches.length === 0 ? (
           <Card className="p-12 text-center">
             <AlertCircle className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-            <h3 className="text-xl font-semibold mb-2">No hay partidos asignados</h3>
+            <h3 className="text-xl font-semibold mb-2">No hay partidos disponibles</h3>
             <p className="text-muted-foreground">
-              Aún no tienes partidos asignados. Contacta al administrador del torneo.
+              {isAdmin 
+                ? 'No hay partidos registrados en el sistema.' 
+                : 'Aún no tienes partidos asignados. Contacta al administrador del torneo.'}
             </p>
           </Card>
         ) : (
@@ -252,7 +283,7 @@ export const RefereeDashboard = () => {
                       homeTeamName={getTeamName(match.home_team_id)}
                       awayTeamName={getTeamName(match.away_team_id)}
                       onUpdate={handleMatchUpdate}
-                      readOnly
+                      readOnly={!isAdmin} // Los admins pueden editar incluso si está completado
                     />
                   ))}
                 </div>

@@ -11,7 +11,7 @@ import { Footer } from "@/components/Footer";
 import { HomePage } from "@/pages/HomePage";
 import { AdminDashboard } from "@/pages/AdminDashboard";
 import { AuthPage } from "@/pages/AuthPage";
-import { RefereeDashboard } from "@/pages/RefereeDashboard";
+import { MesaDashboard } from "@/pages/MesaDashboard";
 import { TeamsPage } from "@/pages/TeamsPage";
 import { TeamDetailPage } from "@/pages/TeamDetailPage";
 import { TournamentsPage } from "@/pages/TournamentsPage";
@@ -47,7 +47,7 @@ const App = () => (
                     <Route path="/contacto" element={<ContactPage />} />
                     <Route path="/auth" element={<AuthPage />} />
                     <Route path="/admin" element={<AdminDashboard />} />
-                    <Route path="/mesa" element={<RefereeDashboard />} />
+                    <Route path="/mesa" element={<MesaDashboard />} />
                     {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                     <Route path="*" element={<NotFound />} />
                   </Routes>

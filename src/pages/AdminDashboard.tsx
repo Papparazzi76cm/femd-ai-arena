@@ -1,27 +1,35 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { Card } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
 import { roleService } from '@/services/roleService';
-import { tournamentService } from '@/services/tournamentService';
-import { teamService } from '@/services/teamService';
-import { Match } from '@/types/tournament';
-import { Team } from '@/types/database';
-import { Loader2, LogOut, Calendar, Trophy, AlertCircle, ArrowLeft } from 'lucide-react';
-import { MatchCard } from '@/components/referee/MatchCard';
+import { 
+  Loader2, 
+  LogOut, 
+  Users, 
+  Trophy, 
+  Newspaper, 
+  Handshake, 
+  Calendar,
+  UserCog,
+  Shuffle
+} from 'lucide-react';
+import { TeamManager } from '@/components/admin/TeamManager';
+import { ParticipantManager } from '@/components/admin/ParticipantManager';
+import { AdminRefereeManager } from '@/components/admin/AdminRefereeManager';
+import { PostManager } from '@/components/admin/PostManager';
+import { SponsorManager } from '@/components/admin/SponsorManager';
+import { EventManager } from '@/components/admin/EventManager';
 
 export const AdminDashboard = () => {
   const { user, signOut, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [loading, setLoading] = useState(true);
-  const [isMesa, setIsMesa] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
-  const [matches, setMatches] = useState<Match[]>([]);
-  const [teams, setTeams] = useState<Team[]>([]);
+  const [activeTab, setActiveTab] = useState('equipos');
 
   useEffect(() => {
     if (!authLoading) {
@@ -41,24 +49,17 @@ export const AdminDashboard = () => {
       setLoading(true);
       const roles = await roleService.getUserRoles(user.id);
       
-      const hasMesaRole = roles.includes('mesa');
-      const hasAdminRole = roles.includes('admin');
-
-      // PERMITIR ACCESO SI ES MESA O ADMIN
-      if (!hasMesaRole && !hasAdminRole) {
+      if (!roles.includes('admin')) {
         toast({
           title: 'Acceso denegado',
-          description: 'No tienes permisos para acceder a este panel',
+          description: 'Solo los administradores pueden acceder a este panel',
           variant: 'destructive',
         });
         navigate('/');
         return;
       }
 
-      setIsMesa(true);
-      setIsAdmin(hasAdminRole);
-      // Pasamos el flag de admin a loadData
-      await loadData(hasAdminRole);
+      setIsAdmin(true);
     } catch (error) {
       console.error('Error verificando acceso:', error);
       toast({
@@ -72,74 +73,9 @@ export const AdminDashboard = () => {
     }
   };
 
-  const loadData = async (userIsAdmin: boolean) => {
-    if (!user) return;
-
-    try {
-      let query = supabase
-        .from('matches')
-        .select('*')
-        .order('match_date', { ascending: true });
-
-      // Si NO es admin, filtramos solo sus partidos asignados.
-      // Si ES admin, no aplicamos filtro (ve todo).
-      if (!userIsAdmin) {
-        query = query.eq('referee_user_id', user.id);
-      }
-
-      const { data: allMatches, error } = await query;
-
-      if (error) throw error;
-
-      setMatches((allMatches || []) as Match[]);
-
-      // Get all teams
-      const teamsData = await teamService.getAll();
-      setTeams(teamsData);
-    } catch (error) {
-      console.error('Error cargando datos:', error);
-      toast({
-        title: 'Error',
-        description: 'No se pudieron cargar los partidos',
-        variant: 'destructive',
-      });
-    }
-  };
-
-  const handleMatchUpdate = async (matchId: string, updates: Partial<Match>) => {
-    try {
-      await tournamentService.updateMatch(matchId, updates);
-      
-      // Update statistics if scores are updated
-      const match = matches.find(m => m.id === matchId);
-      if (match && updates.home_score !== undefined && updates.away_score !== undefined) {
-        await tournamentService.updateTeamStatistics(match.event_id);
-      }
-
-      toast({
-        title: 'Partido actualizado',
-        description: 'Los datos del partido se guardaron correctamente',
-      });
-      
-      // Recargar datos manteniendo el contexto (si es admin o no)
-      loadData(isAdmin);
-    } catch (error) {
-      console.error('Error actualizando partido:', error);
-      toast({
-        title: 'Error',
-        description: 'No se pudo actualizar el partido',
-        variant: 'destructive',
-      });
-    }
-  };
-
   const handleSignOut = async () => {
     await signOut();
     navigate('/auth');
-  };
-
-  const getTeamName = (teamId: string) => {
-    return teams.find(t => t.id === teamId)?.name || 'Equipo desconocido';
   };
 
   if (authLoading || loading) {
@@ -147,49 +83,44 @@ export const AdminDashboard = () => {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center space-y-4">
           <Loader2 className="w-12 h-12 animate-spin text-primary mx-auto" />
-          <p className="text-muted-foreground">Cargando panel...</p>
+          <p className="text-muted-foreground">Cargando panel de administración...</p>
         </div>
       </div>
     );
   }
 
-  if (!isMesa && !isAdmin) {
+  if (!isAdmin) {
     return null;
   }
-
-  const upcomingMatches = matches.filter(m => m.status === 'scheduled');
-  const completedMatches = matches.filter(m => m.status === 'finished');
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-muted/20 to-background pt-20">
       {/* Header */}
-      <div className="bg-gradient-to-r from-emerald-600 to-blue-600 text-white py-6 px-4">
+      <div className="bg-gradient-to-r from-primary to-primary/80 text-primary-foreground py-6 px-4">
         <div className="container mx-auto">
-          <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div className="min-w-0 flex-1">
               <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold mb-1">
-                {isAdmin ? 'Panel de Mesa (Vista Admin)' : 'Panel de Mesa'}
+                Panel de Administración
               </h1>
-              <p className="text-emerald-100 text-sm truncate">
+              <p className="text-primary-foreground/80 text-sm truncate">
                 Bienvenido, {user?.email}
               </p>
             </div>
-            <div className="flex flex-wrap gap-2 shrink-0">
-              {isAdmin && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="bg-white/10 border-white/20 text-white hover:bg-white/20"
-                  onClick={() => navigate('/admin')}
-                >
-                  <ArrowLeft className="w-4 h-4 mr-2" />
-                  Volver al Admin
-                </Button>
-              )}
+            <div className="flex gap-2 shrink-0">
               <Button
                 variant="outline"
                 size="sm"
-                className="bg-white/10 border-white/20 text-white hover:bg-white/20"
+                className="bg-white/10 border-white/20 text-primary-foreground hover:bg-white/20"
+                onClick={() => navigate('/mesa')}
+              >
+                <Calendar className="w-4 h-4 mr-2" />
+                Panel Mesa
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="bg-white/10 border-white/20 text-primary-foreground hover:bg-white/20"
                 onClick={handleSignOut}
               >
                 <LogOut className="w-4 h-4 mr-2" />
@@ -201,96 +132,58 @@ export const AdminDashboard = () => {
       </div>
 
       <div className="container mx-auto px-4 py-8">
-        {/* Stats */}
-        <div className="grid md:grid-cols-3 gap-6 mb-8">
-          <Card className="p-6">
-            <div className="flex items-center gap-4">
-              <div className="p-3 bg-emerald-100 dark:bg-emerald-900/30 rounded-lg">
-                <Trophy className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Total de Partidos</p>
-                <p className="text-2xl font-bold">{matches.length}</p>
-              </div>
-            </div>
-          </Card>
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+          <TabsList className="grid grid-cols-3 lg:grid-cols-6 gap-2 h-auto p-2 bg-muted/50">
+            <TabsTrigger value="equipos" className="flex items-center gap-2 py-3">
+              <Users className="w-4 h-4" />
+              <span className="hidden sm:inline">Equipos</span>
+            </TabsTrigger>
+            <TabsTrigger value="jugadores" className="flex items-center gap-2 py-3">
+              <UserCog className="w-4 h-4" />
+              <span className="hidden sm:inline">Jugadores</span>
+            </TabsTrigger>
+            <TabsTrigger value="torneos" className="flex items-center gap-2 py-3">
+              <Trophy className="w-4 h-4" />
+              <span className="hidden sm:inline">Torneos</span>
+            </TabsTrigger>
+            <TabsTrigger value="mesas" className="flex items-center gap-2 py-3">
+              <Shuffle className="w-4 h-4" />
+              <span className="hidden sm:inline">Mesas</span>
+            </TabsTrigger>
+            <TabsTrigger value="blog" className="flex items-center gap-2 py-3">
+              <Newspaper className="w-4 h-4" />
+              <span className="hidden sm:inline">Blog</span>
+            </TabsTrigger>
+            <TabsTrigger value="patrocinadores" className="flex items-center gap-2 py-3">
+              <Handshake className="w-4 h-4" />
+              <span className="hidden sm:inline">Patrocinadores</span>
+            </TabsTrigger>
+          </TabsList>
 
-          <Card className="p-6">
-            <div className="flex items-center gap-4">
-              <div className="p-3 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
-                <Calendar className="w-6 h-6 text-blue-600 dark:text-blue-400" />
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Pendientes</p>
-                <p className="text-2xl font-bold">{upcomingMatches.length}</p>
-              </div>
-            </div>
-          </Card>
+          <TabsContent value="equipos" className="space-y-4">
+            <TeamManager />
+          </TabsContent>
 
-          <Card className="p-6">
-            <div className="flex items-center gap-4">
-              <div className="p-3 bg-green-100 dark:bg-green-900/30 rounded-lg">
-                <Trophy className="w-6 h-6 text-green-600 dark:text-green-400" />
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Completados</p>
-                <p className="text-2xl font-bold">{completedMatches.length}</p>
-              </div>
-            </div>
-          </Card>
-        </div>
+          <TabsContent value="jugadores" className="space-y-4">
+            <ParticipantManager />
+          </TabsContent>
 
-        {/* Matches */}
-        {matches.length === 0 ? (
-          <Card className="p-12 text-center">
-            <AlertCircle className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-            <h3 className="text-xl font-semibold mb-2">No hay partidos disponibles</h3>
-            <p className="text-muted-foreground">
-              {isAdmin 
-                ? 'No hay partidos registrados en el sistema.' 
-                : 'Aún no tienes partidos asignados. Contacta al administrador del torneo.'}
-            </p>
-          </Card>
-        ) : (
-          <div className="space-y-8">
-            {/* Upcoming Matches */}
-            {upcomingMatches.length > 0 && (
-              <div>
-                <h2 className="text-2xl font-bold mb-4">Partidos Pendientes</h2>
-                <div className="grid gap-4">
-                  {upcomingMatches.map((match) => (
-                    <MatchCard
-                      key={match.id}
-                      match={match}
-                      homeTeamName={getTeamName(match.home_team_id)}
-                      awayTeamName={getTeamName(match.away_team_id)}
-                      onUpdate={handleMatchUpdate}
-                    />
-                  ))}
-                </div>
-              </div>
-            )}
+          <TabsContent value="torneos" className="space-y-4">
+            <EventManager />
+          </TabsContent>
 
-            {/* Completed Matches */}
-            {completedMatches.length > 0 && (
-              <div>
-                <h2 className="text-2xl font-bold mb-4">Partidos Completados</h2>
-                <div className="grid gap-4">
-                  {completedMatches.map((match) => (
-                    <MatchCard
-                      key={match.id}
-                      match={match}
-                      homeTeamName={getTeamName(match.home_team_id)}
-                      awayTeamName={getTeamName(match.away_team_id)}
-                      onUpdate={handleMatchUpdate}
-                      readOnly={!isAdmin} // Los admins pueden editar incluso si está completado
-                    />
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-        )}
+          <TabsContent value="mesas" className="space-y-4">
+            <AdminRefereeManager />
+          </TabsContent>
+
+          <TabsContent value="blog" className="space-y-4">
+            <PostManager />
+          </TabsContent>
+
+          <TabsContent value="patrocinadores" className="space-y-4">
+            <SponsorManager />
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );
