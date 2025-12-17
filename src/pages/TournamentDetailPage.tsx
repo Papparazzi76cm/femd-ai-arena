@@ -107,6 +107,8 @@ export function TournamentDetailPage() {
   const [loading, setLoading] = useState(true);
   const [openPhases, setOpenPhases] = useState<Record<string, boolean>>({});
   const [selectedGroup, setSelectedGroup] = useState<string>("all");
+  const [selectedPhase, setSelectedPhase] = useState<string>("all");
+  const [selectedBracketGroup, setSelectedBracketGroup] = useState<string>("all");
 
   useEffect(() => {
     if (!id) return;
@@ -524,71 +526,99 @@ export function TournamentDetailPage() {
             </TabsTrigger>
           </TabsList>
 
-          {/* Tournament Bracket Tab with Collapsible Phases */}
+          {/* Tournament Bracket Tab with Filters */}
           <TabsContent value="bracket" className="space-y-4">
-            {groupedMatchesByPhase.length === 0 ? (
+            {matches.length === 0 ? (
               <Card>
                 <CardContent className="py-8 text-center text-muted-foreground">
                   No hay partidos registrados para este torneo.
                 </CardContent>
               </Card>
             ) : (
-              groupedMatchesByPhase.map(([phase, phaseMatches]) => {
-                const isOpen = openPhases[phase] ?? (phase === 'final' || phase === 'semi_final');
-                const phaseLabel = PHASE_LABELS[phase] || phase;
-                
-                // For group phase, organize by groups
-                const isGroupPhase = phase === 'group';
-                const matchesByGroup = isGroupPhase
-                  ? phaseMatches.reduce((acc, match) => {
-                      const group = match.group_name || 'Sin grupo';
-                      if (!acc[group]) acc[group] = [];
-                      acc[group].push(match);
-                      return acc;
-                    }, {} as Record<string, Match[]>)
-                  : null;
+              <Card className="animate-fade-in">
+                <CardContent className="p-0">
+                  <div className="grid md:grid-cols-[280px_1fr]">
+                    {/* Left Sidebar - Filters */}
+                    <div className="border-r bg-muted/30 p-6 space-y-6">
+                      <h3 className="font-bold text-lg">GRUPOS</h3>
+                      
+                      <div className="space-y-4">
+                        <div className="space-y-2">
+                          <label className="text-sm font-medium text-muted-foreground">FASE</label>
+                          <Select value={selectedPhase} onValueChange={setSelectedPhase}>
+                            <SelectTrigger className="w-full bg-background">
+                              <SelectValue placeholder="Seleccionar fase" />
+                            </SelectTrigger>
+                            <SelectContent className="bg-background z-50">
+                              <SelectItem value="all">Todas las fases</SelectItem>
+                              <SelectItem value="group">Fase de Grupos</SelectItem>
+                              <SelectItem value="round_of_16">Octavos de Final</SelectItem>
+                              <SelectItem value="quarter_final">Cuartos de Final</SelectItem>
+                              <SelectItem value="semi_final">Semifinales</SelectItem>
+                              <SelectItem value="final">Final</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
 
-                return (
-                  <Collapsible key={phase} open={isOpen} onOpenChange={() => togglePhase(phase)}>
-                    <Card className="animate-fade-in">
-                      <CollapsibleTrigger asChild>
-                        <CardHeader className="cursor-pointer hover:bg-accent/50 transition-colors rounded-t-lg">
-                          <div className="flex items-center justify-between">
-                            <CardTitle className="flex items-center gap-2">
-                              {phase === 'final' && <Crown className="h-5 w-5 text-yellow-500" />}
-                              {phaseLabel}
-                              <Badge variant="secondary" className="ml-2">
-                                {phaseMatches.length} partido{phaseMatches.length !== 1 ? 's' : ''}
-                              </Badge>
-                            </CardTitle>
-                            <ChevronDown className={`h-5 w-5 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
-                          </div>
-                        </CardHeader>
-                      </CollapsibleTrigger>
-                      <CollapsibleContent>
-                        <CardContent className="space-y-4">
-                          {isGroupPhase && matchesByGroup ? (
-                            Object.entries(matchesByGroup).sort(([a], [b]) => a.localeCompare(b)).map(([group, groupMatches]) => (
-                              <div key={group} className="space-y-2">
-                                <h4 className="font-semibold text-sm text-muted-foreground">Grupo {group}</h4>
-                                <div className="space-y-2">
-                                  {groupMatches.map((match) => (
-                                    <MatchCard key={match.id} match={match} />
-                                  ))}
-                                </div>
-                              </div>
-                            ))
-                          ) : (
-                            phaseMatches.map((match) => (
-                              <MatchCard key={match.id} match={match} isFinal={phase === 'final'} />
-                            ))
-                          )}
-                        </CardContent>
-                      </CollapsibleContent>
-                    </Card>
-                  </Collapsible>
-                );
-              })
+                        <div className="space-y-2">
+                          <label className="text-sm font-medium text-muted-foreground">GRUPO</label>
+                          <Select value={selectedBracketGroup} onValueChange={setSelectedBracketGroup}>
+                            <SelectTrigger className="w-full bg-background">
+                              <SelectValue placeholder="Seleccionar grupo" />
+                            </SelectTrigger>
+                            <SelectContent className="bg-background z-50">
+                              <SelectItem value="all">Todos los grupos</SelectItem>
+                              {Array.from(new Set(matches.filter(m => m.group_name).map(m => m.group_name))).sort().map((group) => (
+                                <SelectItem key={group} value={group || ""}>
+                                  Grupo {group}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Main Content - Results */}
+                    <div className="p-6">
+                      <div className="flex items-center justify-between mb-6">
+                        <h3 className="font-bold text-lg">RESULTADOS</h3>
+                      </div>
+
+                      <div className="space-y-2">
+                        {matches
+                          .filter(match => {
+                            const phaseMatch = selectedPhase === "all" || 
+                              match.phase === selectedPhase || 
+                              (selectedPhase === "group" && (match.phase === "group" || match.phase === "Fase de Grupos" || match.phase?.toLowerCase().includes("grupo")));
+                            const groupMatch = selectedBracketGroup === "all" || match.group_name === selectedBracketGroup;
+                            return phaseMatch && groupMatch;
+                          })
+                          .sort((a, b) => {
+                            if (a.match_date && b.match_date) {
+                              return new Date(a.match_date).getTime() - new Date(b.match_date).getTime();
+                            }
+                            return (a.match_number || 0) - (b.match_number || 0);
+                          })
+                          .map((match) => (
+                            <ResultRow key={match.id} match={match} />
+                          ))}
+                        {matches.filter(match => {
+                          const phaseMatch = selectedPhase === "all" || 
+                            match.phase === selectedPhase || 
+                            (selectedPhase === "group" && (match.phase === "group" || match.phase === "Fase de Grupos" || match.phase?.toLowerCase().includes("grupo")));
+                          const groupMatch = selectedBracketGroup === "all" || match.group_name === selectedBracketGroup;
+                          return phaseMatch && groupMatch;
+                        }).length === 0 && (
+                          <p className="text-center text-muted-foreground py-8">
+                            No hay partidos con los filtros seleccionados.
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
             )}
           </TabsContent>
 
@@ -846,7 +876,60 @@ export function TournamentDetailPage() {
   );
 }
 
-// Match Card Component
+// Result Row Component - New horizontal design
+function ResultRow({ match }: { match: Match }) {
+  const isCompleted = match.status === 'completed';
+  const hasHomeWon = isCompleted && match.home_score !== null && match.away_score !== null && match.home_score > match.away_score;
+  const hasAwayWon = isCompleted && match.home_score !== null && match.away_score !== null && match.away_score > match.home_score;
+
+  return (
+    <div className="flex items-center justify-between py-4 border-b last:border-b-0 hover:bg-accent/30 transition-colors px-2 rounded">
+      {/* Home Team */}
+      <div className={`flex items-center gap-3 flex-1 justify-start ${hasHomeWon ? 'font-bold' : ''}`}>
+        {match.home_team.logo_url && (
+          <img
+            src={match.home_team.logo_url}
+            alt={match.home_team.name}
+            className="h-8 w-8 object-contain"
+          />
+        )}
+        <span className={`text-sm ${hasHomeWon ? 'text-primary' : ''}`}>{match.home_team.name}</span>
+      </div>
+
+      {/* Score and Date */}
+      <div className="flex flex-col items-center px-4 min-w-[200px]">
+        {isCompleted ? (
+          <span className="text-xl font-bold">
+            <span className={hasHomeWon ? 'text-primary' : ''}>{match.home_score}</span>
+            <span className="mx-2 text-muted-foreground">-</span>
+            <span className={hasAwayWon ? 'text-primary' : ''}>{match.away_score}</span>
+          </span>
+        ) : (
+          <span className="text-xl font-bold text-muted-foreground">- vs -</span>
+        )}
+        {match.match_date && (
+          <span className="text-xs text-muted-foreground mt-1">
+            {format(new Date(match.match_date), "dd.MM.yyyy", { locale: es })}
+          </span>
+        )}
+      </div>
+
+      {/* Away Team */}
+      <div className={`flex items-center gap-3 flex-1 justify-end ${hasAwayWon ? 'font-bold' : ''}`}>
+        <span className={`text-sm ${hasAwayWon ? 'text-primary' : ''}`}>{match.away_team.name}</span>
+        {match.away_team.logo_url && (
+          <img
+            src={match.away_team.logo_url}
+            alt={match.away_team.name}
+            className="h-8 w-8 object-contain"
+          />
+        )}
+      </div>
+    </div>
+  );
+}
+
+// Match Card Component (kept for other uses)
 function MatchCard({ match, isFinal = false }: { match: Match; isFinal?: boolean }) {
   const isCompleted = match.status === 'completed';
   const hasHomeWon = isCompleted && match.home_score !== null && match.away_score !== null && match.home_score > match.away_score;
