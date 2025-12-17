@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Calendar, MapPin, Trophy, ArrowLeft, Medal, Target, AlertTriangle, Users, ChevronDown, Crown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
@@ -105,6 +106,7 @@ export function TournamentDetailPage() {
   const [matches, setMatches] = useState<Match[]>([]);
   const [loading, setLoading] = useState(true);
   const [openPhases, setOpenPhases] = useState<Record<string, boolean>>({});
+  const [selectedGroup, setSelectedGroup] = useState<string>("all");
 
   useEffect(() => {
     if (!id) return;
@@ -644,74 +646,96 @@ export function TournamentDetailPage() {
                 </CardContent>
               </Card>
             ) : (
-              Object.entries(groupedCalculatedStandings).map(([groupName, teams]) => (
-                <Card key={groupName} className="animate-fade-in">
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <Trophy className="h-5 w-5 text-primary" />
-                      Grupo {groupName}
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="overflow-x-auto">
-                      <Table>
-                        <TableHeader>
-                          <TableRow>
-                            <TableHead className="w-16">EQUIPOS</TableHead>
-                            <TableHead></TableHead>
-                            <TableHead className="text-center font-bold">PTS</TableHead>
-                            <TableHead className="text-center">J</TableHead>
-                            <TableHead className="text-center">G</TableHead>
-                            <TableHead className="text-center">E</TableHead>
-                            <TableHead className="text-center">P</TableHead>
-                            <TableHead className="text-center">GF</TableHead>
-                            <TableHead className="text-center">GC</TableHead>
-                            <TableHead className="text-center">DG</TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {teams.map((team, index) => (
-                            <TableRow 
-                              key={team.team_id}
-                              className={index < 2 ? "border-l-4 border-l-primary" : index === teams.length - 1 ? "border-l-4 border-l-destructive" : ""}
-                            >
-                              <TableCell className="font-medium text-muted-foreground">
-                                {String(index + 1).padStart(2, '0')}
-                              </TableCell>
-                              <TableCell>
-                                <Link to={`/equipos/${team.team_id}`} className="flex items-center gap-2 hover:text-primary transition-colors">
-                                  {team.teams.logo_url && (
-                                    <img
-                                      src={team.teams.logo_url}
-                                      alt={team.teams.name}
-                                      className="h-6 w-6 object-contain"
-                                    />
-                                  )}
-                                  <span className="font-medium">{team.teams.name}</span>
-                                </Link>
-                              </TableCell>
-                              <TableCell className="text-center font-bold">{team.points}</TableCell>
-                              <TableCell className="text-center">{team.matches_played}</TableCell>
-                              <TableCell className="text-center">{team.wins}</TableCell>
-                              <TableCell className="text-center">{team.draws}</TableCell>
-                              <TableCell className="text-center">{team.losses}</TableCell>
-                              <TableCell className="text-center text-primary">{team.goals_for}</TableCell>
-                              <TableCell className="text-center text-destructive">{team.goals_against}</TableCell>
-                              <TableCell className={`text-center font-medium ${team.goal_difference > 0 ? 'text-green-600' : team.goal_difference < 0 ? 'text-red-600' : ''}`}>
-                                {team.goal_difference > 0 ? `+${team.goal_difference}` : team.goal_difference}
-                              </TableCell>
-                            </TableRow>
-                          ))}
-                        </TableBody>
-                      </Table>
-                    </div>
-                    <p className="text-xs text-muted-foreground mt-3">
-                      <Badge variant="default" className="mr-1 bg-green-600 text-[10px]">C</Badge>
-                      = Clasificado a siguiente fase
-                    </p>
-                  </CardContent>
-                </Card>
-              ))
+              <Card className="animate-fade-in">
+                <CardHeader className="flex flex-row items-center justify-between">
+                  <CardTitle className="flex items-center gap-2">
+                    <Trophy className="h-5 w-5 text-primary" />
+                    CLASIFICACIÓN
+                  </CardTitle>
+                  <div className="flex items-center gap-2">
+                    <Select value={selectedGroup} onValueChange={setSelectedGroup}>
+                      <SelectTrigger className="w-[180px] bg-background">
+                        <SelectValue placeholder="Seleccionar grupo" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-background z-50">
+                        <SelectItem value="all">TODOS LOS GRUPOS</SelectItem>
+                        {Object.keys(groupedCalculatedStandings).map((groupName) => (
+                          <SelectItem key={groupName} value={groupName}>
+                            GRUPO {groupName}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  {Object.entries(groupedCalculatedStandings)
+                    .filter(([groupName]) => selectedGroup === "all" || groupName === selectedGroup)
+                    .map(([groupName, teams]) => (
+                      <div key={groupName} className="space-y-4">
+                        <div className="flex items-center gap-2 border-l-4 border-primary pl-3">
+                          <h3 className="text-lg font-bold">GRUPO {groupName}</h3>
+                        </div>
+                        <div className="overflow-x-auto">
+                          <Table>
+                            <TableHeader>
+                              <TableRow className="bg-muted/50">
+                                <TableHead className="w-10"></TableHead>
+                                <TableHead className="font-bold">EQUIPOS</TableHead>
+                                <TableHead className="text-center font-bold">PTS</TableHead>
+                                <TableHead className="text-center">J</TableHead>
+                                <TableHead className="text-center">G</TableHead>
+                                <TableHead className="text-center">E</TableHead>
+                                <TableHead className="text-center">P</TableHead>
+                                <TableHead className="text-center">GF</TableHead>
+                                <TableHead className="text-center">GC</TableHead>
+                                <TableHead className="text-center">DG</TableHead>
+                              </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                              {teams.map((team, index) => (
+                                <TableRow 
+                                  key={team.team_id}
+                                  className={index < 2 ? "border-l-4 border-l-primary bg-primary/5" : ""}
+                                >
+                                  <TableCell className="font-bold text-muted-foreground">
+                                    {String(index + 1).padStart(2, '0')}
+                                  </TableCell>
+                                  <TableCell>
+                                    <Link to={`/equipos/${team.team_id}`} className="flex items-center gap-2 hover:text-primary transition-colors">
+                                      {team.teams.logo_url && (
+                                        <img
+                                          src={team.teams.logo_url}
+                                          alt={team.teams.name}
+                                          className="h-6 w-6 object-contain"
+                                        />
+                                      )}
+                                      <span className="font-medium">{team.teams.name}</span>
+                                    </Link>
+                                  </TableCell>
+                                  <TableCell className="text-center font-bold">{team.points}</TableCell>
+                                  <TableCell className="text-center">{team.matches_played}</TableCell>
+                                  <TableCell className="text-center">{team.wins}</TableCell>
+                                  <TableCell className="text-center text-muted-foreground">{team.draws}</TableCell>
+                                  <TableCell className="text-center text-destructive">{team.losses}</TableCell>
+                                  <TableCell className="text-center text-primary">{team.goals_for}</TableCell>
+                                  <TableCell className="text-center text-destructive">{team.goals_against}</TableCell>
+                                  <TableCell className={`text-center font-medium ${team.goal_difference > 0 ? 'text-green-600' : team.goal_difference < 0 ? 'text-red-600' : ''}`}>
+                                    {team.goal_difference > 0 ? `+${team.goal_difference}` : team.goal_difference}
+                                  </TableCell>
+                                </TableRow>
+                              ))}
+                            </TableBody>
+                          </Table>
+                        </div>
+                      </div>
+                    ))}
+                  <p className="text-xs text-muted-foreground mt-3">
+                    <Badge variant="default" className="mr-1 bg-primary text-[10px]">C</Badge>
+                    = Clasificado a siguiente fase
+                  </p>
+                </CardContent>
+              </Card>
             )}
           </TabsContent>
 
