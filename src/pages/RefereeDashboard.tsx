@@ -23,10 +23,14 @@ export const RefereeDashboard = () => {
   const [teams, setTeams] = useState<Team[]>([]);
 
   useEffect(() => {
-    checkAccess();
-  }, [user]);
+    if (!authLoading) {
+      checkAccess();
+    }
+  }, [user, authLoading]);
 
   const checkAccess = async () => {
+    if (authLoading) return;
+    
     if (!user) {
       navigate('/auth');
       return;
