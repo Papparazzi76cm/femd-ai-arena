@@ -632,29 +632,24 @@ export function TournamentDetailPage() {
                         <h3 className="font-bold text-lg">RESULTADOS</h3>
                       </div>
 
-                      <div className="space-y-2">
+                      <div className="space-y-6">
                         {(() => {
-                          // Helper function to determine jornada based on match position within group
-                          const getMatchJornada = (match: Match, allMatches: Match[]): number => {
-                            if (!match.group_name) return 0;
-                            const groupMatches = allMatches
-                              .filter(m => m.group_name === match.group_name && 
-                                (m.phase === "group" || m.phase === "Fase de Grupos" || m.phase?.toLowerCase().includes("grupo")))
-                              .sort((a, b) => (a.match_number || 0) - (b.match_number || 0));
-                            const index = groupMatches.findIndex(m => m.id === match.id);
-                            // 2 matches per jornada (for groups with multiple teams playing round robin)
-                            const matchesPerJornada = 2;
-                            return Math.floor(index / matchesPerJornada) + 1;
+                          // Helper function to determine jornada from phase field
+                          const getMatchJornada = (match: Match): string => {
+                            if (match.phase?.startsWith("Jornada")) {
+                              return match.phase;
+                            }
+                            return "";
                           };
 
                           const filteredMatches = matches
                             .filter(match => {
-                              const isGroupPhase = match.phase === "group" || match.phase === "Fase de Grupos" || match.phase?.toLowerCase().includes("grupo");
+                              const isGroupPhase = match.phase === "group" || match.phase === "Fase de Grupos" || match.phase?.toLowerCase().includes("grupo") || match.phase?.startsWith("Jornada");
                               const phaseMatch = selectedPhase === "all" || 
                                 match.phase === selectedPhase || 
                                 (selectedPhase === "Fase de Grupos" && isGroupPhase);
                               
-                              // Group filter - for knockout phases, ignore group filter since there's only one "group"
+                              // Group filter
                               const groupMatch = selectedBracketGroup === "all" || 
                                 (isGroupPhase ? match.group_name === selectedBracketGroup : true);
                               
@@ -662,11 +657,8 @@ export function TournamentDetailPage() {
                               let jornadaMatch = true;
                               if (selectedJornada !== "all") {
                                 if (isGroupPhase) {
-                                  // For group phase, filter by computed jornada
-                                  const matchJornada = getMatchJornada(match, matches);
-                                  jornadaMatch = matchJornada === parseInt(selectedJornada);
+                                  jornadaMatch = match.phase === `Jornada ${selectedJornada}`;
                                 } else {
-                                  // For knockout phases, filter by group_name which contains the round
                                   jornadaMatch = match.group_name === selectedJornada;
                                 }
                               }
@@ -674,21 +666,52 @@ export function TournamentDetailPage() {
                               return phaseMatch && groupMatch && jornadaMatch;
                             })
                             .sort((a, b) => {
-                              if (a.match_date && b.match_date) {
-                                return new Date(a.match_date).getTime() - new Date(b.match_date).getTime();
+                              // Sort by group first, then by phase/jornada
+                              if (a.group_name && b.group_name && a.group_name !== b.group_name) {
+                                return a.group_name.localeCompare(b.group_name);
+                              }
+                              if (a.phase && b.phase && a.phase !== b.phase) {
+                                return a.phase.localeCompare(b.phase);
                               }
                               return (a.match_number || 0) - (b.match_number || 0);
                             });
 
-                          return filteredMatches.length > 0 ? (
-                            filteredMatches.map((match) => (
-                              <ResultRow key={match.id} match={match} />
-                            ))
-                          ) : (
-                            <p className="text-center text-muted-foreground py-8">
-                              No hay partidos con los filtros seleccionados.
-                            </p>
-                          );
+                          if (filteredMatches.length === 0) {
+                            return (
+                              <p className="text-center text-muted-foreground py-8">
+                                No hay partidos con los filtros seleccionados.
+                              </p>
+                            );
+                          }
+
+                          // Group matches by group_name for display
+                          const matchesByGroup = filteredMatches.reduce((acc, match) => {
+                            const groupName = match.group_name || "Sin grupo";
+                            if (!acc[groupName]) {
+                              acc[groupName] = [];
+                            }
+                            acc[groupName].push(match);
+                            return acc;
+                          }, {} as Record<string, Match[]>);
+
+                          // Sort groups alphabetically
+                          const sortedGroups = Object.keys(matchesByGroup).sort();
+
+                          return sortedGroups.map((groupName) => (
+                            <div key={groupName} className="space-y-3">
+                              <div className="flex items-center gap-2 border-l-4 border-primary pl-3 py-1 bg-muted/30 rounded-r">
+                                <h4 className="font-bold text-base">{groupName}</h4>
+                                <Badge variant="secondary" className="text-xs">
+                                  {matchesByGroup[groupName].length} partidos
+                                </Badge>
+                              </div>
+                              <div className="space-y-2 pl-4">
+                                {matchesByGroup[groupName].map((match) => (
+                                  <ResultRow key={match.id} match={match} />
+                                ))}
+                              </div>
+                            </div>
+                          ));
                         })()}
                       </div>
                     </div>
@@ -959,7 +982,7 @@ function ResultRow({ match }: { match: Match }) {
   const hasAwayWon = isCompleted && match.home_score !== null && match.away_score !== null && match.away_score > match.home_score;
 
   return (
-    <div className="flex items-center justify-between py-4 border-b last:border-b-0 hover:bg-accent/30 transition-colors px-2 rounded">
+    <div className="flex items-center justify-between py-3 border-b last:border-b-0 hover:bg-accent/30 transition-colors px-2 rounded">
       {/* Home Team */}
       <div className={`flex items-center gap-3 flex-1 justify-start ${hasHomeWon ? 'font-bold' : ''}`}>
         {match.home_team.logo_url && (
@@ -972,7 +995,7 @@ function ResultRow({ match }: { match: Match }) {
         <span className={`text-sm ${hasHomeWon ? 'text-primary' : ''}`}>{match.home_team.name}</span>
       </div>
 
-      {/* Score and Date */}
+      {/* Score, Phase and Date */}
       <div className="flex flex-col items-center px-4 min-w-[200px]">
         {isCompleted ? (
           <span className="text-xl font-bold">
@@ -983,11 +1006,16 @@ function ResultRow({ match }: { match: Match }) {
         ) : (
           <span className="text-xl font-bold text-muted-foreground">- vs -</span>
         )}
-        {match.match_date && (
-          <span className="text-xs text-muted-foreground mt-1">
-            {format(new Date(match.match_date), "dd.MM.yyyy", { locale: es })}
-          </span>
-        )}
+        <div className="flex items-center gap-2 mt-1">
+          {match.phase && (
+            <span className="text-xs text-primary font-medium">{match.phase}</span>
+          )}
+          {match.match_date && (
+            <span className="text-xs text-muted-foreground">
+              {format(new Date(match.match_date), "dd.MM.yyyy", { locale: es })}
+            </span>
+          )}
+        </div>
       </div>
 
       {/* Away Team */}
