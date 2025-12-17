@@ -89,13 +89,12 @@ interface CalculatedTeamStats {
   };
 }
 
-const PHASE_ORDER = ['Fase de Grupos', 'Fase Oro', 'Fase Plata', 'Fase Bronce', '1/8 de final'];
+const PHASE_ORDER = ['Fase de Grupos', 'Fase Oro', 'Fase Plata', 'Fase Bronce'];
 const PHASE_LABELS: Record<string, string> = {
   'Fase de Grupos': 'Fase de Grupos',
   'Fase Oro': 'Fase Oro',
   'Fase Plata': 'Fase Plata',
   'Fase Bronce': 'Fase Bronce',
-  '1/8 de final': '1/8 de final',
   'group': 'Fase de Grupos'
 };
 
@@ -556,7 +555,6 @@ export function TournamentDetailPage() {
                               <SelectItem value="Fase Oro">Fase Oro</SelectItem>
                               <SelectItem value="Fase Plata">Fase Plata</SelectItem>
                               <SelectItem value="Fase Bronce">Fase Bronce</SelectItem>
-                              <SelectItem value="1/8 de final">1/8 de final</SelectItem>
                             </SelectContent>
                           </Select>
                         </div>
