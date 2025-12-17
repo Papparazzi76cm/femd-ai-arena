@@ -589,6 +589,8 @@ export function TournamentDetailPage() {
                               <SelectItem value="1">Jornada 1</SelectItem>
                               <SelectItem value="2">Jornada 2</SelectItem>
                               <SelectItem value="3">Jornada 3</SelectItem>
+                              <SelectItem value="4">Jornada 4</SelectItem>
+                              <SelectItem value="5">Jornada 5</SelectItem>
                             </SelectContent>
                           </Select>
                         </div>
@@ -611,8 +613,8 @@ export function TournamentDetailPage() {
                                 (m.phase === "group" || m.phase === "Fase de Grupos" || m.phase?.toLowerCase().includes("grupo")))
                               .sort((a, b) => (a.match_number || 0) - (b.match_number || 0));
                             const index = groupMatches.findIndex(m => m.id === match.id);
-                            // Assuming 2 matches per jornada for 4-team groups, adjust based on group size
-                            const matchesPerJornada = Math.ceil(groupMatches.length / 3);
+                            // 2 matches per jornada (for groups with multiple teams playing round robin)
+                            const matchesPerJornada = 2;
                             return Math.floor(index / matchesPerJornada) + 1;
                           };
 
