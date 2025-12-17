@@ -177,17 +177,24 @@ export const tournamentService = {
 
   // Update team statistics based on match results
   async updateTeamStatistics(eventId: string): Promise<void> {
-    // Get all matches for this event
+    // Get all group stage matches for this event (including Jornada phases)
     const { data: matches, error: matchesError } = await supabase
       .from('matches')
       .select('*')
       .eq('event_id', eventId)
-      .eq('phase', 'group')
       .not('home_score', 'is', null)
       .not('away_score', 'is', null);
 
     if (matchesError) throw matchesError;
     if (!matches || matches.length === 0) return;
+
+    // Filter only group stage matches (phase = 'group', 'Fase de Grupos', or starts with 'Jornada')
+    const groupMatches = matches.filter((m: any) => 
+      m.phase === 'group' || 
+      m.phase === 'Fase de Grupos' || 
+      m.phase?.startsWith('Jornada') ||
+      m.phase?.toLowerCase().includes('grupo')
+    );
 
     // Get all event teams
     const { data: eventTeams, error: teamsError } = await supabase
@@ -216,8 +223,8 @@ export const tournamentService = {
       });
     });
 
-    // Calculate statistics from matches
-    matches.forEach((match: any) => {
+    // Calculate statistics from group matches
+    groupMatches.forEach((match: any) => {
       const homeStats = teamStats.get(match.home_team_id);
       const awayStats = teamStats.get(match.away_team_id);
 
@@ -265,16 +272,23 @@ export const tournamentService = {
 
   // Get head-to-head result between two teams
   async getHeadToHeadResult(eventId: string, teamId1: string, teamId2: string): Promise<number> {
-    const { data: matches } = await supabase
+    const { data: allMatches } = await supabase
       .from('matches')
       .select('*')
       .eq('event_id', eventId)
-      .eq('phase', 'group')
       .or(`and(home_team_id.eq.${teamId1},away_team_id.eq.${teamId2}),and(home_team_id.eq.${teamId2},away_team_id.eq.${teamId1})`)
       .not('home_score', 'is', null)
       .not('away_score', 'is', null);
 
-    if (!matches || matches.length === 0) return 0;
+    // Filter only group stage matches
+    const matches = (allMatches || []).filter((m: any) => 
+      m.phase === 'group' || 
+      m.phase === 'Fase de Grupos' || 
+      m.phase?.startsWith('Jornada') ||
+      m.phase?.toLowerCase().includes('grupo')
+    );
+
+    if (matches.length === 0) return 0;
 
     const match = matches[0];
     let team1Goals = 0;

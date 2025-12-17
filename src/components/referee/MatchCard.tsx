@@ -1,11 +1,11 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Match } from '@/types/tournament';
-import { Calendar, MapPin, Save, Edit } from 'lucide-react';
+import { Calendar, MapPin, Save, Edit, Check } from 'lucide-react';
 
 interface MatchCardProps {
   match: Match;
@@ -31,6 +31,16 @@ export const MatchCard = ({
   const [awayRed, setAwayRed] = useState(match.away_red_cards ?? 0);
   const [saving, setSaving] = useState(false);
 
+  // Sync local state when match data changes
+  useEffect(() => {
+    setHomeScore(match.home_score ?? 0);
+    setAwayScore(match.away_score ?? 0);
+    setHomeYellow(match.home_yellow_cards ?? 0);
+    setHomeRed(match.home_red_cards ?? 0);
+    setAwayYellow(match.away_yellow_cards ?? 0);
+    setAwayRed(match.away_red_cards ?? 0);
+  }, [match]);
+
   const getPhaseLabel = (phase: string) => {
     const labels: Record<string, string> = {
       'group': 'Fase de Grupos',
@@ -45,11 +55,11 @@ export const MatchCard = ({
   const getStatusBadge = () => {
     switch (match.status) {
       case 'scheduled':
-        return <Badge variant="outline" className="bg-blue-50 dark:bg-blue-900/20">Programado</Badge>;
+        return <Badge variant="outline" className="bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-300">Programado</Badge>;
       case 'in_progress':
-        return <Badge variant="outline" className="bg-yellow-50 dark:bg-yellow-900/20">En Juego</Badge>;
+        return <Badge variant="outline" className="bg-yellow-50 text-yellow-700 dark:bg-yellow-900/20 dark:text-yellow-300">En Juego</Badge>;
       case 'finished':
-        return <Badge variant="outline" className="bg-green-50 dark:bg-green-900/20">Finalizado</Badge>;
+        return <Badge variant="outline" className="bg-green-50 text-green-700 dark:bg-green-900/20 dark:text-green-300"><Check className="w-3 h-3 mr-1" />Finalizado</Badge>;
       default:
         return null;
     }
@@ -84,17 +94,19 @@ export const MatchCard = ({
     setIsEditing(false);
   };
 
+  const canEdit = !readOnly;
+
   return (
     <Card className="p-6">
       <div className="space-y-4">
         {/* Header */}
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between flex-wrap gap-2">
           <div className="space-y-1">
             <h3 className="font-semibold text-lg">{getPhaseLabel(match.phase)}</h3>
             {match.group_name && (
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <MapPin className="w-4 h-4" />
-                Grupo {match.group_name}
+                {match.group_name}
               </div>
             )}
             {match.match_date && (
@@ -111,7 +123,7 @@ export const MatchCard = ({
           </div>
           <div className="flex items-center gap-2">
             {getStatusBadge()}
-            {!readOnly && match.status === 'scheduled' && !isEditing && (
+            {canEdit && !isEditing && (
               <Button variant="outline" size="sm" onClick={() => setIsEditing(true)}>
                 <Edit className="w-4 h-4 mr-2" />
                 Editar
