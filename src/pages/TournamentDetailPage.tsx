@@ -98,6 +98,13 @@ const PHASE_LABELS: Record<string, string> = {
   'group': 'Fase de Grupos'
 };
 
+const isCompletedStatus = (status: string | null | undefined) =>
+  status === 'finished' || status === 'completed';
+
+const isGroupStagePhase = (phase: string | null | undefined) => {
+  const p = (phase ?? '').toLowerCase();
+  return phase === 'group' || phase === 'Fase de Grupos' || p.includes('grupo') || p.startsWith('jornada');
+};
 export function TournamentDetailPage() {
   const { id } = useParams<{ id: string }>();
   const [event, setEvent] = useState<Event | null>(null);
@@ -212,11 +219,8 @@ export function TournamentDetailPage() {
 
   // Calculate team statistics from match results
   const calculatedStandings = useMemo(() => {
-    // Filter group stage matches - check for both 'group' and 'Fase de Grupos' phases
-    const groupMatches = matches.filter(m => 
-      (m.phase === 'group' || m.phase === 'Fase de Grupos' || m.phase?.toLowerCase().includes('grupo')) && 
-      m.status === 'completed'
-    );
+    // Filter group stage matches (grupo/jornada) that are already finalizados
+    const groupMatches = matches.filter(m => isGroupStagePhase(m.phase) && isCompletedStatus(m.status));
     
     // Initialize stats for each team
     const statsMap = new Map<string, CalculatedTeamStats>();
@@ -322,10 +326,7 @@ export function TournamentDetailPage() {
 
   // Group calculated standings by group_name and sort
   const groupedCalculatedStandings = useMemo(() => {
-    const groupMatches = matches.filter(m => 
-      (m.phase === 'group' || m.phase === 'Fase de Grupos' || m.phase?.toLowerCase().includes('grupo')) && 
-      m.status === 'completed'
-    );
+    const groupMatches = matches.filter(m => isGroupStagePhase(m.phase) && isCompletedStatus(m.status));
     const grouped = calculatedStandings.reduce((acc, team) => {
       const groupName = team.group_name || "General";
       if (!acc[groupName]) {
@@ -385,7 +386,7 @@ export function TournamentDetailPage() {
 
   // Get tournament winner
   const tournamentWinner = useMemo(() => {
-    const finalMatch = matches.find(m => m.phase === 'final' && m.status === 'completed');
+    const finalMatch = matches.find(m => m.phase === 'final' && isCompletedStatus(m.status));
     if (!finalMatch || finalMatch.home_score === null || finalMatch.away_score === null) return null;
     
     if (finalMatch.home_score > finalMatch.away_score) {
@@ -955,7 +956,7 @@ export function TournamentDetailPage() {
                   </div>
                   <div className="text-center p-4 rounded-lg bg-accent/50">
                     <p className="text-3xl font-bold text-primary">
-                      {matches.filter(m => m.status === 'completed').reduce((sum, m) => sum + (m.home_score || 0) + (m.away_score || 0), 0)}
+                      {matches.filter(m => isCompletedStatus(m.status)).reduce((sum, m) => sum + (m.home_score || 0) + (m.away_score || 0), 0)}
                     </p>
                     <p className="text-sm text-muted-foreground">Goles</p>
                   </div>
@@ -977,7 +978,7 @@ export function TournamentDetailPage() {
 
 // Result Row Component - New horizontal design
 function ResultRow({ match }: { match: Match }) {
-  const isCompleted = match.status === 'completed';
+  const isCompleted = isCompletedStatus(match.status);
   const hasHomeWon = isCompleted && match.home_score !== null && match.away_score !== null && match.home_score > match.away_score;
   const hasAwayWon = isCompleted && match.home_score !== null && match.away_score !== null && match.away_score > match.home_score;
 
@@ -1035,7 +1036,7 @@ function ResultRow({ match }: { match: Match }) {
 
 // Match Card Component (kept for other uses)
 function MatchCard({ match, isFinal = false }: { match: Match; isFinal?: boolean }) {
-  const isCompleted = match.status === 'completed';
+  const isCompleted = isCompletedStatus(match.status);
   const hasHomeWon = isCompleted && match.home_score !== null && match.away_score !== null && match.home_score > match.away_score;
   const hasAwayWon = isCompleted && match.home_score !== null && match.away_score !== null && match.away_score > match.home_score;
 
