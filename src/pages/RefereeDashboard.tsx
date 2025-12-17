@@ -147,20 +147,21 @@ export const RefereeDashboard = () => {
   const completedMatches = matches.filter(m => m.status === 'finished');
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-muted/20 to-background">
+    <div className="min-h-screen bg-gradient-to-b from-muted/20 to-background pt-20">
       {/* Header */}
-      <div className="bg-gradient-to-r from-emerald-600 to-blue-600 text-white py-8">
-        <div className="container mx-auto px-4">
-          <div className="flex justify-between items-center">
-            <div>
-              <h1 className="text-3xl font-bold mb-2">Panel de Mesa</h1>
-              <p className="text-emerald-100">
+      <div className="bg-gradient-to-r from-emerald-600 to-blue-600 text-white py-6 px-4">
+        <div className="container mx-auto">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div className="min-w-0 flex-1">
+              <h1 className="text-2xl sm:text-3xl font-bold mb-1 truncate">Panel de Mesa</h1>
+              <p className="text-emerald-100 text-sm sm:text-base truncate">
                 Bienvenido, {user?.email}
               </p>
             </div>
             <Button
               variant="outline"
-              className="bg-white/10 border-white/20 text-white hover:bg-white/20"
+              size="sm"
+              className="bg-white/10 border-white/20 text-white hover:bg-white/20 shrink-0"
               onClick={handleSignOut}
             >
               <LogOut className="w-4 h-4 mr-2" />
