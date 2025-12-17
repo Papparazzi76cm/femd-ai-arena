@@ -7,8 +7,11 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Checkbox } from '@/components/ui/checkbox';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, Edit, Trash2, Save, X, Calendar, Upload, Trophy, History as HistoryIcon } from 'lucide-react';
+import { Plus, Edit, Trash2, Save, X, Calendar, Upload, Trophy, History as HistoryIcon, Users } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { TournamentManager } from './TournamentManager';
 import { HistoricalTournamentManager } from './HistoricalTournamentManager';
@@ -22,6 +25,8 @@ export const EventManager = () => {
   const [uploading, setUploading] = useState(false);
   const [expandedTournament, setExpandedTournament] = useState<string | null>(null);
   const [tournamentMode, setTournamentMode] = useState<'automatic' | 'historical'>('automatic');
+  const [showTeamsDialog, setShowTeamsDialog] = useState(false);
+  const [selectedTeamIds, setSelectedTeamIds] = useState<string[]>([]);
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -63,7 +68,7 @@ export const EventManager = () => {
         date: formData.date,
         location: formData.location.trim() || undefined,
         poster_url: formData.poster_url.trim() || undefined,
-        team_ids: []
+        team_ids: selectedTeamIds
       };
 
       if (editingId) {
@@ -93,6 +98,7 @@ export const EventManager = () => {
       location: event.location || '',
       poster_url: (event as any).poster_url || ''
     });
+    setSelectedTeamIds((event as any).team_ids || []);
     setEditingId(event.id);
     setShowForm(true);
   };
@@ -172,8 +178,17 @@ export const EventManager = () => {
 
   const resetForm = () => {
     setFormData({ title: '', description: '', date: '', location: '', poster_url: '' });
+    setSelectedTeamIds([]);
     setEditingId(null);
     setShowForm(false);
+  };
+
+  const handleTeamToggle = (teamId: string) => {
+    setSelectedTeamIds(prev => 
+      prev.includes(teamId) 
+        ? prev.filter(id => id !== teamId)
+        : [...prev, teamId]
+    );
   };
 
   if (loading) {
@@ -278,6 +293,60 @@ export const EventManager = () => {
                   />
                 </div>
               </div>
+              
+              {/* Team Selection */}
+              <div>
+                <label className="block text-sm font-medium mb-1">Equipos Participantes</label>
+                <Dialog open={showTeamsDialog} onOpenChange={setShowTeamsDialog}>
+                  <DialogTrigger asChild>
+                    <Button type="button" variant="outline" className="w-full justify-start">
+                      <Users className="w-4 h-4 mr-2" />
+                      {selectedTeamIds.length > 0 
+                        ? `${selectedTeamIds.length} equipo(s) seleccionado(s)` 
+                        : 'Añadir equipos'}
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="max-w-md">
+                    <DialogHeader>
+                      <DialogTitle>Seleccionar Equipos</DialogTitle>
+                    </DialogHeader>
+                    <ScrollArea className="h-[400px] pr-4">
+                      <div className="space-y-2">
+                        {teams.map(team => (
+                          <div 
+                            key={team.id} 
+                            className="flex items-center space-x-3 p-2 rounded hover:bg-muted cursor-pointer"
+                            onClick={() => handleTeamToggle(team.id)}
+                          >
+                            <Checkbox 
+                              checked={selectedTeamIds.includes(team.id)}
+                              onCheckedChange={() => handleTeamToggle(team.id)}
+                            />
+                            {team.logo_url && (
+                              <img src={team.logo_url} alt={team.name} className="w-8 h-8 object-contain" />
+                            )}
+                            <span className="flex-1">{team.name}</span>
+                          </div>
+                        ))}
+                        {teams.length === 0 && (
+                          <p className="text-sm text-muted-foreground text-center py-4">
+                            No hay equipos registrados
+                          </p>
+                        )}
+                      </div>
+                    </ScrollArea>
+                    <div className="flex justify-between items-center pt-4 border-t">
+                      <span className="text-sm text-muted-foreground">
+                        {selectedTeamIds.length} seleccionado(s)
+                      </span>
+                      <Button onClick={() => setShowTeamsDialog(false)}>
+                        Confirmar
+                      </Button>
+                    </div>
+                  </DialogContent>
+                </Dialog>
+              </div>
+
               <div className="flex gap-2">
                 <Button type="submit" className="bg-emerald-600 hover:bg-emerald-700">
                   <Save className="w-4 h-4 mr-2" />
