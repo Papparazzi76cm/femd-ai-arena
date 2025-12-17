@@ -161,23 +161,24 @@ export const AdminDashboard = () => {
   const completedMatches = matches.filter(m => m.status === 'finished');
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-muted/20 to-background">
+    <div className="min-h-screen bg-gradient-to-b from-muted/20 to-background pt-20">
       {/* Header */}
-      <div className="bg-gradient-to-r from-emerald-600 to-blue-600 text-white py-8">
-        <div className="container mx-auto px-4">
-          <div className="flex justify-between items-center">
-            <div>
-              <h1 className="text-3xl font-bold mb-2">
+      <div className="bg-gradient-to-r from-emerald-600 to-blue-600 text-white py-6 px-4">
+        <div className="container mx-auto">
+          <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
+            <div className="min-w-0 flex-1">
+              <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold mb-1">
                 {isAdmin ? 'Panel de Mesa (Vista Admin)' : 'Panel de Mesa'}
               </h1>
-              <p className="text-emerald-100">
+              <p className="text-emerald-100 text-sm truncate">
                 Bienvenido, {user?.email}
               </p>
             </div>
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2 shrink-0">
               {isAdmin && (
                 <Button
                   variant="outline"
+                  size="sm"
                   className="bg-white/10 border-white/20 text-white hover:bg-white/20"
                   onClick={() => navigate('/admin')}
                 >
@@ -187,6 +188,7 @@ export const AdminDashboard = () => {
               )}
               <Button
                 variant="outline"
+                size="sm"
                 className="bg-white/10 border-white/20 text-white hover:bg-white/20"
                 onClick={handleSignOut}
               >
