@@ -53,21 +53,31 @@ export const roleService = {
 
   async getUsersByRole(role: 'admin' | 'moderator' | 'user' | 'mesa'): Promise<Array<{ id: string; email: string }>> {
     try {
-      const { data, error } = await supabase
-        .from('user_roles')
-        .select('user_id')
-        .eq('role', role);
-
-      if (error) {
-        console.error('Error fetching users by role:', error);
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        console.error('No active session for getUsersByRole');
         return [];
       }
 
-      if (!data || data.length === 0) return [];
+      // Use edge function to get users with emails
+      const { data, error } = await supabase.functions.invoke('list-users', {
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
+      });
 
-      // Since we can't query auth.users directly, return user_ids
-      // Email will need to be fetched separately or displayed as user ID
-      return data.map(r => ({ id: r.user_id, email: r.user_id }));
+      if (error) {
+        console.error('Error fetching users:', error);
+        return [];
+      }
+
+      if (!data?.users) return [];
+
+      // Filter users by role
+      return data.users
+        .filter((u: { id: string; email: string; roles: string[] }) => u.roles.includes(role))
+        .map((u: { id: string; email: string }) => ({ id: u.id, email: u.email }));
     } catch (error) {
       console.error('Unexpected error fetching users by role:', error);
       return [];
