@@ -567,11 +567,21 @@ export function TournamentDetailPage() {
                             </SelectTrigger>
                             <SelectContent className="bg-background z-50">
                               <SelectItem value="all">Todos los grupos</SelectItem>
-                              {Array.from(new Set(matches.filter(m => m.group_name).map(m => m.group_name))).sort().map((group) => (
-                                <SelectItem key={group} value={group || ""}>
-                                  Grupo {group}
-                                </SelectItem>
-                              ))}
+                              {selectedPhase === "Fase de Grupos" || selectedPhase === "all" ? (
+                                // Show group letters for group phase
+                                Array.from(new Set(matches
+                                  .filter(m => m.group_name && (m.phase === "group" || m.phase === "Fase de Grupos" || m.phase?.toLowerCase().includes("grupo")))
+                                  .map(m => m.group_name)))
+                                  .sort()
+                                  .map((group) => (
+                                    <SelectItem key={group} value={group || ""}>
+                                      Grupo {group}
+                                    </SelectItem>
+                                  ))
+                              ) : (
+                                // For knockout phases, show the phase name as the only group
+                                <SelectItem value={selectedPhase}>{selectedPhase}</SelectItem>
+                              )}
                             </SelectContent>
                           </Select>
                         </div>
@@ -584,11 +594,32 @@ export function TournamentDetailPage() {
                             </SelectTrigger>
                             <SelectContent className="bg-background z-50">
                               <SelectItem value="all">Todas</SelectItem>
-                              <SelectItem value="1">Jornada 1</SelectItem>
-                              <SelectItem value="2">Jornada 2</SelectItem>
-                              <SelectItem value="3">Jornada 3</SelectItem>
-                              <SelectItem value="4">Jornada 4</SelectItem>
-                              <SelectItem value="5">Jornada 5</SelectItem>
+                              {selectedPhase === "Fase de Grupos" || selectedPhase === "all" ? (
+                                // Show jornadas for group phase
+                                <>
+                                  <SelectItem value="1">Jornada 1</SelectItem>
+                                  <SelectItem value="2">Jornada 2</SelectItem>
+                                  <SelectItem value="3">Jornada 3</SelectItem>
+                                </>
+                              ) : selectedPhase === "Fase Oro" ? (
+                                <>
+                                  <SelectItem value="1/8 de final">1/8 de final</SelectItem>
+                                  <SelectItem value="1/4 de final">1/4 de final</SelectItem>
+                                  <SelectItem value="Semifinal">Semifinal</SelectItem>
+                                  <SelectItem value="Final">Final</SelectItem>
+                                </>
+                              ) : selectedPhase === "Fase Plata" ? (
+                                <>
+                                  <SelectItem value="1/4 de final">1/4 de final</SelectItem>
+                                  <SelectItem value="Semifinal">Semifinal</SelectItem>
+                                  <SelectItem value="Final">Final</SelectItem>
+                                </>
+                              ) : selectedPhase === "Fase Bronce" ? (
+                                <>
+                                  <SelectItem value="Semifinal">Semifinal</SelectItem>
+                                  <SelectItem value="Final">Final</SelectItem>
+                                </>
+                              ) : null}
                             </SelectContent>
                           </Select>
                         </div>
@@ -622,13 +653,22 @@ export function TournamentDetailPage() {
                               const phaseMatch = selectedPhase === "all" || 
                                 match.phase === selectedPhase || 
                                 (selectedPhase === "Fase de Grupos" && isGroupPhase);
-                              const groupMatch = selectedBracketGroup === "all" || match.group_name === selectedBracketGroup;
                               
-                              // Jornada filter only applies to group phase
+                              // Group filter - for knockout phases, ignore group filter since there's only one "group"
+                              const groupMatch = selectedBracketGroup === "all" || 
+                                (isGroupPhase ? match.group_name === selectedBracketGroup : true);
+                              
+                              // Jornada filter
                               let jornadaMatch = true;
-                              if (selectedJornada !== "all" && isGroupPhase) {
-                                const matchJornada = getMatchJornada(match, matches);
-                                jornadaMatch = matchJornada === parseInt(selectedJornada);
+                              if (selectedJornada !== "all") {
+                                if (isGroupPhase) {
+                                  // For group phase, filter by computed jornada
+                                  const matchJornada = getMatchJornada(match, matches);
+                                  jornadaMatch = matchJornada === parseInt(selectedJornada);
+                                } else {
+                                  // For knockout phases, filter by group_name which contains the round
+                                  jornadaMatch = match.group_name === selectedJornada;
+                                }
                               }
                               
                               return phaseMatch && groupMatch && jornadaMatch;
