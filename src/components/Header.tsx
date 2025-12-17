@@ -13,7 +13,6 @@ export function Header() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
-  const [isMesa, setIsMesa] = useState(false);
   const { theme } = useTheme();
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
@@ -23,10 +22,8 @@ export function Header() {
       if (user) {
         const roles = await roleService.getUserRoles(user.id);
         setIsAdmin(roles.includes('admin'));
-        setIsMesa(roles.includes('mesa') || roles.includes('admin'));
       } else {
         setIsAdmin(false);
-        setIsMesa(false);
       }
     };
     checkRoles();
@@ -49,10 +46,8 @@ export function Header() {
     { name: "Contacto", href: "/contacto", isRoute: true },
   ];
 
-  // Add Mesa link if user has mesa or admin role
-  const mesaLink = isMesa
-    ? { name: "Mesa", href: "/mesa", isRoute: true }
-    : null;
+  // Mesa link - visible to everyone
+  const mesaLink = { name: "Mesa", href: "/mesa", isRoute: true };
 
   // Add Admin link if user is admin
   const adminLink = isAdmin
@@ -102,14 +97,12 @@ export function Header() {
                   </a>
                 )
               ))}
-              {mesaLink && (
-                <Link
-                  to={mesaLink.href}
-                  className="text-blue-600 hover:text-blue-700 transition-colors duration-200 font-semibold"
-                >
-                  {mesaLink.name}
-                </Link>
-              )}
+              <Link
+                to={mesaLink.href}
+                className="text-blue-600 hover:text-blue-700 transition-colors duration-200 font-semibold"
+              >
+                {mesaLink.name}
+              </Link>
               {adminLink && (
                 <Link
                   to={adminLink.href}
@@ -178,15 +171,13 @@ export function Header() {
                   </a>
                 )
               ))}
-              {mesaLink && (
-                <Link
-                  to={mesaLink.href}
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className="text-lg text-blue-600 hover:text-blue-700 transition-colors font-semibold"
-                >
-                  {mesaLink.name}
-                </Link>
-              )}
+              <Link
+                to={mesaLink.href}
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="text-lg text-blue-600 hover:text-blue-700 transition-colors font-semibold"
+              >
+                {mesaLink.name}
+              </Link>
               {adminLink && (
                 <Link
                   to={adminLink.href}
