@@ -4,7 +4,7 @@ import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { ChevronLeft, ChevronRight, X, Image as ImageIcon, Filter } from 'lucide-react';
+import { ChevronLeft, ChevronRight, X, Image as ImageIcon, Filter, LayoutGrid, List } from 'lucide-react';
 
 const CATEGORIES = [
   { value: 'all', label: 'Todas', color: 'bg-muted' },
@@ -33,6 +33,7 @@ export const TournamentGalleryDisplay = ({ eventId }: TournamentGalleryDisplayPr
   const [loading, setLoading] = useState(true);
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
   const [activeCategory, setActiveCategory] = useState('all');
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
 
   useEffect(() => {
     const loadImages = async () => {
@@ -105,26 +106,48 @@ export const TournamentGalleryDisplay = ({ eventId }: TournamentGalleryDisplayPr
           Galería de Fotos
         </h2>
         
-        {/* Category Filter */}
-        <div className="flex items-center gap-2 flex-wrap">
-          <Filter className="w-4 h-4 text-muted-foreground" />
-          {CATEGORIES.filter(cat => availableCategories.includes(cat.value)).map(cat => (
+        <div className="flex items-center gap-4 flex-wrap">
+          {/* View Mode Toggle */}
+          <div className="flex items-center border rounded-lg p-1">
             <Button
-              key={cat.value}
-              variant={activeCategory === cat.value ? 'default' : 'outline'}
+              variant={viewMode === 'grid' ? 'default' : 'ghost'}
               size="sm"
-              onClick={() => setActiveCategory(cat.value)}
-              className={activeCategory === cat.value ? 'bg-emerald-600 hover:bg-emerald-700' : ''}
+              onClick={() => setViewMode('grid')}
+              className={viewMode === 'grid' ? 'bg-emerald-600 hover:bg-emerald-700' : ''}
             >
-              <span className={`w-2 h-2 rounded-full ${cat.color} mr-2`} />
-              {cat.label}
-              {cat.value !== 'all' && (
-                <span className="ml-1 text-xs opacity-70">
-                  ({images.filter(img => (img.category || 'general') === cat.value).length})
-                </span>
-              )}
+              <LayoutGrid className="w-4 h-4" />
             </Button>
-          ))}
+            <Button
+              variant={viewMode === 'list' ? 'default' : 'ghost'}
+              size="sm"
+              onClick={() => setViewMode('list')}
+              className={viewMode === 'list' ? 'bg-emerald-600 hover:bg-emerald-700' : ''}
+            >
+              <List className="w-4 h-4" />
+            </Button>
+          </div>
+
+          {/* Category Filter */}
+          <div className="flex items-center gap-2 flex-wrap">
+            <Filter className="w-4 h-4 text-muted-foreground" />
+            {CATEGORIES.filter(cat => availableCategories.includes(cat.value)).map(cat => (
+              <Button
+                key={cat.value}
+                variant={activeCategory === cat.value ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setActiveCategory(cat.value)}
+                className={activeCategory === cat.value ? 'bg-emerald-600 hover:bg-emerald-700' : ''}
+              >
+                <span className={`w-2 h-2 rounded-full ${cat.color} mr-2`} />
+                {cat.label}
+                {cat.value !== 'all' && (
+                  <span className="ml-1 text-xs opacity-70">
+                    ({images.filter(img => (img.category || 'general') === cat.value).length})
+                  </span>
+                )}
+              </Button>
+            ))}
+          </div>
         </div>
       </div>
       
@@ -132,7 +155,8 @@ export const TournamentGalleryDisplay = ({ eventId }: TournamentGalleryDisplayPr
         <div className="text-center py-8 text-muted-foreground">
           No hay imágenes en esta categoría
         </div>
-      ) : (
+      ) : viewMode === 'grid' ? (
+        // Grid View
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
           {filteredImages.map((image, index) => {
             const categoryInfo = getCategoryInfo(image.category);
@@ -148,7 +172,6 @@ export const TournamentGalleryDisplay = ({ eventId }: TournamentGalleryDisplayPr
                     alt={image.caption || `Imagen ${index + 1}`}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                   />
-                  {/* Category Badge */}
                   <div className="absolute top-2 right-2">
                     <Badge className={`${categoryInfo.color} text-white text-xs`}>
                       {categoryInfo.label}
@@ -159,6 +182,44 @@ export const TournamentGalleryDisplay = ({ eventId }: TournamentGalleryDisplayPr
                       <p className="text-white text-xs line-clamp-2">{image.caption}</p>
                     </div>
                   )}
+                </div>
+              </Card>
+            );
+          })}
+        </div>
+      ) : (
+        // List View
+        <div className="space-y-3">
+          {filteredImages.map((image, index) => {
+            const categoryInfo = getCategoryInfo(image.category);
+            return (
+              <Card
+                key={image.id}
+                className="overflow-hidden cursor-pointer group hover:ring-2 hover:ring-emerald-600 transition-all animate-fade-in"
+                onClick={() => setSelectedIndex(index)}
+              >
+                <div className="flex items-center gap-4 p-3">
+                  <div className="w-24 h-24 sm:w-32 sm:h-32 flex-shrink-0 rounded-lg overflow-hidden">
+                    <img
+                      src={image.image_url}
+                      alt={image.caption || `Imagen ${index + 1}`}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Badge className={`${categoryInfo.color} text-white text-xs`}>
+                        {categoryInfo.label}
+                      </Badge>
+                      <span className="text-xs text-muted-foreground">#{index + 1}</span>
+                    </div>
+                    {image.caption ? (
+                      <p className="text-sm text-foreground line-clamp-3">{image.caption}</p>
+                    ) : (
+                      <p className="text-sm text-muted-foreground italic">Sin descripción</p>
+                    )}
+                  </div>
+                  <ChevronRight className="w-5 h-5 text-muted-foreground flex-shrink-0" />
                 </div>
               </Card>
             );
