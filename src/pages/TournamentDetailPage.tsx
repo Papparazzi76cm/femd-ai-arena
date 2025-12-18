@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
+import { TournamentGalleryDisplay } from "@/components/TournamentGalleryDisplay";
 
 interface EventTeam {
   id: string;
@@ -971,6 +972,11 @@ export function TournamentDetailPage() {
             </Card>
           </TabsContent>
         </Tabs>
+
+        {/* Tournament Gallery */}
+        <div className="mt-12">
+          <TournamentGalleryDisplay eventId={id!} />
+        </div>
       </div>
     </div>
   );
