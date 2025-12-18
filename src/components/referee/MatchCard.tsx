@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -6,6 +6,9 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Match } from '@/types/tournament';
 import { Calendar, MapPin, Save, Play, Square, Check } from 'lucide-react';
+import { MatchTimer } from './MatchTimer';
+import { useGoalSound } from '@/hooks/useGoalSound';
+import { useMatchNotifications } from '@/hooks/useMatchNotifications';
 
 interface MatchCardProps {
   match: Match;
@@ -31,6 +34,10 @@ export const MatchCard = ({
   const [awayRed, setAwayRed] = useState(match.away_red_cards ?? 0);
   const [saving, setSaving] = useState(false);
 
+  const { playGoalSound } = useGoalSound();
+  const { notifyMatchStarted, notifyMatchEnded, notifyGoal } = useMatchNotifications();
+  
+  const prevScoreRef = useRef({ home: match.home_score ?? 0, away: match.away_score ?? 0 });
   const isLive = match.status === 'in_progress';
 
   // Sync local state when match data changes
@@ -81,6 +88,7 @@ export const MatchCard = ({
         away_score: awayScore,
       });
       setIsEditing(true);
+      notifyMatchStarted(homeTeamName, awayTeamName);
     } finally {
       setSaving(false);
     }
@@ -99,8 +107,31 @@ export const MatchCard = ({
         status: 'finished',
       });
       setIsEditing(false);
+      notifyMatchEnded(homeTeamName, awayTeamName, homeScore, awayScore);
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleScoreChange = (team: 'home' | 'away', newScore: number) => {
+    const prevHome = prevScoreRef.current.home;
+    const prevAway = prevScoreRef.current.away;
+    
+    if (team === 'home') {
+      setHomeScore(newScore);
+      // Check if it's a goal (score increased)
+      if (newScore > prevHome && isLive) {
+        playGoalSound();
+        notifyGoal(homeTeamName, newScore, awayScore);
+      }
+      prevScoreRef.current.home = newScore;
+    } else {
+      setAwayScore(newScore);
+      if (newScore > prevAway && isLive) {
+        playGoalSound();
+        notifyGoal(awayTeamName, homeScore, newScore);
+      }
+      prevScoreRef.current.away = newScore;
     }
   };
 
@@ -114,15 +145,16 @@ export const MatchCard = ({
         home_red_cards: homeRed,
         away_yellow_cards: awayYellow,
         away_red_cards: awayRed,
-        status: 'in_progress', // Keep it live
+        status: 'in_progress',
       });
+      // Update prev scores after save
+      prevScoreRef.current = { home: homeScore, away: awayScore };
     } finally {
       setSaving(false);
     }
   };
 
   const handleCancel = () => {
-    // Reset to original values
     setHomeScore(match.home_score ?? 0);
     setAwayScore(match.away_score ?? 0);
     setHomeYellow(match.home_yellow_cards ?? 0);
@@ -164,6 +196,11 @@ export const MatchCard = ({
           </div>
         </div>
 
+        {/* Match Timer for live matches */}
+        {isLive && canEdit && (
+          <MatchTimer isLive={isLive} />
+        )}
+
         {/* Teams and Scores */}
         <div className="grid grid-cols-3 gap-4 items-center">
           {/* Home Team */}
@@ -176,7 +213,7 @@ export const MatchCard = ({
                 type="number"
                 min="0"
                 value={homeScore}
-                onChange={(e) => setHomeScore(Number(e.target.value))}
+                onChange={(e) => handleScoreChange('home', Number(e.target.value))}
                 className="w-20 ml-auto text-center text-2xl font-bold"
               />
             ) : (
@@ -203,7 +240,7 @@ export const MatchCard = ({
                 type="number"
                 min="0"
                 value={awayScore}
-                onChange={(e) => setAwayScore(Number(e.target.value))}
+                onChange={(e) => handleScoreChange('away', Number(e.target.value))}
                 className="w-20 text-center text-2xl font-bold"
               />
             ) : (
@@ -214,12 +251,11 @@ export const MatchCard = ({
           </div>
         </div>
 
-        {/* Cards Statistics - Show when editing or live */}
+        {/* Cards Statistics */}
         {(isEditing || isLive) && (
           <div className="border-t pt-4">
             <h4 className="font-semibold mb-4">Tarjetas</h4>
             <div className="grid md:grid-cols-2 gap-6">
-              {/* Home Team Cards */}
               <div>
                 <Label className="text-sm font-medium mb-3 block">{homeTeamName}</Label>
                 <div className="grid grid-cols-2 gap-3">
@@ -247,8 +283,6 @@ export const MatchCard = ({
                   </div>
                 </div>
               </div>
-
-              {/* Away Team Cards */}
               <div>
                 <Label className="text-sm font-medium mb-3 block">{awayTeamName}</Label>
                 <div className="grid grid-cols-2 gap-3">
@@ -280,27 +314,19 @@ export const MatchCard = ({
           </div>
         )}
 
-        {/* Show cards in read-only mode */}
+        {/* Read-only cards display */}
         {!isEditing && !isLive && (match.home_yellow_cards > 0 || match.home_red_cards > 0 || match.away_yellow_cards > 0 || match.away_red_cards > 0) && (
           <div className="border-t pt-4">
             <div className="grid grid-cols-2 gap-4 text-sm">
               <div>
                 <span className="font-medium">{homeTeamName}:</span>
-                {match.home_yellow_cards > 0 && (
-                  <span className="ml-2">🟨 {match.home_yellow_cards}</span>
-                )}
-                {match.home_red_cards > 0 && (
-                  <span className="ml-2">🟥 {match.home_red_cards}</span>
-                )}
+                {match.home_yellow_cards > 0 && <span className="ml-2">🟨 {match.home_yellow_cards}</span>}
+                {match.home_red_cards > 0 && <span className="ml-2">🟥 {match.home_red_cards}</span>}
               </div>
               <div>
                 <span className="font-medium">{awayTeamName}:</span>
-                {match.away_yellow_cards > 0 && (
-                  <span className="ml-2">🟨 {match.away_yellow_cards}</span>
-                )}
-                {match.away_red_cards > 0 && (
-                  <span className="ml-2">🟥 {match.away_red_cards}</span>
-                )}
+                {match.away_yellow_cards > 0 && <span className="ml-2">🟨 {match.away_yellow_cards}</span>}
+                {match.away_red_cards > 0 && <span className="ml-2">🟥 {match.away_red_cards}</span>}
               </div>
             </div>
           </div>
@@ -309,7 +335,6 @@ export const MatchCard = ({
         {/* Actions */}
         {canEdit && (
           <div className="flex gap-2 justify-end border-t pt-4 flex-wrap">
-            {/* Scheduled match - show "Iniciar Partido" button */}
             {match.status === 'scheduled' && (
               <Button 
                 onClick={handleStartMatch} 
@@ -321,14 +346,9 @@ export const MatchCard = ({
               </Button>
             )}
 
-            {/* Live match - show "Guardar" and "Finalizar" buttons */}
             {isLive && (
               <>
-                <Button 
-                  variant="outline" 
-                  onClick={handleSaveLive} 
-                  disabled={saving}
-                >
+                <Button variant="outline" onClick={handleSaveLive} disabled={saving}>
                   <Save className="w-4 h-4 mr-2" />
                   {saving ? 'Guardando...' : 'Guardar Cambios'}
                 </Button>
@@ -343,14 +363,12 @@ export const MatchCard = ({
               </>
             )}
 
-            {/* Finished match - allow editing if admin */}
             {match.status === 'finished' && !readOnly && !isEditing && (
               <Button variant="outline" size="sm" onClick={() => setIsEditing(true)}>
                 Editar Resultado
               </Button>
             )}
 
-            {/* Editing finished match */}
             {match.status === 'finished' && isEditing && (
               <>
                 <Button variant="outline" onClick={handleCancel} disabled={saving}>

@@ -1,11 +1,14 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Loader2, Trophy, Users, BarChart3, Radio } from 'lucide-react';
+import { Loader2, Trophy, Users, BarChart3, Radio, Bell, BellOff } from 'lucide-react';
 import { Match } from '@/types/tournament';
 import { Team } from '@/types/database';
+import { useMatchNotifications } from '@/hooks/useMatchNotifications';
+import { useGoalSound } from '@/hooks/useGoalSound';
 
 interface EventTeam {
   id: string;
@@ -32,6 +35,23 @@ export const LiveTournamentPage = () => {
   const [teams, setTeams] = useState<Team[]>([]);
   const [eventTeams, setEventTeams] = useState<EventTeam[]>([]);
   const [liveTeamIds, setLiveTeamIds] = useState<Set<string>>(new Set());
+  const [notificationsEnabled, setNotificationsEnabled] = useState(false);
+
+  const { requestPermission, notifyMatchStarted, notifyMatchEnded, notifyGoal } = useMatchNotifications();
+  const { playGoalSound } = useGoalSound();
+
+  // Track previous match states for notifications
+  const prevMatchesRef = useRef<Map<string, { status: string; homeScore: number; awayScore: number }>>(new Map());
+  const teamsRef = useRef<Team[]>([]);
+
+  const getTeamNameById = useCallback((teamId: string) => {
+    return teamsRef.current.find(t => t.id === teamId)?.name || 'Equipo';
+  }, []);
+
+  const handleEnableNotifications = async () => {
+    const granted = await requestPermission();
+    setNotificationsEnabled(granted);
+  };
 
   useEffect(() => {
     loadData();
@@ -42,7 +62,8 @@ export const LiveTournamentPage = () => {
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'matches' },
-        () => {
+        (payload) => {
+          handleMatchChange(payload);
           loadData();
         }
       )
@@ -65,6 +86,50 @@ export const LiveTournamentPage = () => {
       supabase.removeChannel(teamsChannel);
     };
   }, []);
+
+  const handleMatchChange = (payload: any) => {
+    if (!notificationsEnabled) return;
+
+    const newMatch = payload.new as Match;
+    if (!newMatch) return;
+
+    const prevState = prevMatchesRef.current.get(newMatch.id);
+    const homeTeam = getTeamNameById(newMatch.home_team_id);
+    const awayTeam = getTeamNameById(newMatch.away_team_id);
+
+    if (prevState) {
+      // Check for status changes
+      if (prevState.status !== newMatch.status) {
+        if (newMatch.status === 'in_progress') {
+          notifyMatchStarted(homeTeam, awayTeam);
+        } else if (newMatch.status === 'finished') {
+          notifyMatchEnded(homeTeam, awayTeam, newMatch.home_score ?? 0, newMatch.away_score ?? 0);
+        }
+      }
+
+      // Check for goals (only in live matches)
+      if (newMatch.status === 'in_progress') {
+        const newHomeScore = newMatch.home_score ?? 0;
+        const newAwayScore = newMatch.away_score ?? 0;
+
+        if (newHomeScore > prevState.homeScore) {
+          playGoalSound();
+          notifyGoal(homeTeam, newHomeScore, newAwayScore);
+        }
+        if (newAwayScore > prevState.awayScore) {
+          playGoalSound();
+          notifyGoal(awayTeam, newHomeScore, newAwayScore);
+        }
+      }
+    }
+
+    // Update tracked state
+    prevMatchesRef.current.set(newMatch.id, {
+      status: newMatch.status,
+      homeScore: newMatch.home_score ?? 0,
+      awayScore: newMatch.away_score ?? 0,
+    });
+  };
 
   const loadData = async () => {
     try {
@@ -118,7 +183,20 @@ export const LiveTournamentPage = () => {
 
       // Load teams
       const { data: teamsData } = await supabase.from('teams').select('*');
-      setTeams((teamsData || []) as Team[]);
+      const loadedTeams = (teamsData || []) as Team[];
+      setTeams(loadedTeams);
+      teamsRef.current = loadedTeams;
+
+      // Initialize match tracking for notifications
+      typedMatches.forEach(m => {
+        if (!prevMatchesRef.current.has(m.id)) {
+          prevMatchesRef.current.set(m.id, {
+            status: m.status,
+            homeScore: m.home_score ?? 0,
+            awayScore: m.away_score ?? 0,
+          });
+        }
+      });
 
       // Load event teams for standings
       const { data: eventTeamsData } = await supabase
@@ -188,14 +266,34 @@ export const LiveTournamentPage = () => {
       {/* Hero Header */}
       <div className="bg-gradient-to-r from-red-600 via-orange-500 to-yellow-500 text-white py-8 px-4">
         <div className="container mx-auto">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="relative">
-              <Radio className="w-8 h-8" />
-              <span className="absolute -top-1 -right-1 w-3 h-3 bg-white rounded-full animate-pulse-live" />
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-3">
+              <div className="relative">
+                <Radio className="w-8 h-8" />
+                <span className="absolute -top-1 -right-1 w-3 h-3 bg-white rounded-full animate-pulse-live" />
+              </div>
+              <Badge className="bg-white/20 text-white border-white/30 text-lg px-4 py-1">
+                EN VIVO
+              </Badge>
             </div>
-            <Badge className="bg-white/20 text-white border-white/30 text-lg px-4 py-1">
-              EN VIVO
-            </Badge>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleEnableNotifications}
+              className={`text-white hover:bg-white/20 ${notificationsEnabled ? 'bg-white/20' : ''}`}
+            >
+              {notificationsEnabled ? (
+                <>
+                  <Bell className="w-4 h-4 mr-2" />
+                  Notificaciones activas
+                </>
+              ) : (
+                <>
+                  <BellOff className="w-4 h-4 mr-2" />
+                  Activar notificaciones
+                </>
+              )}
+            </Button>
           </div>
           <h1 className="text-3xl md:text-4xl font-bold">{activeEvent.title}</h1>
           <p className="text-white/80 mt-2">{activeEvent.location}</p>
