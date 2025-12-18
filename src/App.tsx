@@ -15,6 +15,7 @@ import { MesaDashboard } from "@/pages/MesaDashboard";
 import { TeamsPage } from "@/pages/TeamsPage";
 import { TeamDetailPage } from "@/pages/TeamDetailPage";
 import { PlayerDetailPage } from "@/pages/PlayerDetailPage";
+import { PlayersSearchPage } from "@/pages/PlayersSearchPage";
 import { TournamentsPage } from "@/pages/TournamentsPage";
 import { TournamentDetailPage } from "@/pages/TournamentDetailPage";
 import { LiveTournamentPage } from "@/pages/LiveTournamentPage";
@@ -42,6 +43,7 @@ const App = () => (
                     <Route path="/" element={<HomePage />} />
                     <Route path="/equipos" element={<TeamsPage />} />
                     <Route path="/equipos/:id" element={<TeamDetailPage />} />
+                    <Route path="/jugadores" element={<PlayersSearchPage />} />
                     <Route path="/jugador/:id" element={<PlayerDetailPage />} />
                     <Route path="/torneos" element={<TournamentsPage />} />
                     <Route path="/torneos/:id" element={<TournamentDetailPage />} />
