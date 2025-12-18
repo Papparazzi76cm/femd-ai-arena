@@ -4,8 +4,10 @@ import { Post } from '@/types/database';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { useToast } from '@/hooks/use-toast';
-import { Newspaper, Clock, Search, ChevronLeft, ChevronRight, Loader2, Calendar } from 'lucide-react';
+import { Newspaper, Clock, Search, ChevronLeft, ChevronRight, Loader2, Calendar, X } from 'lucide-react';
 
 const POSTS_PER_PAGE = 6;
 
@@ -16,6 +18,7 @@ export const BlogPage = () => {
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedPost, setSelectedPost] = useState<Post | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -134,7 +137,10 @@ export const BlogPage = () => {
               <div className="w-1 h-8 bg-emerald-600 rounded"></div>
               Destacado
             </h2>
-            <Card className="overflow-hidden border-2 border-emerald-600/20 hover:border-emerald-600/50 transition-all duration-300 hover:shadow-2xl">
+            <Card 
+              className="overflow-hidden border-2 border-emerald-600/20 hover:border-emerald-600/50 transition-all duration-300 hover:shadow-2xl cursor-pointer"
+              onClick={() => setSelectedPost(featuredPost)}
+            >
               <div className="grid md:grid-cols-2 gap-0">
                 {featuredPost.image_url && (
                   <div className="relative h-64 md:h-auto overflow-hidden">
@@ -172,7 +178,13 @@ export const BlogPage = () => {
                         {featuredPost.description}
                       </p>
                     )}
-                    <Button className="bg-emerald-600 hover:bg-emerald-700">
+                    <Button 
+                      className="bg-emerald-600 hover:bg-emerald-700"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedPost(featuredPost);
+                      }}
+                    >
                       Leer más
                     </Button>
                   </CardContent>
@@ -203,8 +215,9 @@ export const BlogPage = () => {
               {displayedPosts.map((post, index) => (
                 <Card
                   key={post.id}
-                  className="group overflow-hidden hover-scale border-2 hover:border-emerald-600/30 transition-all duration-300 hover:shadow-xl animate-fade-in"
+                  className="group overflow-hidden hover-scale border-2 hover:border-emerald-600/30 transition-all duration-300 hover:shadow-xl animate-fade-in cursor-pointer"
                   style={{ animationDelay: `${(index + 3) * 100}ms` }}
+                  onClick={() => setSelectedPost(post)}
                 >
                   {post.image_url && (
                     <div className="relative h-48 overflow-hidden">
@@ -240,6 +253,10 @@ export const BlogPage = () => {
                         variant="ghost"
                         size="sm"
                         className="text-emerald-600 hover:text-emerald-700 hover:bg-emerald-600/10"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedPost(post);
+                        }}
                       >
                         Leer más →
                       </Button>
@@ -312,6 +329,73 @@ export const BlogPage = () => {
           </div>
         )}
       </div>
+
+      {/* Post Detail Dialog */}
+      <Dialog open={!!selectedPost} onOpenChange={(open) => !open && setSelectedPost(null)}>
+        <DialogContent className="max-w-3xl max-h-[90vh] p-0 overflow-hidden">
+          <DialogHeader className="sr-only">
+            <DialogTitle>{selectedPost?.title}</DialogTitle>
+          </DialogHeader>
+          <ScrollArea className="max-h-[90vh]">
+            {selectedPost && (
+              <div>
+                {selectedPost.image_url && (
+                  <div className="relative h-64 md:h-80 w-full">
+                    <img
+                      src={selectedPost.image_url}
+                      alt={selectedPost.title}
+                      className="w-full h-full object-cover"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                    <div className="absolute bottom-4 left-6 right-6 text-white">
+                      <h2 className="text-2xl md:text-3xl font-bold mb-2">{selectedPost.title}</h2>
+                      <div className="flex items-center gap-4 text-sm opacity-90">
+                        <div className="flex items-center gap-2">
+                          <Calendar className="w-4 h-4" />
+                          {formatDate(selectedPost.created_at)}
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Clock className="w-4 h-4" />
+                          {Math.ceil((selectedPost.content?.length || 0) / 1000)} min lectura
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+                <div className="p-6 md:p-8">
+                  {!selectedPost.image_url && (
+                    <>
+                      <h2 className="text-2xl md:text-3xl font-bold mb-4">{selectedPost.title}</h2>
+                      <div className="flex items-center gap-4 text-sm text-muted-foreground mb-6">
+                        <div className="flex items-center gap-2">
+                          <Calendar className="w-4 h-4" />
+                          {formatDate(selectedPost.created_at)}
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Clock className="w-4 h-4" />
+                          {Math.ceil((selectedPost.content?.length || 0) / 1000)} min lectura
+                        </div>
+                      </div>
+                    </>
+                  )}
+                  {selectedPost.description && (
+                    <p className="text-lg text-muted-foreground mb-6 leading-relaxed border-l-4 border-emerald-600 pl-4 italic">
+                      {selectedPost.description}
+                    </p>
+                  )}
+                  {selectedPost.content && (
+                    <div className="prose prose-lg dark:prose-invert max-w-none">
+                      {selectedPost.content.split('\n').map((paragraph, idx) => (
+                        paragraph.trim() && <p key={idx} className="mb-4 leading-relaxed">{paragraph}</p>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </ScrollArea>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

@@ -15,6 +15,7 @@ import { Plus, Edit, Trash2, Save, X, Calendar, Upload, Trophy, History as Histo
 import { supabase } from '@/integrations/supabase/client';
 import { TournamentManager } from './TournamentManager';
 import { HistoricalTournamentManager } from './HistoricalTournamentManager';
+import { TournamentGalleryManager } from './TournamentGalleryManager';
 
 export const EventManager = () => {
   const [events, setEvents] = useState<Event[]>([]);
@@ -407,7 +408,7 @@ export const EventManager = () => {
               </div>
               
               {expandedTournament === event.id && (
-                <div className="border-t pt-4">
+                <div className="border-t pt-4 space-y-6">
                   <Tabs value={tournamentMode} onValueChange={(v: any) => setTournamentMode(v)}>
                     <TabsList className="grid w-full grid-cols-2">
                       <TabsTrigger value="automatic">
@@ -428,6 +429,11 @@ export const EventManager = () => {
                       <HistoricalTournamentManager eventId={event.id} />
                     </TabsContent>
                   </Tabs>
+                  
+                  {/* Tournament Gallery */}
+                  <div className="border-t pt-6">
+                    <TournamentGalleryManager eventId={event.id} />
+                  </div>
                 </div>
               )}
             </CardContent>
