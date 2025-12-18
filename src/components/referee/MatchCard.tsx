@@ -5,15 +5,18 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Match } from '@/types/tournament';
-import { Calendar, MapPin, Save, Play, Square, Check } from 'lucide-react';
+import { Calendar, MapPin, Save, Play, Square, Check, Goal } from 'lucide-react';
 import { MatchTimer } from './MatchTimer';
 import { useGoalSound } from '@/hooks/useGoalSound';
 import { useMatchNotifications } from '@/hooks/useMatchNotifications';
+import { GoalScorersDialog } from './GoalScorersDialog';
 
 interface MatchCardProps {
   match: Match;
   homeTeamName: string;
   awayTeamName: string;
+  homeTeamId: string;
+  awayTeamId: string;
   onUpdate: (matchId: string, updates: Partial<Match>) => Promise<void>;
   readOnly?: boolean;
 }
@@ -21,11 +24,14 @@ interface MatchCardProps {
 export const MatchCard = ({ 
   match, 
   homeTeamName, 
-  awayTeamName, 
+  awayTeamName,
+  homeTeamId,
+  awayTeamId,
   onUpdate,
   readOnly = false 
 }: MatchCardProps) => {
   const [isEditing, setIsEditing] = useState(false);
+  const [showGoalScorers, setShowGoalScorers] = useState(false);
   const [homeScore, setHomeScore] = useState(match.home_score ?? 0);
   const [awayScore, setAwayScore] = useState(match.away_score ?? 0);
   const [homeYellow, setHomeYellow] = useState(match.home_yellow_cards ?? 0);
@@ -348,6 +354,14 @@ export const MatchCard = ({
 
             {isLive && (
               <>
+                <Button 
+                  variant="outline" 
+                  onClick={() => setShowGoalScorers(true)}
+                  className="border-yellow-500 text-yellow-600 hover:bg-yellow-50 dark:hover:bg-yellow-900/20"
+                >
+                  <Goal className="w-4 h-4 mr-2" />
+                  Goleadores
+                </Button>
                 <Button variant="outline" onClick={handleSaveLive} disabled={saving}>
                   <Save className="w-4 h-4 mr-2" />
                   {saving ? 'Guardando...' : 'Guardar Cambios'}
@@ -383,6 +397,17 @@ export const MatchCard = ({
           </div>
         )}
       </div>
+
+      {/* Goal Scorers Dialog */}
+      <GoalScorersDialog
+        open={showGoalScorers}
+        onOpenChange={setShowGoalScorers}
+        matchId={match.id}
+        homeTeamId={homeTeamId}
+        awayTeamId={awayTeamId}
+        homeTeamName={homeTeamName}
+        awayTeamName={awayTeamName}
+      />
     </Card>
   );
 };

@@ -281,6 +281,8 @@ export const MesaDashboard = () => {
                       match={match}
                       homeTeamName={getTeamName(match.home_team_id)}
                       awayTeamName={getTeamName(match.away_team_id)}
+                      homeTeamId={match.home_team_id}
+                      awayTeamId={match.away_team_id}
                       onUpdate={handleMatchUpdate}
                     />
                   ))}
@@ -299,6 +301,8 @@ export const MesaDashboard = () => {
                       match={match}
                       homeTeamName={getTeamName(match.home_team_id)}
                       awayTeamName={getTeamName(match.away_team_id)}
+                      homeTeamId={match.home_team_id}
+                      awayTeamId={match.away_team_id}
                       onUpdate={handleMatchUpdate}
                     />
                   ))}
@@ -317,6 +321,8 @@ export const MesaDashboard = () => {
                       match={match}
                       homeTeamName={getTeamName(match.home_team_id)}
                       awayTeamName={getTeamName(match.away_team_id)}
+                      homeTeamId={match.home_team_id}
+                      awayTeamId={match.away_team_id}
                       onUpdate={handleMatchUpdate}
                       readOnly={!isAdmin}
                     />

@@ -4,9 +4,9 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Loader2, Trophy, Users, BarChart3, Radio, Bell, BellOff } from 'lucide-react';
+import { Loader2, Trophy, Users, BarChart3, Radio, Bell, BellOff, Goal } from 'lucide-react';
 import { Match } from '@/types/tournament';
-import { Team } from '@/types/database';
+import { Team, Participant } from '@/types/database';
 import { useMatchNotifications } from '@/hooks/useMatchNotifications';
 import { useGoalSound } from '@/hooks/useGoalSound';
 
@@ -27,6 +27,21 @@ interface EventTeam {
   red_cards: number;
 }
 
+interface MatchGoal {
+  id: string;
+  match_id: string;
+  team_id: string;
+  player_id: string | null;
+  minute: number | null;
+  is_own_goal: boolean;
+}
+
+interface TopScorer {
+  player: Participant;
+  team: Team | null;
+  goals: number;
+}
+
 export const LiveTournamentPage = () => {
   const [loading, setLoading] = useState(true);
   const [activeEvent, setActiveEvent] = useState<any>(null);
@@ -36,6 +51,7 @@ export const LiveTournamentPage = () => {
   const [eventTeams, setEventTeams] = useState<EventTeam[]>([]);
   const [liveTeamIds, setLiveTeamIds] = useState<Set<string>>(new Set());
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
+  const [topScorers, setTopScorers] = useState<TopScorer[]>([]);
 
   const { requestPermission, notifyMatchStarted, notifyMatchEnded, notifyGoal } = useMatchNotifications();
   const { playGoalSound } = useGoalSound();
@@ -81,9 +97,22 @@ export const LiveTournamentPage = () => {
       )
       .subscribe();
 
+    // Set up real-time subscription for goals
+    const goalsChannel = supabase
+      .channel('live-goals')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'match_goals' },
+        () => {
+          loadData();
+        }
+      )
+      .subscribe();
+
     return () => {
       supabase.removeChannel(matchChannel);
       supabase.removeChannel(teamsChannel);
+      supabase.removeChannel(goalsChannel);
     };
   }, []);
 
@@ -207,6 +236,49 @@ export const LiveTournamentPage = () => {
         .order('points', { ascending: false });
 
       setEventTeams((eventTeamsData || []) as EventTeam[]);
+
+      // Load goals for top scorers
+      const matchIds = typedMatches.map(m => m.id);
+      if (matchIds.length > 0) {
+        const { data: goalsData } = await supabase
+          .from('match_goals')
+          .select('*')
+          .in('match_id', matchIds);
+
+        if (goalsData && goalsData.length > 0) {
+          // Count goals per player
+          const goalCounts = new Map<string, number>();
+          (goalsData as MatchGoal[]).forEach(goal => {
+            if (goal.player_id) {
+              goalCounts.set(goal.player_id, (goalCounts.get(goal.player_id) || 0) + 1);
+            }
+          });
+
+          // Get unique player IDs
+          const playerIds = Array.from(goalCounts.keys());
+          
+          if (playerIds.length > 0) {
+            const { data: playersData } = await supabase
+              .from('participants')
+              .select('*')
+              .in('id', playerIds);
+
+            if (playersData) {
+              const scorers: TopScorer[] = (playersData as Participant[]).map(player => ({
+                player,
+                team: loadedTeams.find(t => t.id === player.team_id) || null,
+                goals: goalCounts.get(player.id) || 0,
+              }));
+
+              // Sort by goals descending
+              scorers.sort((a, b) => b.goals - a.goals);
+              setTopScorers(scorers);
+            }
+          }
+        } else {
+          setTopScorers([]);
+        }
+      }
     } catch (error) {
       console.error('Error loading live data:', error);
     } finally {
@@ -497,31 +569,77 @@ export const LiveTournamentPage = () => {
               </Card>
             </div>
 
-            {/* Top Scorers */}
-            <Card className="p-6">
-              <h3 className="font-bold text-lg mb-4">Equipos Más Goleadores</h3>
-              <div className="space-y-3">
-                {[...eventTeams]
-                  .sort((a, b) => (b.goals_for || 0) - (a.goals_for || 0))
-                  .slice(0, 5)
-                  .map((et, idx) => (
-                    <div key={et.id} className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <span className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center text-sm font-bold">
-                          {idx + 1}
-                        </span>
-                        {getTeamLogo(et.team_id) && (
-                          <img src={getTeamLogo(et.team_id)} alt="" className="w-8 h-8 object-contain" />
-                        )}
-                        <span className={liveTeamIds.has(et.team_id) ? 'text-red-600 dark:text-red-400 font-bold' : ''}>
-                          {getTeamName(et.team_id)}
-                        </span>
+            {/* Top Scorers - Players */}
+            <div className="grid md:grid-cols-2 gap-6">
+              <Card className="p-6">
+                <h3 className="font-bold text-lg mb-4 flex items-center gap-2">
+                  <Goal className="w-5 h-5 text-primary" />
+                  Máximos Goleadores
+                </h3>
+                <div className="space-y-3">
+                  {topScorers.length === 0 ? (
+                    <p className="text-muted-foreground text-sm">Aún no hay goles registrados</p>
+                  ) : (
+                    topScorers.slice(0, 10).map((scorer, idx) => (
+                      <div key={scorer.player.id} className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <span className={`w-7 h-7 rounded-full flex items-center justify-center text-sm font-bold ${
+                            idx === 0 ? 'bg-yellow-400 text-yellow-900' :
+                            idx === 1 ? 'bg-gray-300 text-gray-700' :
+                            idx === 2 ? 'bg-amber-600 text-amber-100' :
+                            'bg-primary/10'
+                          }`}>
+                            {idx + 1}
+                          </span>
+                          {scorer.player.photo_url && (
+                            <img src={scorer.player.photo_url} alt="" className="w-8 h-8 rounded-full object-cover" />
+                          )}
+                          <div>
+                            <p className="font-medium">
+                              {scorer.player.number && <span className="text-muted-foreground mr-1">#{scorer.player.number}</span>}
+                              {scorer.player.name}
+                            </p>
+                            {scorer.team && (
+                              <p className="text-xs text-muted-foreground">{scorer.team.name}</p>
+                            )}
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <span className="text-2xl font-bold text-primary">{scorer.goals}</span>
+                          <span className="text-sm text-muted-foreground">⚽</span>
+                        </div>
                       </div>
-                      <span className="font-bold text-primary">{et.goals_for || 0} goles</span>
-                    </div>
-                  ))}
-              </div>
-            </Card>
+                    ))
+                  )}
+                </div>
+              </Card>
+
+              {/* Team Scorers */}
+              <Card className="p-6">
+                <h3 className="font-bold text-lg mb-4">Equipos Más Goleadores</h3>
+                <div className="space-y-3">
+                  {[...eventTeams]
+                    .sort((a, b) => (b.goals_for || 0) - (a.goals_for || 0))
+                    .slice(0, 5)
+                    .map((et, idx) => (
+                      <div key={et.id} className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <span className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center text-sm font-bold">
+                            {idx + 1}
+                          </span>
+                          {getTeamLogo(et.team_id) && (
+                            <img src={getTeamLogo(et.team_id)} alt="" className="w-8 h-8 object-contain" />
+                          )}
+                          <span className={liveTeamIds.has(et.team_id) ? 'text-red-600 dark:text-red-400 font-bold' : ''}>
+                            {getTeamName(et.team_id)}
+                          </span>
+                        </div>
+                        <span className="font-bold text-primary">{et.goals_for || 0} goles</span>
+                      </div>
+                    ))}
+                </div>
+              </Card>
+            </div>
           </TabsContent>
         </Tabs>
       </div>
