@@ -84,32 +84,39 @@ export const MatchTimer = ({ isLive, onHalfEnd }: MatchTimerProps) => {
           <span className="text-sm font-medium opacity-80">
             {currentHalf === 1 ? '1er Tiempo' : '2do Tiempo'}
           </span>
+        </div>
+        <div className="flex items-center gap-1">
           <Popover open={showSettings} onOpenChange={setShowSettings}>
             <PopoverTrigger asChild>
               <Button 
                 variant="ghost" 
                 size="sm" 
-                className="h-6 w-6 p-0 text-white/70 hover:text-white hover:bg-white/20"
+                className="h-8 px-3 text-white/90 hover:text-white hover:bg-white/20 flex items-center gap-1"
               >
-                <Settings className="w-3 h-3" />
+                <Settings className="w-4 h-4" />
+                <span className="text-xs">{halfDuration} min</span>
               </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-48">
-              <div className="space-y-2">
-                <Label className="text-xs">Duración por tiempo (min)</Label>
-                <Input
-                  type="number"
-                  min="1"
-                  max="60"
-                  value={halfDuration}
-                  onChange={(e) => handleDurationChange(Number(e.target.value))}
-                  className="h-8"
-                />
+            <PopoverContent className="w-56">
+              <div className="space-y-3">
+                <Label className="text-sm font-medium">Duración por tiempo</Label>
+                <div className="flex items-center gap-2">
+                  <Input
+                    type="number"
+                    min="1"
+                    max="60"
+                    value={halfDuration}
+                    onChange={(e) => handleDurationChange(Number(e.target.value))}
+                    className="h-9"
+                  />
+                  <span className="text-sm text-muted-foreground">min</span>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Configura la duración de cada tiempo del partido (1-60 minutos)
+                </p>
               </div>
             </PopoverContent>
           </Popover>
-        </div>
-        <div className="flex items-center gap-1">
           <Button
             variant="ghost"
             size="sm"
@@ -153,10 +160,6 @@ export const MatchTimer = ({ isLive, onHalfEnd }: MatchTimerProps) => {
           Iniciar 2do Tiempo
         </Button>
       )}
-
-      <div className="text-xs text-center mt-2 opacity-70">
-        {halfDuration} min por tiempo
-      </div>
     </div>
   );
 };
