@@ -7,7 +7,8 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, Edit, Trash2, Save, X, Upload } from 'lucide-react';
+import { Plus, Edit, Trash2, Save, X, Upload, History } from 'lucide-react';
+import { PlayerTeamChangeDialog } from './PlayerTeamChangeDialog';
 
 export const ParticipantManager = () => {
   const [participants, setParticipants] = useState<Participant[]>([]);
@@ -23,6 +24,8 @@ export const ParticipantManager = () => {
     photo_url: '',
     birth_date: ''
   });
+  const [historyDialogOpen, setHistoryDialogOpen] = useState(false);
+  const [selectedParticipant, setSelectedParticipant] = useState<Participant | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -298,7 +301,13 @@ export const ParticipantManager = () => {
             <CardHeader>
               <CardTitle className="flex items-center justify-between">
                 <span className="truncate">{participant.name}</span>
-                <div className="flex gap-2">
+                <div className="flex gap-1">
+                  <Button size="sm" variant="ghost" onClick={() => {
+                    setSelectedParticipant(participant);
+                    setHistoryDialogOpen(true);
+                  }} title="Historial de equipos">
+                    <History className="w-4 h-4 text-emerald-600" />
+                  </Button>
                   <Button size="sm" variant="ghost" onClick={() => handleEdit(participant)}>
                     <Edit className="w-4 h-4" />
                   </Button>
@@ -323,6 +332,16 @@ export const ParticipantManager = () => {
           </Card>
         ))}
       </div>
+
+      {selectedParticipant && (
+        <PlayerTeamChangeDialog
+          open={historyDialogOpen}
+          onOpenChange={setHistoryDialogOpen}
+          participant={selectedParticipant}
+          teams={teams}
+          onSuccess={loadData}
+        />
+      )}
     </div>
   );
 };
