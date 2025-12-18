@@ -41,6 +41,7 @@ export function Header() {
     { name: "Inicio", href: "#home", isAnchor: true },
     { name: "Equipos", href: "/equipos", isRoute: true },
     { name: "Torneos", href: "/torneos", isRoute: true },
+    { name: "Torneo en Vivo", href: "/en-vivo", isRoute: true, isLive: true },
     { name: "Noticias", href: "/noticias", isRoute: true },
     { name: "Patrocinadores", href: "/patrocinadores", isRoute: true },
     { name: "Contacto", href: "/contacto", isRoute: true },
@@ -83,8 +84,15 @@ export function Header() {
                   <Link
                     key={link.name}
                     to={link.href}
-                    className="text-foreground/80 hover:text-primary transition-colors duration-200 font-medium"
+                    className={`transition-colors duration-200 font-medium flex items-center gap-1 ${
+                      (link as any).isLive 
+                        ? 'text-red-600 hover:text-red-700 dark:text-red-500 dark:hover:text-red-400' 
+                        : 'text-foreground/80 hover:text-primary'
+                    }`}
                   >
+                    {(link as any).isLive && (
+                      <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse-live" />
+                    )}
                     {link.name}
                   </Link>
                 ) : (
@@ -156,8 +164,15 @@ export function Header() {
                     key={link.name}
                     to={link.href}
                     onClick={() => setIsMobileMenuOpen(false)}
-                    className="text-lg text-foreground hover:text-primary transition-colors"
+                    className={`text-lg transition-colors flex items-center gap-2 ${
+                      (link as any).isLive 
+                        ? 'text-red-600 hover:text-red-700 dark:text-red-500' 
+                        : 'text-foreground hover:text-primary'
+                    }`}
                   >
+                    {(link as any).isLive && (
+                      <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse-live" />
+                    )}
                     {link.name}
                   </Link>
                 ) : (

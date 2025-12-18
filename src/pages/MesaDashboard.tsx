@@ -157,6 +157,7 @@ export const MesaDashboard = () => {
     return null;
   }
 
+  const liveMatches = matches.filter(m => m.status === 'in_progress');
   const upcomingMatches = matches.filter(m => m.status === 'scheduled');
   const completedMatches = matches.filter(m => m.status === 'finished');
 
@@ -202,7 +203,7 @@ export const MesaDashboard = () => {
 
       <div className="container mx-auto px-4 py-8">
         {/* Stats */}
-        <div className="grid md:grid-cols-3 gap-6 mb-8">
+        <div className="grid md:grid-cols-4 gap-6 mb-8">
           <Card className="p-6">
             <div className="flex items-center gap-4">
               <div className="p-3 bg-emerald-100 dark:bg-emerald-900/30 rounded-lg">
@@ -211,6 +212,19 @@ export const MesaDashboard = () => {
               <div>
                 <p className="text-sm text-muted-foreground">Total de Partidos</p>
                 <p className="text-2xl font-bold">{matches.length}</p>
+              </div>
+            </div>
+          </Card>
+
+          <Card className="p-6 border-2 border-red-500/50">
+            <div className="flex items-center gap-4">
+              <div className="p-3 bg-red-100 dark:bg-red-900/30 rounded-lg relative">
+                <Trophy className="w-6 h-6 text-red-600 dark:text-red-400" />
+                <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full animate-pulse-live" />
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">En Juego</p>
+                <p className="text-2xl font-bold text-red-600">{liveMatches.length}</p>
               </div>
             </div>
           </Card>
@@ -253,6 +267,27 @@ export const MesaDashboard = () => {
           </Card>
         ) : (
           <div className="space-y-8">
+            {/* Live Matches */}
+            {liveMatches.length > 0 && (
+              <div>
+                <h2 className="text-2xl font-bold mb-4 flex items-center gap-2 text-red-600">
+                  <span className="w-3 h-3 bg-red-500 rounded-full animate-pulse-live" />
+                  Partidos en Juego
+                </h2>
+                <div className="grid gap-4">
+                  {liveMatches.map((match) => (
+                    <MatchCard
+                      key={match.id}
+                      match={match}
+                      homeTeamName={getTeamName(match.home_team_id)}
+                      awayTeamName={getTeamName(match.away_team_id)}
+                      onUpdate={handleMatchUpdate}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* Upcoming Matches */}
             {upcomingMatches.length > 0 && (
               <div>
@@ -283,7 +318,7 @@ export const MesaDashboard = () => {
                       homeTeamName={getTeamName(match.home_team_id)}
                       awayTeamName={getTeamName(match.away_team_id)}
                       onUpdate={handleMatchUpdate}
-                      readOnly={!isAdmin} // Los admins pueden editar incluso si está completado
+                      readOnly={!isAdmin}
                     />
                   ))}
                 </div>
