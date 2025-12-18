@@ -116,6 +116,58 @@ export type Database = {
         }
         Relationships: []
       }
+      match_goals: {
+        Row: {
+          created_at: string
+          id: string
+          is_own_goal: boolean | null
+          match_id: string
+          minute: number | null
+          player_id: string | null
+          team_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_own_goal?: boolean | null
+          match_id: string
+          minute?: number | null
+          player_id?: string | null
+          team_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_own_goal?: boolean | null
+          match_id?: string
+          minute?: number | null
+          player_id?: string | null
+          team_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "match_goals_match_id_fkey"
+            columns: ["match_id"]
+            isOneToOne: false
+            referencedRelation: "matches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "match_goals_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "participants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "match_goals_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       matches: {
         Row: {
           away_red_cards: number | null
