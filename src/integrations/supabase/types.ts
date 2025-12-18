@@ -344,6 +344,69 @@ export type Database = {
           },
         ]
       }
+      player_team_history: {
+        Row: {
+          category: string | null
+          created_at: string
+          end_date: string | null
+          goals_scored: number | null
+          id: string
+          matches_played: number | null
+          notes: string | null
+          player_id: string
+          red_cards: number | null
+          season: string | null
+          start_date: string
+          team_id: string
+          yellow_cards: number | null
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string
+          end_date?: string | null
+          goals_scored?: number | null
+          id?: string
+          matches_played?: number | null
+          notes?: string | null
+          player_id: string
+          red_cards?: number | null
+          season?: string | null
+          start_date?: string
+          team_id: string
+          yellow_cards?: number | null
+        }
+        Update: {
+          category?: string | null
+          created_at?: string
+          end_date?: string | null
+          goals_scored?: number | null
+          id?: string
+          matches_played?: number | null
+          notes?: string | null
+          player_id?: string
+          red_cards?: number | null
+          season?: string | null
+          start_date?: string
+          team_id?: string
+          yellow_cards?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "player_team_history_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "participants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "player_team_history_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       posts: {
         Row: {
           author_id: string | null
