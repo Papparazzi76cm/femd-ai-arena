@@ -40,6 +40,7 @@ export function Header() {
   const navLinks = [
     { name: "Inicio", href: "#home", isAnchor: true },
     { name: "Equipos", href: "/equipos", isRoute: true },
+    { name: "Jugadores", href: "/jugadores", isRoute: true },
     { name: "Torneos", href: "/torneos", isRoute: true },
     { name: "Torneo en Vivo", href: "/en-vivo", isRoute: true, isLive: true },
     { name: "Noticias", href: "/noticias", isRoute: true },
