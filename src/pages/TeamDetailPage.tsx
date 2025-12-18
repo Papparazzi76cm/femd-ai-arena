@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import { teamService } from '@/services/teamService';
 import { participantService } from '@/services/participantService';
 import { eventService } from '@/services/eventService';
@@ -211,7 +211,10 @@ export const TeamDetailPage = () => {
                               {participant.number || '-'}
                             </TableCell>
                             <TableCell className="font-medium">
-                              <div className="flex items-center gap-3">
+                              <Link 
+                                to={`/jugador/${participant.id}`}
+                                className="flex items-center gap-3 hover:text-primary transition-colors"
+                              >
                                 {participant.photo_url ? (
                                   <img 
                                     src={participant.photo_url} 
@@ -223,8 +226,8 @@ export const TeamDetailPage = () => {
                                     <Users className="w-5 h-5 text-muted-foreground" />
                                   </div>
                                 )}
-                                {participant.name}
-                              </div>
+                                <span className="hover:underline">{participant.name}</span>
+                              </Link>
                             </TableCell>
                             <TableCell>
                               {participant.position ? (
