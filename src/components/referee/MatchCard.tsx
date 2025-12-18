@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Match } from '@/types/tournament';
-import { Calendar, MapPin, Save, Edit, Check } from 'lucide-react';
+import { Calendar, MapPin, Save, Play, Square, Check } from 'lucide-react';
 
 interface MatchCardProps {
   match: Match;
@@ -30,6 +30,8 @@ export const MatchCard = ({
   const [awayYellow, setAwayYellow] = useState(match.away_yellow_cards ?? 0);
   const [awayRed, setAwayRed] = useState(match.away_red_cards ?? 0);
   const [saving, setSaving] = useState(false);
+
+  const isLive = match.status === 'in_progress';
 
   // Sync local state when match data changes
   useEffect(() => {
@@ -57,7 +59,12 @@ export const MatchCard = ({
       case 'scheduled':
         return <Badge variant="outline" className="bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-300">Programado</Badge>;
       case 'in_progress':
-        return <Badge variant="outline" className="bg-yellow-50 text-yellow-700 dark:bg-yellow-900/20 dark:text-yellow-300">En Juego</Badge>;
+        return (
+          <Badge className="bg-red-500 text-white animate-pulse-live flex items-center gap-1">
+            <span className="w-2 h-2 bg-white rounded-full" />
+            En Juego
+          </Badge>
+        );
       case 'finished':
         return <Badge variant="outline" className="bg-green-50 text-green-700 dark:bg-green-900/20 dark:text-green-300"><Check className="w-3 h-3 mr-1" />Finalizado</Badge>;
       default:
@@ -65,7 +72,21 @@ export const MatchCard = ({
     }
   };
 
-  const handleSave = async () => {
+  const handleStartMatch = async () => {
+    setSaving(true);
+    try {
+      await onUpdate(match.id, {
+        status: 'in_progress',
+        home_score: homeScore,
+        away_score: awayScore,
+      });
+      setIsEditing(true);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleEndMatch = async () => {
     setSaving(true);
     try {
       await onUpdate(match.id, {
@@ -78,6 +99,23 @@ export const MatchCard = ({
         status: 'finished',
       });
       setIsEditing(false);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleSaveLive = async () => {
+    setSaving(true);
+    try {
+      await onUpdate(match.id, {
+        home_score: homeScore,
+        away_score: awayScore,
+        home_yellow_cards: homeYellow,
+        home_red_cards: homeRed,
+        away_yellow_cards: awayYellow,
+        away_red_cards: awayRed,
+        status: 'in_progress', // Keep it live
+      });
     } finally {
       setSaving(false);
     }
@@ -97,7 +135,7 @@ export const MatchCard = ({
   const canEdit = !readOnly;
 
   return (
-    <Card className="p-6">
+    <Card className={`p-6 ${isLive ? 'border-2 border-red-500 animate-heartbeat' : ''}`}>
       <div className="space-y-4">
         {/* Header */}
         <div className="flex items-center justify-between flex-wrap gap-2">
@@ -123,12 +161,6 @@ export const MatchCard = ({
           </div>
           <div className="flex items-center gap-2">
             {getStatusBadge()}
-            {canEdit && !isEditing && (
-              <Button variant="outline" size="sm" onClick={() => setIsEditing(true)}>
-                <Edit className="w-4 h-4 mr-2" />
-                Editar
-              </Button>
-            )}
           </div>
         </div>
 
@@ -136,8 +168,10 @@ export const MatchCard = ({
         <div className="grid grid-cols-3 gap-4 items-center">
           {/* Home Team */}
           <div className="text-right">
-            <div className="font-bold text-xl mb-2">{homeTeamName}</div>
-            {isEditing ? (
+            <div className={`font-bold text-xl mb-2 ${isLive ? 'text-red-600 dark:text-red-400' : ''}`}>
+              {homeTeamName}
+            </div>
+            {isEditing || isLive ? (
               <Input
                 type="number"
                 min="0"
@@ -154,13 +188,17 @@ export const MatchCard = ({
 
           {/* VS */}
           <div className="text-center">
-            <div className="text-2xl font-bold text-muted-foreground">VS</div>
+            <div className={`text-2xl font-bold ${isLive ? 'text-red-500 animate-pulse-live' : 'text-muted-foreground'}`}>
+              {isLive ? 'EN VIVO' : 'VS'}
+            </div>
           </div>
 
           {/* Away Team */}
           <div className="text-left">
-            <div className="font-bold text-xl mb-2">{awayTeamName}</div>
-            {isEditing ? (
+            <div className={`font-bold text-xl mb-2 ${isLive ? 'text-red-600 dark:text-red-400' : ''}`}>
+              {awayTeamName}
+            </div>
+            {isEditing || isLive ? (
               <Input
                 type="number"
                 min="0"
@@ -176,8 +214,8 @@ export const MatchCard = ({
           </div>
         </div>
 
-        {/* Cards Statistics */}
-        {isEditing && (
+        {/* Cards Statistics - Show when editing or live */}
+        {(isEditing || isLive) && (
           <div className="border-t pt-4">
             <h4 className="font-semibold mb-4">Tarjetas</h4>
             <div className="grid md:grid-cols-2 gap-6">
@@ -186,7 +224,7 @@ export const MatchCard = ({
                 <Label className="text-sm font-medium mb-3 block">{homeTeamName}</Label>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <Label htmlFor="home-yellow" className="text-xs">Amarillas</Label>
+                    <Label htmlFor="home-yellow" className="text-xs">🟨 Amarillas</Label>
                     <Input
                       id="home-yellow"
                       type="number"
@@ -197,7 +235,7 @@ export const MatchCard = ({
                     />
                   </div>
                   <div>
-                    <Label htmlFor="home-red" className="text-xs">Rojas</Label>
+                    <Label htmlFor="home-red" className="text-xs">🟥 Rojas</Label>
                     <Input
                       id="home-red"
                       type="number"
@@ -215,7 +253,7 @@ export const MatchCard = ({
                 <Label className="text-sm font-medium mb-3 block">{awayTeamName}</Label>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <Label htmlFor="away-yellow" className="text-xs">Amarillas</Label>
+                    <Label htmlFor="away-yellow" className="text-xs">🟨 Amarillas</Label>
                     <Input
                       id="away-yellow"
                       type="number"
@@ -226,7 +264,7 @@ export const MatchCard = ({
                     />
                   </div>
                   <div>
-                    <Label htmlFor="away-red" className="text-xs">Rojas</Label>
+                    <Label htmlFor="away-red" className="text-xs">🟥 Rojas</Label>
                     <Input
                       id="away-red"
                       type="number"
@@ -243,7 +281,7 @@ export const MatchCard = ({
         )}
 
         {/* Show cards in read-only mode */}
-        {!isEditing && (match.home_yellow_cards > 0 || match.home_red_cards > 0 || match.away_yellow_cards > 0 || match.away_red_cards > 0) && (
+        {!isEditing && !isLive && (match.home_yellow_cards > 0 || match.home_red_cards > 0 || match.away_yellow_cards > 0 || match.away_red_cards > 0) && (
           <div className="border-t pt-4">
             <div className="grid grid-cols-2 gap-4 text-sm">
               <div>
@@ -269,15 +307,61 @@ export const MatchCard = ({
         )}
 
         {/* Actions */}
-        {isEditing && (
-          <div className="flex gap-2 justify-end border-t pt-4">
-            <Button variant="outline" onClick={handleCancel} disabled={saving}>
-              Cancelar
-            </Button>
-            <Button onClick={handleSave} disabled={saving}>
-              <Save className="w-4 h-4 mr-2" />
-              {saving ? 'Guardando...' : 'Guardar Resultado'}
-            </Button>
+        {canEdit && (
+          <div className="flex gap-2 justify-end border-t pt-4 flex-wrap">
+            {/* Scheduled match - show "Iniciar Partido" button */}
+            {match.status === 'scheduled' && (
+              <Button 
+                onClick={handleStartMatch} 
+                disabled={saving}
+                className="bg-green-600 hover:bg-green-700 text-white"
+              >
+                <Play className="w-4 h-4 mr-2" />
+                {saving ? 'Iniciando...' : 'Iniciar Partido'}
+              </Button>
+            )}
+
+            {/* Live match - show "Guardar" and "Finalizar" buttons */}
+            {isLive && (
+              <>
+                <Button 
+                  variant="outline" 
+                  onClick={handleSaveLive} 
+                  disabled={saving}
+                >
+                  <Save className="w-4 h-4 mr-2" />
+                  {saving ? 'Guardando...' : 'Guardar Cambios'}
+                </Button>
+                <Button 
+                  onClick={handleEndMatch} 
+                  disabled={saving}
+                  className="bg-red-600 hover:bg-red-700 text-white"
+                >
+                  <Square className="w-4 h-4 mr-2" />
+                  {saving ? 'Finalizando...' : 'Finalizar Partido'}
+                </Button>
+              </>
+            )}
+
+            {/* Finished match - allow editing if admin */}
+            {match.status === 'finished' && !readOnly && !isEditing && (
+              <Button variant="outline" size="sm" onClick={() => setIsEditing(true)}>
+                Editar Resultado
+              </Button>
+            )}
+
+            {/* Editing finished match */}
+            {match.status === 'finished' && isEditing && (
+              <>
+                <Button variant="outline" onClick={handleCancel} disabled={saving}>
+                  Cancelar
+                </Button>
+                <Button onClick={handleEndMatch} disabled={saving}>
+                  <Save className="w-4 h-4 mr-2" />
+                  {saving ? 'Guardando...' : 'Guardar'}
+                </Button>
+              </>
+            )}
           </div>
         )}
       </div>

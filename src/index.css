@@ -203,3 +203,33 @@ All colors MUST be HSL.
     transform: scale(1);
   }
 }
+
+@keyframes heartbeat {
+  0%, 100% {
+    transform: scale(1);
+    background-color: hsl(0 84% 60% / 0.1);
+  }
+  50% {
+    transform: scale(1.01);
+    background-color: hsl(0 84% 60% / 0.15);
+  }
+}
+
+@keyframes pulseLive {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.5;
+    transform: scale(1.2);
+  }
+}
+
+.animate-heartbeat {
+  animation: heartbeat 1.5s ease-in-out infinite;
+}
+
+.animate-pulse-live {
+  animation: pulseLive 1s ease-in-out infinite;
+}
