@@ -5,7 +5,10 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Search, User, Users, Target, Shield, ChevronRight } from 'lucide-react';
+import { Search, User, Users, Target, Shield, ChevronRight, Filter, X, SlidersHorizontal } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Slider } from '@/components/ui/slider';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 
 interface PlayerWithTeam {
   id: string;
@@ -22,44 +25,106 @@ interface PlayerWithTeam {
   } | null;
 }
 
+interface TeamOption {
+  id: string;
+  name: string;
+}
+
+const POSITIONS = ['Portero', 'Defensa', 'Centrocampista', 'Delantero'];
+
 export const PlayersSearchPage = () => {
   const [players, setPlayers] = useState<PlayerWithTeam[]>([]);
+  const [teams, setTeams] = useState<TeamOption[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(true);
+  
+  // Filter states
+  const [selectedPosition, setSelectedPosition] = useState<string>('all');
+  const [selectedTeam, setSelectedTeam] = useState<string>('all');
+  const [minGoals, setMinGoals] = useState<number>(0);
+  const [minMatches, setMinMatches] = useState<number>(0);
+  const [filtersOpen, setFiltersOpen] = useState(false);
+  
+  // Calculate max values for sliders
+  const maxGoals = useMemo(() => Math.max(...players.map(p => p.goals_scored || 0), 50), [players]);
+  const maxMatches = useMemo(() => Math.max(...players.map(p => p.matches_played || 0), 50), [players]);
 
   useEffect(() => {
-    loadPlayers();
+    loadData();
   }, []);
 
-  const loadPlayers = async () => {
+  const loadData = async () => {
     try {
-      const { data, error } = await supabase
-        .from('participants')
-        .select(`
-          id, name, position, number, photo_url, goals_scored, matches_played,
-          team:teams(id, name, logo_url)
-        `)
-        .order('name');
+      const [playersRes, teamsRes] = await Promise.all([
+        supabase
+          .from('participants')
+          .select(`
+            id, name, position, number, photo_url, goals_scored, matches_played,
+            team:teams(id, name, logo_url)
+          `)
+          .order('name'),
+        supabase
+          .from('teams')
+          .select('id, name')
+          .order('name')
+      ]);
 
-      if (error) throw error;
-      setPlayers(data || []);
+      if (playersRes.error) throw playersRes.error;
+      if (teamsRes.error) throw teamsRes.error;
+      
+      setPlayers(playersRes.data || []);
+      setTeams(teamsRes.data || []);
     } catch (error) {
-      console.error('Error loading players:', error);
+      console.error('Error loading data:', error);
     } finally {
       setLoading(false);
     }
   };
 
+  const hasActiveFilters = selectedPosition !== 'all' || selectedTeam !== 'all' || minGoals > 0 || minMatches > 0;
+
+  const clearFilters = () => {
+    setSelectedPosition('all');
+    setSelectedTeam('all');
+    setMinGoals(0);
+    setMinMatches(0);
+  };
+
   const filteredPlayers = useMemo(() => {
-    if (!searchQuery.trim()) return players;
+    let result = players;
     
-    const query = searchQuery.toLowerCase().trim();
-    return players.filter(player => 
-      player.name.toLowerCase().includes(query) ||
-      player.team?.name.toLowerCase().includes(query) ||
-      player.position?.toLowerCase().includes(query)
-    );
-  }, [players, searchQuery]);
+    // Text search
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase().trim();
+      result = result.filter(player => 
+        player.name.toLowerCase().includes(query) ||
+        player.team?.name.toLowerCase().includes(query) ||
+        player.position?.toLowerCase().includes(query)
+      );
+    }
+    
+    // Position filter
+    if (selectedPosition !== 'all') {
+      result = result.filter(player => player.position === selectedPosition);
+    }
+    
+    // Team filter
+    if (selectedTeam !== 'all') {
+      result = result.filter(player => player.team?.id === selectedTeam);
+    }
+    
+    // Goals filter
+    if (minGoals > 0) {
+      result = result.filter(player => (player.goals_scored || 0) >= minGoals);
+    }
+    
+    // Matches filter
+    if (minMatches > 0) {
+      result = result.filter(player => (player.matches_played || 0) >= minMatches);
+    }
+    
+    return result;
+  }, [players, searchQuery, selectedPosition, selectedTeam, minGoals, minMatches]);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-muted/20 to-background py-16">
@@ -75,8 +140,9 @@ export const PlayersSearchPage = () => {
           </p>
         </div>
 
-        {/* Search Input */}
-        <div className="max-w-xl mx-auto mb-8">
+        {/* Search and Filters */}
+        <div className="max-w-4xl mx-auto mb-8 space-y-4">
+          {/* Search Input */}
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
             <Input
@@ -88,7 +154,108 @@ export const PlayersSearchPage = () => {
               maxLength={100}
             />
           </div>
-          <p className="text-sm text-muted-foreground mt-2 text-center">
+
+          {/* Filter Toggle */}
+          <Collapsible open={filtersOpen} onOpenChange={setFiltersOpen}>
+            <div className="flex items-center justify-between">
+              <CollapsibleTrigger asChild>
+                <Button variant="outline" className="gap-2">
+                  <SlidersHorizontal className="w-4 h-4" />
+                  Filtros avanzados
+                  {hasActiveFilters && (
+                    <Badge variant="secondary" className="ml-1">
+                      {[selectedPosition !== 'all', selectedTeam !== 'all', minGoals > 0, minMatches > 0].filter(Boolean).length}
+                    </Badge>
+                  )}
+                </Button>
+              </CollapsibleTrigger>
+              
+              {hasActiveFilters && (
+                <Button variant="ghost" size="sm" onClick={clearFilters} className="gap-1 text-muted-foreground">
+                  <X className="w-4 h-4" />
+                  Limpiar filtros
+                </Button>
+              )}
+            </div>
+
+            <CollapsibleContent className="mt-4">
+              <Card>
+                <CardContent className="pt-6">
+                  <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+                    {/* Position Filter */}
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium flex items-center gap-2">
+                        <Shield className="w-4 h-4" />
+                        Posición
+                      </label>
+                      <Select value={selectedPosition} onValueChange={setSelectedPosition}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Todas las posiciones" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">Todas las posiciones</SelectItem>
+                          {POSITIONS.map(pos => (
+                            <SelectItem key={pos} value={pos}>{pos}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {/* Team Filter */}
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium flex items-center gap-2">
+                        <Users className="w-4 h-4" />
+                        Equipo
+                      </label>
+                      <Select value={selectedTeam} onValueChange={setSelectedTeam}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Todos los equipos" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">Todos los equipos</SelectItem>
+                          {teams.map(team => (
+                            <SelectItem key={team.id} value={team.id}>{team.name}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {/* Goals Filter */}
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium flex items-center gap-2">
+                        <Target className="w-4 h-4" />
+                        Mínimo goles: {minGoals}
+                      </label>
+                      <Slider
+                        value={[minGoals]}
+                        onValueChange={(v) => setMinGoals(v[0])}
+                        max={maxGoals}
+                        step={1}
+                        className="py-2"
+                      />
+                    </div>
+
+                    {/* Matches Filter */}
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium flex items-center gap-2">
+                        <Filter className="w-4 h-4" />
+                        Mínimo partidos: {minMatches}
+                      </label>
+                      <Slider
+                        value={[minMatches]}
+                        onValueChange={(v) => setMinMatches(v[0])}
+                        max={maxMatches}
+                        step={1}
+                        className="py-2"
+                      />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </CollapsibleContent>
+          </Collapsible>
+
+          <p className="text-sm text-muted-foreground text-center">
             {filteredPlayers.length} jugador{filteredPlayers.length !== 1 ? 'es' : ''} encontrado{filteredPlayers.length !== 1 ? 's' : ''}
           </p>
         </div>
