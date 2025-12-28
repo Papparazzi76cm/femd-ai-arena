@@ -77,7 +77,7 @@ export function HomePage() {
         {/* Hero Content */}
         <div className="relative z-10 text-center text-white px-4 animate-fade-in">
           <h1 className="text-5xl md:text-7xl font-bold mb-6 animate-slide-up">
-            FEMD EVENTOS
+            FEMD TORNEOS
           </h1>
           <p className="text-xl md:text-2xl mb-4 text-gray-200 max-w-2xl mx-auto animate-slide-up">
             Organizadores profesionales de eventos y torneos de fútbol
