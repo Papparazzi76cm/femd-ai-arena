@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Menu, X } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
+import { NavLink } from "@/components/NavLink";
 import { Button } from "@/components/ui/button";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useAuth } from "@/contexts/AuthContext";
@@ -81,44 +82,40 @@ export function Header() {
             {/* Desktop Navigation */}
             <nav className="hidden md:flex items-center space-x-8">
               {navLinks.map((link) => (
-                link.isRoute ? (
-                  <Link
-                    key={link.name}
-                    to={link.href}
-                    className={`transition-colors duration-200 font-medium flex items-center gap-1 ${
-                      (link as any).isLive 
-                        ? 'text-red-600 hover:text-red-700 dark:text-red-500 dark:hover:text-red-400' 
-                        : 'text-foreground/80 hover:text-primary'
-                    }`}
-                  >
-                    {(link as any).isLive && (
-                      <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse-live" />
-                    )}
-                    {link.name}
-                  </Link>
-                ) : (
-                  <a
-                    key={link.name}
-                    href={link.href}
-                    className="text-foreground/80 hover:text-primary transition-colors duration-200 font-medium"
-                  >
-                    {link.name}
-                  </a>
-                )
+                <NavLink
+                  key={link.name}
+                  to={link.href}
+                  className={`transition-colors duration-200 font-medium flex items-center gap-1 ${
+                    (link as any).isLive 
+                      ? 'text-red-600 hover:text-red-700 dark:text-red-500 dark:hover:text-red-400' 
+                      : 'text-foreground/80 hover:text-primary'
+                  }`}
+                  activeClassName={(link as any).isLive 
+                    ? 'text-red-700 dark:text-red-400 border-b-2 border-red-500' 
+                    : 'text-primary border-b-2 border-primary'
+                  }
+                >
+                  {(link as any).isLive && (
+                    <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse-live" />
+                  )}
+                  {link.name}
+                </NavLink>
               ))}
-              <Link
+              <NavLink
                 to={mesaLink.href}
                 className="text-blue-600 hover:text-blue-700 transition-colors duration-200 font-semibold"
+                activeClassName="text-blue-700 border-b-2 border-blue-500"
               >
                 {mesaLink.name}
-              </Link>
+              </NavLink>
               {adminLink && (
-                <Link
+                <NavLink
                   to={adminLink.href}
                   className="text-emerald-600 hover:text-emerald-700 transition-colors duration-200 font-semibold"
+                  activeClassName="text-emerald-700 border-b-2 border-emerald-500"
                 >
                   {adminLink.name}
-                </Link>
+                </NavLink>
               )}
             </nav>
 
@@ -160,48 +157,43 @@ export function Header() {
           <div className="md:hidden fixed inset-0 top-20 bg-background z-40 animate-fade-in opacity-100">
             <nav className="flex flex-col p-6 space-y-6 bg-background">
               {navLinks.map((link) => (
-                link.isRoute ? (
-                  <Link
-                    key={link.name}
-                    to={link.href}
-                    onClick={() => setIsMobileMenuOpen(false)}
-                    className={`text-lg transition-colors flex items-center gap-2 ${
-                      (link as any).isLive 
-                        ? 'text-red-600 hover:text-red-700 dark:text-red-500' 
-                        : 'text-foreground hover:text-primary'
-                    }`}
-                  >
-                    {(link as any).isLive && (
-                      <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse-live" />
-                    )}
-                    {link.name}
-                  </Link>
-                ) : (
-                  <a
-                    key={link.name}
-                    href={link.href}
-                    onClick={() => setIsMobileMenuOpen(false)}
-                    className="text-lg text-foreground hover:text-primary transition-colors"
-                  >
-                    {link.name}
-                  </a>
-                )
+                <NavLink
+                  key={link.name}
+                  to={link.href}
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className={`text-lg transition-colors flex items-center gap-2 ${
+                    (link as any).isLive 
+                      ? 'text-red-600 hover:text-red-700 dark:text-red-500' 
+                      : 'text-foreground hover:text-primary'
+                  }`}
+                  activeClassName={(link as any).isLive 
+                    ? 'text-red-700 dark:text-red-400 font-bold' 
+                    : 'text-primary font-bold'
+                  }
+                >
+                  {(link as any).isLive && (
+                    <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse-live" />
+                  )}
+                  {link.name}
+                </NavLink>
               ))}
-              <Link
+              <NavLink
                 to={mesaLink.href}
                 onClick={() => setIsMobileMenuOpen(false)}
                 className="text-lg text-blue-600 hover:text-blue-700 transition-colors font-semibold"
+                activeClassName="text-blue-700 font-bold"
               >
                 {mesaLink.name}
-              </Link>
+              </NavLink>
               {adminLink && (
-                <Link
+                <NavLink
                   to={adminLink.href}
                   onClick={() => setIsMobileMenuOpen(false)}
                   className="text-lg text-emerald-600 hover:text-emerald-700 transition-colors font-semibold"
+                  activeClassName="text-emerald-700 font-bold"
                 >
                   {adminLink.name}
-                </Link>
+                </NavLink>
               )}
               <div className="pt-4 border-t border-border">
                 <div className="flex items-center justify-between mb-4">
