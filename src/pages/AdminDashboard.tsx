@@ -14,7 +14,9 @@ import {
   Handshake, 
   Calendar,
   UserCog,
-  Shuffle
+  Shuffle,
+  Tag,
+  Building2
 } from 'lucide-react';
 import { TeamManager } from '@/components/admin/TeamManager';
 import { ParticipantManager } from '@/components/admin/ParticipantManager';
@@ -22,6 +24,8 @@ import { AdminRefereeManager } from '@/components/admin/AdminRefereeManager';
 import { PostManager } from '@/components/admin/PostManager';
 import { SponsorManager } from '@/components/admin/SponsorManager';
 import { EventManager } from '@/components/admin/EventManager';
+import { CategoryManager } from '@/components/admin/CategoryManager';
+import { FacilityManager } from '@/components/admin/FacilityManager';
 
 export const AdminDashboard = () => {
   const { user, signOut, loading: authLoading } = useAuth();
@@ -133,14 +137,22 @@ export const AdminDashboard = () => {
 
       <div className="container mx-auto px-4 py-8">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid grid-cols-3 lg:grid-cols-6 gap-2 h-auto p-2 bg-muted/50">
+          <TabsList className="grid grid-cols-4 lg:grid-cols-8 gap-2 h-auto p-2 bg-muted/50">
             <TabsTrigger value="equipos" className="flex items-center gap-2 py-3">
               <Users className="w-4 h-4" />
-              <span className="hidden sm:inline">Equipos</span>
+              <span className="hidden sm:inline">Clubes</span>
             </TabsTrigger>
             <TabsTrigger value="jugadores" className="flex items-center gap-2 py-3">
               <UserCog className="w-4 h-4" />
               <span className="hidden sm:inline">Jugadores</span>
+            </TabsTrigger>
+            <TabsTrigger value="categorias" className="flex items-center gap-2 py-3">
+              <Tag className="w-4 h-4" />
+              <span className="hidden sm:inline">Categorías</span>
+            </TabsTrigger>
+            <TabsTrigger value="instalaciones" className="flex items-center gap-2 py-3">
+              <Building2 className="w-4 h-4" />
+              <span className="hidden sm:inline">Instalaciones</span>
             </TabsTrigger>
             <TabsTrigger value="torneos" className="flex items-center gap-2 py-3">
               <Trophy className="w-4 h-4" />
@@ -166,6 +178,14 @@ export const AdminDashboard = () => {
 
           <TabsContent value="jugadores" className="space-y-4">
             <ParticipantManager />
+          </TabsContent>
+
+          <TabsContent value="categorias" className="space-y-4">
+            <CategoryManager />
+          </TabsContent>
+
+          <TabsContent value="instalaciones" className="space-y-4">
+            <FacilityManager />
           </TabsContent>
 
           <TabsContent value="torneos" className="space-y-4">
