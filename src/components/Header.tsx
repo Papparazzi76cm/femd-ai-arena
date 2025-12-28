@@ -38,7 +38,7 @@ export function Header() {
   }, []);
 
   const navLinks = [
-    { name: "Inicio", href: "#home", isAnchor: true },
+    { name: "Inicio", href: "/", isRoute: true },
     { name: "Equipos", href: "/equipos", isRoute: true },
     { name: "Jugadores", href: "/jugadores", isRoute: true },
     { name: "Torneos", href: "/torneos", isRoute: true },
