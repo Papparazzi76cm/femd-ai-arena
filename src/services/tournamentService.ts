@@ -1,5 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
-import { EventTeam, Match } from '@/types/tournament';
+import { EventTeam, Match, MatchScheduleConflict } from '@/types/tournament';
 
 export const tournamentService = {
   // Event Teams
@@ -394,5 +394,123 @@ export const tournamentService = {
       .insert(matchRecords);
 
     if (error) throw error;
+  },
+
+  // Añadir equipo con letra automática si ya existe el mismo club
+  async addTeamToEventWithLetter(
+    eventId: string,
+    teamId: string,
+    categoryId?: string
+  ): Promise<EventTeam> {
+    // Verificar cuántos equipos del mismo club ya están en la misma categoría
+    const { data: existingTeams } = await supabase
+      .from('event_teams')
+      .select('*')
+      .eq('event_id', eventId)
+      .eq('team_id', teamId)
+      .eq('category_id', categoryId || '');
+
+    let teamLetter: string | null = null;
+    if (existingTeams && existingTeams.length > 0) {
+      // Ya existe al menos uno, asignar letra al nuevo
+      const letters = ['B', 'C', 'D', 'E', 'F', 'G', 'H'];
+      teamLetter = letters[existingTeams.length - 1] || letters[letters.length - 1];
+      
+      // Si el primero no tiene letra, actualizarlo con 'A'
+      const firstTeam = existingTeams.find(t => !t.team_letter);
+      if (firstTeam) {
+        await supabase
+          .from('event_teams')
+          .update({ team_letter: null }) // El original no lleva letra
+          .eq('id', firstTeam.id);
+      }
+    }
+
+    const { data, error } = await supabase
+      .from('event_teams')
+      .insert({
+        event_id: eventId,
+        team_id: teamId,
+        category_id: categoryId,
+        team_letter: teamLetter,
+      })
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data as EventTeam;
+  },
+
+  // Detectar conflictos de horarios
+  async checkScheduleConflict(
+    eventId: string,
+    fieldId: string,
+    matchDate: string,
+    durationMinutes: number,
+    excludeMatchId?: string
+  ): Promise<MatchScheduleConflict[]> {
+    const { data, error } = await supabase
+      .rpc('check_match_schedule_conflict', {
+        p_event_id: eventId,
+        p_field_id: fieldId,
+        p_match_date: matchDate,
+        p_duration_minutes: durationMinutes,
+        p_exclude_match_id: excludeMatchId || null,
+      });
+
+    if (error) throw error;
+    return (data || []) as MatchScheduleConflict[];
+  },
+
+  // Obtener equipos de un evento con datos del club
+  async getEventTeamsWithClubData(eventId: string): Promise<any[]> {
+    const { data, error } = await supabase
+      .from('event_teams')
+      .select(`
+        *,
+        team:teams(*),
+        category:event_categories(
+          *,
+          category:categories(*)
+        )
+      `)
+      .eq('event_id', eventId)
+      .order('group_name')
+      .order('points', { ascending: false });
+
+    if (error) throw error;
+    return data || [];
+  },
+
+  // Obtener partidos con datos completos
+  async getMatchesWithDetails(eventId: string): Promise<any[]> {
+    const { data, error } = await supabase
+      .from('matches')
+      .select(`
+        *,
+        home_team:event_teams!matches_home_team_id_fkey(
+          *,
+          team:teams(*)
+        ),
+        away_team:event_teams!matches_away_team_id_fkey(
+          *,
+          team:teams(*)
+        ),
+        field:fields(
+          *,
+          facility:facilities(*)
+        ),
+        category:event_categories(
+          *,
+          category:categories(*)
+        )
+      `)
+      .eq('event_id', eventId)
+      .order('match_date', { ascending: true })
+      .order('phase')
+      .order('match_number');
+
+    if (error) throw error;
+    return data || [];
   },
 };

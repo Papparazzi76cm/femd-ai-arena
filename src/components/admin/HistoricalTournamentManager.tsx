@@ -10,7 +10,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { tournamentService } from '@/services/tournamentService';
 import { teamService } from '@/services/teamService';
 import { Team } from '@/types/database';
-import { EventTeam, Match } from '@/types/tournament';
+import { EventTeam, Match, TournamentPhase } from '@/types/tournament';
 import { History, Plus, Save, Trash2, Edit2, Calendar, Download, Upload, FileText } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { 
@@ -49,7 +49,7 @@ export const HistoricalTournamentManager = ({ eventId }: HistoricalTournamentMan
   const [matchForm, setMatchForm] = useState({
     home_team_id: '',
     away_team_id: '',
-    phase: 'group' as 'group' | 'round_of_16' | 'quarter_final' | 'semi_final' | 'final',
+    phase: 'group' as TournamentPhase,
     group_name: '',
     match_date: '',
     home_score: 0,
@@ -158,7 +158,7 @@ export const HistoricalTournamentManager = ({ eventId }: HistoricalTournamentMan
     setMatchForm({
       home_team_id: '',
       away_team_id: '',
-      phase: 'group',
+      phase: 'group' as TournamentPhase,
       group_name: '',
       match_date: '',
       home_score: 0,
@@ -419,7 +419,7 @@ export const HistoricalTournamentManager = ({ eventId }: HistoricalTournamentMan
           event_id: eventId,
           home_team_id: homeTeam.id,
           away_team_id: awayTeam.id,
-          phase: row.phase as 'group' | 'round_of_16' | 'quarter_final' | 'semi_final' | 'final',
+          phase: row.phase as TournamentPhase,
           group_name: row.group_name || undefined,
           match_date: matchDate,
           home_score: row.home_score,
@@ -462,7 +462,23 @@ export const HistoricalTournamentManager = ({ eventId }: HistoricalTournamentMan
       'round_of_16': 'Octavos de Final',
       'quarter_final': 'Cuartos de Final',
       'semi_final': 'Semifinales',
+      'third_place': 'Tercer Puesto',
       'final': 'Final',
+      'gold_round_of_16': 'Oro - Octavos',
+      'gold_quarter_final': 'Oro - Cuartos',
+      'gold_semi_final': 'Oro - Semifinales',
+      'gold_third_place': 'Oro - Tercer Puesto',
+      'gold_final': 'Oro - Final',
+      'silver_round_of_16': 'Plata - Octavos',
+      'silver_quarter_final': 'Plata - Cuartos',
+      'silver_semi_final': 'Plata - Semifinales',
+      'silver_third_place': 'Plata - Tercer Puesto',
+      'silver_final': 'Plata - Final',
+      'bronze_round_of_16': 'Bronce - Octavos',
+      'bronze_quarter_final': 'Bronce - Cuartos',
+      'bronze_semi_final': 'Bronce - Semifinales',
+      'bronze_third_place': 'Bronce - Tercer Puesto',
+      'bronze_final': 'Bronce - Final',
     };
     return labels[phase] || phase;
   };
