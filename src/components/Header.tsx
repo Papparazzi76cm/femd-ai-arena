@@ -82,12 +82,14 @@ export function Header() {
                   key={link.name}
                   to={link.href}
                   className={`transition-colors duration-200 font-medium flex items-center gap-1 ${
+                    !isScrolled ? '[text-shadow:_0_1px_3px_rgb(0_0_0_/_80%),_0_0_8px_rgb(0_0_0_/_50%)]' : ''
+                  } ${
                     (link as any).isLive 
-                      ? 'text-red-600 hover:text-red-700 dark:text-red-500 dark:hover:text-red-400' 
-                      : 'text-foreground/80 hover:text-primary'
+                      ? 'text-red-500 hover:text-red-400' 
+                      : `${isScrolled ? 'text-foreground/80 hover:text-primary' : 'text-white hover:text-primary'}`
                   }`}
                   activeClassName={(link as any).isLive 
-                    ? 'text-red-700 dark:text-red-400 border-b-2 border-red-500' 
+                    ? 'text-red-400 border-b-2 border-red-500' 
                     : 'text-primary border-b-2 border-primary'
                   }
                 >
@@ -100,8 +102,10 @@ export function Header() {
               {adminLink && (
                 <NavLink
                   to={adminLink.href}
-                  className="text-emerald-600 hover:text-emerald-700 transition-colors duration-200 font-semibold"
-                  activeClassName="text-emerald-700 border-b-2 border-emerald-500"
+                  className={`transition-colors duration-200 font-semibold ${
+                    !isScrolled ? '[text-shadow:_0_1px_3px_rgb(0_0_0_/_80%),_0_0_8px_rgb(0_0_0_/_50%)] text-emerald-400 hover:text-emerald-300' : 'text-emerald-600 hover:text-emerald-700'
+                  }`}
+                  activeClassName="text-emerald-400 border-b-2 border-emerald-500"
                 >
                   {adminLink.name}
                 </NavLink>
