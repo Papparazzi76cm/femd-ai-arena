@@ -8,83 +8,83 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
-    /* Emerald Green Theme - Light Mode */
+    /* Gold/Bronze Theme - Light Mode (#bb9250 = HSL 37 44% 53%) */
     --background: 0 0% 100%;
-    --foreground: 160 84% 8%;
+    --foreground: 37 30% 10%;
 
     --card: 0 0% 100%;
-    --card-foreground: 160 84% 8%;
+    --card-foreground: 37 30% 10%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 160 84% 8%;
+    --popover-foreground: 37 30% 10%;
 
-    --primary: 160 84% 39%; /* Emerald 600 */
+    --primary: 37 44% 53%; /* #bb9250 Gold */
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 160 60% 95%;
-    --secondary-foreground: 160 84% 20%;
+    --secondary: 37 30% 95%;
+    --secondary-foreground: 37 44% 25%;
 
-    --muted: 160 30% 96%;
-    --muted-foreground: 160 10% 45%;
+    --muted: 37 20% 96%;
+    --muted-foreground: 37 10% 45%;
 
-    --accent: 160 84% 45%; /* Emerald 500 */
+    --accent: 37 50% 58%; /* Lighter gold */
     --accent-foreground: 0 0% 100%;
 
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 160 20% 90%;
-    --input: 160 20% 90%;
-    --ring: 160 84% 39%;
+    --border: 37 15% 88%;
+    --input: 37 15% 88%;
+    --ring: 37 44% 53%;
 
     --radius: 0.75rem;
 
     /* Custom colors */
-    --hero-gradient-start: 160 84% 39%;
-    --hero-gradient-end: 160 94% 25%;
+    --hero-gradient-start: 37 44% 53%;
+    --hero-gradient-end: 37 50% 40%;
     
-    --card-hover: 160 84% 95%;
+    --card-hover: 37 40% 95%;
     
-    --shadow-emerald: 160 84% 39%;
+    --shadow-gold: 37 44% 53%;
   }
 
   .dark {
-    /* Emerald Green Theme - Dark Mode */
-    --background: 160 20% 8%;
-    --foreground: 160 60% 98%;
+    /* Gold/Bronze Theme - Dark Mode */
+    --background: 37 15% 8%;
+    --foreground: 37 40% 98%;
 
-    --card: 160 15% 12%;
-    --card-foreground: 160 60% 98%;
+    --card: 37 12% 12%;
+    --card-foreground: 37 40% 98%;
 
-    --popover: 160 15% 10%;
-    --popover-foreground: 160 60% 98%;
+    --popover: 37 12% 10%;
+    --popover-foreground: 37 40% 98%;
 
-    --primary: 160 84% 45%; /* Emerald 500 */
-    --primary-foreground: 160 84% 8%;
+    --primary: 37 50% 58%; /* Brighter gold for dark mode */
+    --primary-foreground: 37 30% 10%;
 
-    --secondary: 160 20% 18%;
-    --secondary-foreground: 160 60% 98%;
+    --secondary: 37 15% 18%;
+    --secondary-foreground: 37 40% 98%;
 
-    --muted: 160 15% 15%;
-    --muted-foreground: 160 20% 65%;
+    --muted: 37 12% 15%;
+    --muted-foreground: 37 15% 65%;
 
-    --accent: 160 84% 45%;
-    --accent-foreground: 160 84% 8%;
+    --accent: 37 50% 58%;
+    --accent-foreground: 37 30% 10%;
 
     --destructive: 0 62.8% 45%;
-    --destructive-foreground: 160 60% 98%;
+    --destructive-foreground: 37 40% 98%;
 
-    --border: 160 15% 20%;
-    --input: 160 15% 20%;
-    --ring: 160 84% 45%;
+    --border: 37 12% 20%;
+    --input: 37 12% 20%;
+    --ring: 37 50% 58%;
 
     /* Custom colors */
-    --hero-gradient-start: 160 84% 45%;
-    --hero-gradient-end: 160 94% 30%;
+    --hero-gradient-start: 37 50% 58%;
+    --hero-gradient-end: 37 55% 45%;
     
-    --card-hover: 160 15% 18%;
+    --card-hover: 37 12% 18%;
     
-    --shadow-emerald: 160 84% 45%;
+    --shadow-gold: 37 50% 58%;
   }
 }
 
@@ -104,6 +104,11 @@ All colors MUST be HSL.
 
 @layer utilities {
   /* Gradient utilities */
+  .gradient-gold {
+    background: linear-gradient(135deg, hsl(var(--hero-gradient-start)), hsl(var(--hero-gradient-end)));
+  }
+
+  /* Legacy alias for compatibility */
   .gradient-emerald {
     background: linear-gradient(135deg, hsl(var(--hero-gradient-start)), hsl(var(--hero-gradient-end)));
   }
@@ -142,7 +147,7 @@ All colors MUST be HSL.
   }
 
   .hover-glow:hover {
-    box-shadow: 0 0 20px hsl(var(--shadow-emerald) / 0.3);
+    box-shadow: 0 0 20px hsl(var(--shadow-gold) / 0.3);
   }
 
   /* Custom scrollbar */

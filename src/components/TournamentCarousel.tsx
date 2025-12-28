@@ -75,7 +75,7 @@ export function TournamentCarousel() {
       <div className="container mx-auto px-4">
         <div className="text-center mb-16 animate-fade-in">
           <h2 className="text-4xl md:text-5xl font-bold text-foreground mb-4">
-            Galería de <span className="gradient-text">Torneos</span>
+            Galería de <span className="gradient-text">Eventos</span>
           </h2>
         </div>
 

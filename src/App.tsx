@@ -21,6 +21,7 @@ import { TournamentsPage } from "@/pages/TournamentsPage";
 import { TournamentDetailPage } from "@/pages/TournamentDetailPage";
 import { LiveTournamentPage } from "@/pages/LiveTournamentPage";
 import { BlogPage } from "@/pages/BlogPage";
+import { PostDetailPage } from "@/pages/PostDetailPage";
 import { ContactPage } from "@/pages/ContactPage";
 import { SponsorsPage } from "@/pages/SponsorsPage";
 import { ChatBot } from "@/components/ChatBot";
@@ -51,6 +52,7 @@ const App = () => (
                       <Route path="/torneos/:id" element={<TournamentDetailPage />} />
                       <Route path="/en-vivo" element={<LiveTournamentPage />} />
                       <Route path="/noticias" element={<BlogPage />} />
+                      <Route path="/noticias/:id" element={<PostDetailPage />} />
                       <Route path="/patrocinadores" element={<SponsorsPage />} />
                       <Route path="/contacto" element={<ContactPage />} />
                       <Route path="/auth" element={<AuthPage />} />

@@ -41,7 +41,6 @@ export function Header() {
   const navLinks = [
     { name: "Inicio", href: "/", isRoute: true },
     { name: "Equipos", href: "/equipos", isRoute: true },
-    { name: "Jugadores", href: "/jugadores", isRoute: true },
     { name: "Torneos", href: "/torneos", isRoute: true },
     { name: "Torneo en Vivo", href: "/en-vivo", isRoute: true, isLive: true },
     { name: "Noticias", href: "/noticias", isRoute: true },
@@ -49,10 +48,7 @@ export function Header() {
     { name: "Contacto", href: "/contacto", isRoute: true },
   ];
 
-  // Mesa link - visible to everyone
-  const mesaLink = { name: "Mesa", href: "/mesa", isRoute: true };
-
-  // Add Admin link if user is admin
+  // Add Admin link if user is admin (Mesa users also access through admin/auth)
   const adminLink = isAdmin
     ? { name: "Admin", href: "/admin", isRoute: true }
     : null;
@@ -101,13 +97,6 @@ export function Header() {
                   {link.name}
                 </NavLink>
               ))}
-              <NavLink
-                to={mesaLink.href}
-                className="text-blue-600 hover:text-blue-700 transition-colors duration-200 font-semibold"
-                activeClassName="text-blue-700 border-b-2 border-blue-500"
-              >
-                {mesaLink.name}
-              </NavLink>
               {adminLink && (
                 <NavLink
                   to={adminLink.href}
@@ -177,14 +166,6 @@ export function Header() {
                   {link.name}
                 </NavLink>
               ))}
-              <NavLink
-                to={mesaLink.href}
-                onClick={() => setIsMobileMenuOpen(false)}
-                className="text-lg text-blue-600 hover:text-blue-700 transition-colors font-semibold"
-                activeClassName="text-blue-700 font-bold"
-              >
-                {mesaLink.name}
-              </NavLink>
               {adminLink && (
                 <NavLink
                   to={adminLink.href}
