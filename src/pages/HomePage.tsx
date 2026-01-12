@@ -6,7 +6,7 @@ import { Newspaper, Calendar, ArrowRight, Instagram } from "lucide-react";
 import { sponsorService } from "@/services/sponsorService";
 import { postService } from "@/services/postService";
 import { Sponsor, Post } from "@/types/database";
-import { TournamentCarousel } from "@/components/TournamentCarousel";
+import { EventGallery } from "@/components/EventGallery";
 import { AudioPlayer } from "@/components/AudioPlayer";
 
 export function HomePage() {
@@ -77,7 +77,7 @@ export function HomePage() {
         {/* Hero Content */}
         <div className="relative z-10 text-center text-white px-4 animate-fade-in">
           <h1 className="text-5xl md:text-7xl font-bold mb-6 animate-slide-up">
-            FEMD TORNEOS
+            FEMD EVENTOS
           </h1>
           <p className="text-xl md:text-2xl mb-4 text-gray-200 max-w-2xl mx-auto animate-slide-up">
             Organizadores profesionales de eventos y torneos de fútbol
@@ -220,8 +220,8 @@ export function HomePage() {
         </section>
       )}
 
-      {/* Tournament Gallery */}
-      <TournamentCarousel />
+      {/* Event Gallery - Tournament Logos */}
+      <EventGallery />
 
       {/* Social Media & Contact Section */}
       <section className="py-16 bg-card">
