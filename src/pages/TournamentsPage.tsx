@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, MapPin, Users, Trophy, ArrowLeft, ChevronLeft, ChevronRight } from "lucide-react";
+import { Calendar, MapPin, Users, Trophy, ArrowLeft, ChevronLeft, ChevronRight, Image as ImageIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { eventService } from "@/services/eventService";
 import { Event } from "@/types/database";
@@ -198,38 +198,58 @@ export function TournamentsPage() {
                       return (
                         <Link key={event.id} to={`/torneos/${event.id}`}>
                           <Card
-                            className={`hover-lift animate-fade-in cursor-pointer h-full transition-all ${
+                            className={`hover-lift animate-fade-in cursor-pointer h-full transition-all overflow-hidden ${
                               isPast ? "opacity-80 hover:opacity-100" : "hover-glow"
                             }`}
                             style={{ animationDelay: `${index * 50}ms` }}
                           >
                             {!isPast && <div className="h-1 gradient-gold" />}
-                            <CardHeader className="pb-2">
-                              <div className="flex items-start justify-between gap-2">
-                                <CardTitle className="text-lg line-clamp-2">
-                                  {event.title.replace(selectedBrand.name, "").trim()}
-                                </CardTitle>
-                                <Badge variant={isPast ? "outline" : "default"} className="shrink-0">
-                                  {isPast ? "Finalizado" : "Próximo"}
-                                </Badge>
+                            <div className="flex">
+                              {/* Miniatura del cartel */}
+                              <div className="w-16 h-20 flex-shrink-0 bg-muted overflow-hidden">
+                                {event.poster_url ? (
+                                  <img 
+                                    src={event.poster_url} 
+                                    alt={event.title}
+                                    className="w-full h-full object-cover"
+                                  />
+                                ) : (
+                                  <div className="w-full h-full flex items-center justify-center">
+                                    <ImageIcon className="h-6 w-6 text-muted-foreground/40" />
+                                  </div>
+                                )}
                               </div>
-                            </CardHeader>
-                            <CardContent className="space-y-2 pt-0">
-                              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                <Calendar className="h-4 w-4 text-primary" />
-                                <span>
-                                  {format(new Date(event.date), "d 'de' MMMM, yyyy", {
-                                    locale: es,
-                                  })}
-                                </span>
+                              
+                              {/* Contenido */}
+                              <div className="flex-1">
+                                <CardHeader className="pb-2 pt-3 px-3">
+                                  <div className="flex items-start justify-between gap-2">
+                                    <CardTitle className="text-base line-clamp-2">
+                                      {event.title.replace(selectedBrand.name, "").trim()}
+                                    </CardTitle>
+                                    <Badge variant={isPast ? "outline" : "default"} className="shrink-0 text-xs">
+                                      {isPast ? "Finalizado" : "Próximo"}
+                                    </Badge>
+                                  </div>
+                                </CardHeader>
+                                <CardContent className="space-y-1 pt-0 px-3 pb-3">
+                                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                                    <Calendar className="h-3 w-3 text-primary" />
+                                    <span>
+                                      {format(new Date(event.date), "d 'de' MMMM, yyyy", {
+                                        locale: es,
+                                      })}
+                                    </span>
+                                  </div>
+                                  {event.location && (
+                                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                                      <MapPin className="h-3 w-3 text-primary" />
+                                      <span className="line-clamp-1">{event.location}</span>
+                                    </div>
+                                  )}
+                                </CardContent>
                               </div>
-                              {event.location && (
-                                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                  <MapPin className="h-4 w-4 text-primary" />
-                                  <span className="line-clamp-1">{event.location}</span>
-                                </div>
-                              )}
-                            </CardContent>
+                            </div>
                           </Card>
                         </Link>
                       );
