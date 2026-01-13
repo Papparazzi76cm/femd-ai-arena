@@ -9,6 +9,28 @@ import { Event } from "@/types/database";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 
+// Component for image with fallback
+const TournamentThumbnail = ({ src, alt }: { src: string | null; alt: string }) => {
+  const [hasError, setHasError] = useState(false);
+  
+  if (!src || hasError) {
+    return (
+      <div className="w-full h-full flex items-center justify-center bg-muted">
+        <ImageIcon className="h-6 w-6 text-muted-foreground/40" />
+      </div>
+    );
+  }
+  
+  return (
+    <img 
+      src={src} 
+      alt={alt}
+      className="w-full h-full object-cover"
+      onError={() => setHasError(true)}
+    />
+  );
+};
+
 // Definición de torneos base con sus logos
 interface TournamentBrand {
   slug: string;
@@ -206,18 +228,8 @@ export function TournamentsPage() {
                             {!isPast && <div className="h-1 gradient-gold" />}
                             <div className="flex">
                               {/* Miniatura del cartel */}
-                              <div className="w-16 h-20 flex-shrink-0 bg-muted overflow-hidden">
-                                {event.poster_url ? (
-                                  <img 
-                                    src={event.poster_url} 
-                                    alt={event.title}
-                                    className="w-full h-full object-cover"
-                                  />
-                                ) : (
-                                  <div className="w-full h-full flex items-center justify-center">
-                                    <ImageIcon className="h-6 w-6 text-muted-foreground/40" />
-                                  </div>
-                                )}
+                              <div className="w-16 h-20 flex-shrink-0 overflow-hidden">
+                                <TournamentThumbnail src={event.poster_url} alt={event.title} />
                               </div>
                               
                               {/* Contenido */}

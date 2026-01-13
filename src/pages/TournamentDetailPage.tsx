@@ -475,6 +475,9 @@ export function TournamentDetailPage() {
                 src={event.poster_url}
                 alt={event.title}
                 className="w-full h-auto object-cover"
+                onError={(e) => {
+                  e.currentTarget.style.display = 'none';
+                }}
               />
             </div>
           )}
@@ -509,22 +512,22 @@ export function TournamentDetailPage() {
 
         {/* Tabs */}
         <Tabs defaultValue="bracket" className="w-full">
-          <TabsList className="grid w-full grid-cols-4 mb-8">
-            <TabsTrigger value="bracket">
-              <Trophy className="h-4 w-4 mr-2" />
-              Cuadro del Torneo
+          <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 gap-1 h-auto p-1 mb-8">
+            <TabsTrigger value="bracket" className="text-xs sm:text-sm py-2 px-2 sm:px-4">
+              <Trophy className="h-4 w-4 mr-1 sm:mr-2 flex-shrink-0" />
+              <span className="truncate">Cuadro del Torneo</span>
             </TabsTrigger>
-            <TabsTrigger value="teams">
-              <Users className="h-4 w-4 mr-2" />
-              Equipos
+            <TabsTrigger value="teams" className="text-xs sm:text-sm py-2 px-2 sm:px-4">
+              <Users className="h-4 w-4 mr-1 sm:mr-2 flex-shrink-0" />
+              <span className="truncate">Equipos</span>
             </TabsTrigger>
-            <TabsTrigger value="standings">
-              <Target className="h-4 w-4 mr-2" />
-              Clasificación
+            <TabsTrigger value="standings" className="text-xs sm:text-sm py-2 px-2 sm:px-4">
+              <Target className="h-4 w-4 mr-1 sm:mr-2 flex-shrink-0" />
+              <span className="truncate">Clasificación</span>
             </TabsTrigger>
-            <TabsTrigger value="stats">
-              <Medal className="h-4 w-4 mr-2" />
-              Estadísticas
+            <TabsTrigger value="stats" className="text-xs sm:text-sm py-2 px-2 sm:px-4">
+              <Medal className="h-4 w-4 mr-1 sm:mr-2 flex-shrink-0" />
+              <span className="truncate">Estadísticas</span>
             </TabsTrigger>
           </TabsList>
 
