@@ -832,6 +832,7 @@ export type Database = {
           id: string
           logo_url: string | null
           name: string
+          parent_team_id: string | null
         }
         Insert: {
           colors?: string | null
@@ -841,6 +842,7 @@ export type Database = {
           id?: string
           logo_url?: string | null
           name: string
+          parent_team_id?: string | null
         }
         Update: {
           colors?: string | null
@@ -850,8 +852,17 @@ export type Database = {
           id?: string
           logo_url?: string | null
           name?: string
+          parent_team_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "teams_parent_team_id_fkey"
+            columns: ["parent_team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_roles: {
         Row: {

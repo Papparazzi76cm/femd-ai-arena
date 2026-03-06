@@ -1,0 +1,1 @@
+ALTER TABLE teams ADD COLUMN parent_team_id uuid REFERENCES teams(id) ON DELETE SET NULL DEFAULT NULL;
