@@ -336,7 +336,7 @@ export const ParticipantManager = () => {
       )}
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {participants.map((participant) => (
+        {filteredParticipants.map((participant) => (
           <Card key={participant.id}>
             <CardHeader>
               <CardTitle className="flex items-center justify-between">
