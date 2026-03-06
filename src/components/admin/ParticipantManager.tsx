@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, Edit, Trash2, Save, X, Upload, History, ArrowRightLeft } from 'lucide-react';
+import { Plus, Edit, Trash2, Save, X, Upload, History, ArrowRightLeft, Filter } from 'lucide-react';
 import { PlayerTeamChangeDialog } from './PlayerTeamChangeDialog';
 import { PlayerTransferDialog } from './PlayerTransferDialog';
 import { playerHistoryService, PlayerTeamHistory } from '@/services/playerHistoryService';
@@ -192,6 +192,12 @@ export const ParticipantManager = () => {
       });
     }
   };
+
+  const filteredParticipants = filterTeamId === 'all'
+    ? participants
+    : filterTeamId === 'none'
+      ? participants.filter(p => !p.team_id)
+      : participants.filter(p => p.team_id === filterTeamId);
 
   const getTeamName = (teamId?: string) => {
     if (!teamId) return 'Sin equipo';
