@@ -28,6 +28,9 @@ export const ParticipantManager = () => {
   });
   const [historyDialogOpen, setHistoryDialogOpen] = useState(false);
   const [selectedParticipant, setSelectedParticipant] = useState<Participant | null>(null);
+  const [transferDialogOpen, setTransferDialogOpen] = useState(false);
+  const [transferParticipant, setTransferParticipant] = useState<Participant | null>(null);
+  const [playerHistories, setPlayerHistories] = useState<Record<string, PlayerTeamHistory[]>>({});
   const { toast } = useToast();
 
   useEffect(() => {
