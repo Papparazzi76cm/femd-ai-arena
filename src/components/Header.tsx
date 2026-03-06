@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Menu, X } from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { NavLink } from "@/components/NavLink";
 import { Button } from "@/components/ui/button";
 import { useTheme } from "@/contexts/ThemeContext";
@@ -14,17 +14,25 @@ export function Header() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [isMesa, setIsMesa] = useState(false);
   const { theme } = useTheme();
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+  
+  // On homepage, header starts transparent over hero - always use white text/logo
+  const isHomePage = location.pathname === "/";
+  const isOverHero = isHomePage && !isScrolled;
 
   useEffect(() => {
     const checkRoles = async () => {
       if (user) {
         const roles = await roleService.getUserRoles(user.id);
         setIsAdmin(roles.includes('admin'));
+        setIsMesa(roles.includes('mesa'));
       } else {
         setIsAdmin(false);
+        setIsMesa(false);
       }
     };
     checkRoles();
@@ -68,8 +76,8 @@ export function Header() {
           <div className="flex items-center space-x-2">
             <Link to="/" className="flex items-center space-x-3">
               <img 
-                src={theme === "dark" ? logoBlanco : logoNegro} 
-                alt="FEMD Torneos" 
+                src={isOverHero || theme === "dark" ? logoBlanco : logoNegro} 
+                alt="FEMD Eventos" 
                 className="h-12 w-auto"
               />
             </Link>
@@ -82,11 +90,11 @@ export function Header() {
                   key={link.name}
                   to={link.href}
                   className={`transition-colors duration-200 font-medium flex items-center gap-1 ${
-                    !isScrolled ? '[text-shadow:_0_1px_3px_rgb(0_0_0_/_80%),_0_0_8px_rgb(0_0_0_/_50%)]' : ''
+                    isOverHero ? '[text-shadow:_0_1px_3px_rgb(0_0_0_/_80%),_0_0_8px_rgb(0_0_0_/_50%)]' : ''
                   } ${
                     (link as any).isLive 
                       ? 'text-red-500 hover:text-red-400' 
-                      : `${isScrolled ? 'text-foreground/80 hover:text-primary' : 'text-white hover:text-primary'}`
+                      : `${isOverHero ? 'text-white hover:text-primary' : isScrolled ? 'text-foreground/80 hover:text-primary' : 'text-foreground/80 hover:text-primary'}`
                   }`}
                   activeClassName={(link as any).isLive 
                     ? 'text-red-400 border-b-2 border-red-500' 
@@ -103,7 +111,7 @@ export function Header() {
                 <NavLink
                   to={adminLink.href}
                   className={`transition-colors duration-200 font-semibold ${
-                    !isScrolled ? '[text-shadow:_0_1px_3px_rgb(0_0_0_/_80%),_0_0_8px_rgb(0_0_0_/_50%)] text-emerald-400 hover:text-emerald-300' : 'text-emerald-600 hover:text-emerald-700'
+                    isOverHero ? '[text-shadow:_0_1px_3px_rgb(0_0_0_/_80%),_0_0_8px_rgb(0_0_0_/_50%)] text-emerald-400 hover:text-emerald-300' : 'text-emerald-600 hover:text-emerald-700'
                   }`}
                   activeClassName="text-emerald-400 border-b-2 border-emerald-500"
                 >
@@ -117,28 +125,20 @@ export function Header() {
               <ThemeToggle />
               {user ? (
                 <div className="flex items-center space-x-3">
-                  <span className="text-sm text-muted-foreground">
+                  <span className={`text-sm ${isOverHero ? 'text-white/80' : 'text-muted-foreground'}`}>
                     Hola, {user.user_metadata?.name || user.email}
                   </span>
                   <Button onClick={signOut} variant="outline" size="sm">
                     Salir
                   </Button>
                 </div>
-              ) : (
-                <Button
-                  onClick={() => navigate('/auth')}
-                  variant="default"
-                  size="sm"
-                >
-                  Acceder
-                </Button>
-              )}
+              ) : null}
             </div>
 
             {/* Mobile Menu Button */}
             <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="md:hidden p-2 text-foreground"
+              className={`md:hidden p-2 ${isOverHero ? 'text-white' : 'text-foreground'}`}
             >
               {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
             </button>
@@ -194,18 +194,7 @@ export function Header() {
                       Cerrar Sesión
                     </Button>
                   </div>
-                ) : (
-                  <Button
-                    onClick={() => {
-                      navigate('/auth');
-                      setIsMobileMenuOpen(false);
-                    }}
-                    variant="default"
-                    className="w-full"
-                  >
-                    Acceder / Registrarse
-                  </Button>
-                )}
+                ) : null}
               </div>
             </nav>
           </div>
