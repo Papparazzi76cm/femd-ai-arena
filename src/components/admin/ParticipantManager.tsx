@@ -319,6 +319,12 @@ export const ParticipantManager = () => {
                 <span className="truncate">{participant.name}</span>
                 <div className="flex gap-1">
                   <Button size="sm" variant="ghost" onClick={() => {
+                    setTransferParticipant(participant);
+                    setTransferDialogOpen(true);
+                  }} title="Traspaso a otro club">
+                    <ArrowRightLeft className="w-4 h-4 text-blue-600" />
+                  </Button>
+                  <Button size="sm" variant="ghost" onClick={() => {
                     setSelectedParticipant(participant);
                     setHistoryDialogOpen(true);
                   }} title="Historial de equipos">
@@ -343,6 +349,23 @@ export const ParticipantManager = () => {
               )}
               {participant.number && (
                 <p className="text-sm"><strong>Número:</strong> {participant.number}</p>
+              )}
+
+              {/* Histórico de clubes */}
+              {playerHistories[participant.id] && playerHistories[participant.id].length > 0 && (
+                <div className="mt-3 pt-3 border-t">
+                  <p className="text-xs font-semibold text-muted-foreground mb-1 flex items-center gap-1">
+                    <History className="w-3 h-3" /> Histórico de clubes
+                  </p>
+                  <div className="space-y-1">
+                    {playerHistories[participant.id].map(h => (
+                      <div key={h.id} className="text-xs flex items-center gap-1 text-muted-foreground">
+                        <span className="font-medium text-foreground">{getTeamName(h.team_id)}</span>
+                        <span>({h.start_date}{h.end_date ? ` → ${h.end_date}` : ' → actual'})</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
               )}
             </CardContent>
           </Card>
