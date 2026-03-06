@@ -37,11 +37,7 @@ export const TeamsPage = () => {
     if (!search.trim()) return teams;
     const q = search.toLowerCase();
     return teams.filter(t =>
-      t.name.toLowerCase().includes(q) ||
-      t.city?.toLowerCase().includes(q) ||
-      t.province?.toLowerCase().includes(q) ||
-      t.autonomous_community?.toLowerCase().includes(q) ||
-      t.country?.toLowerCase().includes(q)
+      t.name.toLowerCase().includes(q)
     );
   }, [teams, search]);
 
