@@ -7,8 +7,10 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, Edit, Trash2, Save, X, Upload, History } from 'lucide-react';
+import { Plus, Edit, Trash2, Save, X, Upload, History, ArrowRightLeft } from 'lucide-react';
 import { PlayerTeamChangeDialog } from './PlayerTeamChangeDialog';
+import { PlayerTransferDialog } from './PlayerTransferDialog';
+import { playerHistoryService, PlayerTeamHistory } from '@/services/playerHistoryService';
 
 export const ParticipantManager = () => {
   const [participants, setParticipants] = useState<Participant[]>([]);
