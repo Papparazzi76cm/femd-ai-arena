@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { eventService } from '@/services/eventService';
 import { teamService } from '@/services/teamService';
-import { Event, Team } from '@/types/database';
+import { categoryService } from '@/services/categoryService';
+import { Event, Team, Category } from '@/types/database';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -11,7 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Checkbox } from '@/components/ui/checkbox';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, Edit, Trash2, Save, X, Calendar, Upload, Trophy, History as HistoryIcon, Users } from 'lucide-react';
+import { Plus, Edit, Trash2, Save, X, Calendar, Upload, Trophy, History as HistoryIcon, Users, Tag } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { TournamentManager } from './TournamentManager';
 import { HistoricalTournamentManager } from './HistoricalTournamentManager';
@@ -20,6 +21,7 @@ import { TournamentGalleryManager } from './TournamentGalleryManager';
 export const EventManager = () => {
   const [events, setEvents] = useState<Event[]>([]);
   const [teams, setTeams] = useState<Team[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [showForm, setShowForm] = useState(false);
@@ -27,7 +29,9 @@ export const EventManager = () => {
   const [expandedTournament, setExpandedTournament] = useState<string | null>(null);
   const [tournamentMode, setTournamentMode] = useState<'automatic' | 'historical'>('automatic');
   const [showTeamsDialog, setShowTeamsDialog] = useState(false);
+  const [showCategoriesDialog, setShowCategoriesDialog] = useState(false);
   const [selectedTeamIds, setSelectedTeamIds] = useState<string[]>([]);
+  const [selectedCategoryIds, setSelectedCategoryIds] = useState<string[]>([]);
   const [formData, setFormData] = useState({
     title: '',
     description: '',
