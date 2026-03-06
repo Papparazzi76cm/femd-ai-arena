@@ -47,12 +47,14 @@ export const EventManager = () => {
 
   const loadData = async () => {
     try {
-      const [eventsData, teamsData] = await Promise.all([
+      const [eventsData, teamsData, categoriesData] = await Promise.all([
         eventService.getAll(),
-        teamService.getAll()
+        teamService.getAll(),
+        categoryService.getAll()
       ]);
       setEvents(eventsData);
       setTeams(teamsData);
+      setCategories(categoriesData);
     } catch (error) {
       toast({
         title: 'Error',
@@ -76,12 +78,35 @@ export const EventManager = () => {
         team_ids: selectedTeamIds
       };
 
+      let eventId = editingId;
+
       if (editingId) {
         await eventService.update(editingId, eventData);
         toast({ title: 'Evento actualizado con éxito' });
       } else {
-        await eventService.create(eventData);
+        const created = await eventService.create(eventData);
+        eventId = created.id;
         toast({ title: 'Evento creado con éxito' });
+      }
+
+      // Sync event categories
+      if (eventId) {
+        const existingCategories = await categoryService.getEventCategories(eventId);
+        const existingCategoryIds = existingCategories.map((ec: any) => ec.category_id);
+
+        // Remove categories no longer selected
+        for (const ec of existingCategories) {
+          if (!selectedCategoryIds.includes((ec as any).category_id)) {
+            await categoryService.removeCategoryFromEvent(ec.id);
+          }
+        }
+
+        // Add newly selected categories
+        for (const catId of selectedCategoryIds) {
+          if (!existingCategoryIds.includes(catId)) {
+            await categoryService.addCategoryToEvent(eventId, catId);
+          }
+        }
       }
 
       resetForm();
@@ -95,7 +120,7 @@ export const EventManager = () => {
     }
   };
 
-  const handleEdit = (event: Event) => {
+  const handleEdit = async (event: Event) => {
     setFormData({
       title: event.title,
       description: event.description || '',
@@ -104,6 +129,15 @@ export const EventManager = () => {
       poster_url: (event as any).poster_url || ''
     });
     setSelectedTeamIds((event as any).team_ids || []);
+
+    // Load existing categories for this event
+    try {
+      const eventCategories = await categoryService.getEventCategories(event.id);
+      setSelectedCategoryIds(eventCategories.map((ec: any) => ec.category_id));
+    } catch {
+      setSelectedCategoryIds([]);
+    }
+
     setEditingId(event.id);
     setShowForm(true);
   };
@@ -184,8 +218,17 @@ export const EventManager = () => {
   const resetForm = () => {
     setFormData({ title: '', description: '', date: '', location: '', poster_url: '' });
     setSelectedTeamIds([]);
+    setSelectedCategoryIds([]);
     setEditingId(null);
     setShowForm(false);
+  };
+
+  const handleCategoryToggle = (catId: string) => {
+    setSelectedCategoryIds(prev =>
+      prev.includes(catId)
+        ? prev.filter(id => id !== catId)
+        : [...prev, catId]
+    );
   };
 
   const handleTeamToggle = (teamId: string) => {
