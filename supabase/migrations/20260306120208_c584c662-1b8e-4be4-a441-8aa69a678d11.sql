@@ -1,0 +1,13 @@
+UPDATE teams SET logo_url = 'https://zftbjgonactnpkbkdawh.supabase.co/storage/v1/object/public/imagenes-web/logos/deportivo-alaves.png' WHERE id = '184ad4e3-98b8-4442-982f-efb87fd8d44b';
+UPDATE teams SET logo_url = 'https://zftbjgonactnpkbkdawh.supabase.co/storage/v1/object/public/imagenes-web/logos/valencia-cf.png' WHERE id = '2b7989f0-6ea6-4452-a7f9-4a3809ce2978';
+UPDATE teams SET logo_url = 'https://zftbjgonactnpkbkdawh.supabase.co/storage/v1/object/public/imagenes-web/logos/sd-eibar.png' WHERE id = 'd45f75ce-332e-4110-9c0c-e425d71acc30';
+UPDATE teams SET logo_url = 'https://zftbjgonactnpkbkdawh.supabase.co/storage/v1/object/public/imagenes-web/logos/real-racing-club.png' WHERE id = '08969618-5747-4ee2-9975-46111103b26f';
+UPDATE teams SET logo_url = 'https://zftbjgonactnpkbkdawh.supabase.co/storage/v1/object/public/imagenes-web/logos/zamora-cf.png' WHERE id = '3a9a186d-350e-4f6a-8fe1-5fa3ce80447e';
+UPDATE teams SET logo_url = 'https://zftbjgonactnpkbkdawh.supabase.co/storage/v1/object/public/imagenes-web/logos/sd-ponferradina.png' WHERE id = '0aeff60f-9914-4fb9-bbf9-8fb4e8068e82';
+UPDATE teams SET logo_url = 'https://zftbjgonactnpkbkdawh.supabase.co/storage/v1/object/public/imagenes-web/logos/rs-gimnastica-torrelavega.png' WHERE id = 'be476497-60d8-4643-8a82-5d5d68aa65db';
+UPDATE teams SET logo_url = 'https://zftbjgonactnpkbkdawh.supabase.co/storage/v1/object/public/imagenes-web/logos/sd-logrones.png' WHERE id = '12c8e965-ddff-4458-8146-cc11d0b360ee';
+UPDATE teams SET logo_url = 'https://zftbjgonactnpkbkdawh.supabase.co/storage/v1/object/public/imagenes-web/logos/gimnastica-segoviana.png' WHERE id = 'fa30a1de-ccb9-42cd-becb-599057733e62';
+UPDATE teams SET logo_url = 'https://zftbjgonactnpkbkdawh.supabase.co/storage/v1/object/public/imagenes-web/logos/real-avila-cf.png' WHERE id = '8611afb0-6d33-49f4-b2bf-804233bea4a2';
+UPDATE teams SET logo_url = 'https://zftbjgonactnpkbkdawh.supabase.co/storage/v1/object/public/imagenes-web/logos/rsd-alcala.png' WHERE id = '6a690e89-d333-45d1-b3bc-96c6e4bed7dc';
+UPDATE teams SET logo_url = 'https://zftbjgonactnpkbkdawh.supabase.co/storage/v1/object/public/imagenes-web/logos/cd-diocesano.png' WHERE id = '6fb58e46-5064-4df5-8e79-2978b26068fe';
+UPDATE teams SET logo_url = 'https://zftbjgonactnpkbkdawh.supabase.co/storage/v1/object/public/imagenes-web/logos/las-rozas-cf.png' WHERE id = '5217d208-be91-4102-a7f8-1eeec9bcf914';
