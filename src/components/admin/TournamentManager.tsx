@@ -198,45 +198,6 @@ export const TournamentManager = ({ eventId }: TournamentManagerProps) => {
     }
   };
 
-  // Tournament generation
-  const handleGenerateTournament = async () => {
-    if (eventTeams.length !== 24) {
-      toast({ title: 'Error', description: 'Se requieren exactamente 24 equipos', variant: 'destructive' });
-      return;
-    }
-
-    if (!confirm('¿Generar sorteo y calendario? Se eliminarán los partidos existentes.')) return;
-
-    try {
-      setLoading(true);
-      await tournamentService.deleteMatches(eventId);
-      const teamIds = eventTeams.map(et => et.team_id);
-      await tournamentService.generateTournament(eventId, teamIds);
-      toast({ title: 'Torneo generado' });
-      await loadData();
-    } catch (error) {
-      console.error('Error generando torneo:', error);
-      toast({ title: 'Error', description: 'No se pudo generar el torneo', variant: 'destructive' });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleGenerateKnockout = async () => {
-    if (!confirm('¿Generar fase eliminatoria?')) return;
-
-    try {
-      setLoading(true);
-      await tournamentService.generateKnockoutPhase(eventId);
-      toast({ title: 'Fase eliminatoria generada' });
-      await loadData();
-    } catch (error) {
-      console.error('Error:', error);
-      toast({ title: 'Error', description: 'No se pudo generar', variant: 'destructive' });
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleUpdateMatchScore = async (matchId: string, field: string, value: string) => {
     try {
@@ -496,22 +457,6 @@ export const TournamentManager = ({ eventId }: TournamentManagerProps) => {
               </DialogContent>
             </Dialog>
 
-            <Button 
-              onClick={handleGenerateTournament} 
-              disabled={eventTeams.length !== 24 || loading}
-            >
-              <Calendar className="w-4 h-4 mr-2" />
-              Generar Sorteo
-            </Button>
-
-            <Button
-              onClick={handleGenerateKnockout}
-              disabled={matches.filter(m => m.phase === 'group').length === 0}
-              variant="secondary"
-            >
-              <Trophy className="w-4 h-4 mr-2" />
-              Generar Eliminatoria
-            </Button>
           </div>
 
           {Object.keys(groupedTeams).length > 0 && (
@@ -604,7 +549,7 @@ export const TournamentManager = ({ eventId }: TournamentManagerProps) => {
           ) : (
             <Card className="p-6">
               <p className="text-muted-foreground text-center">
-                No hay partidos programados. Genera el sorteo primero.
+                No hay partidos programados. Crea los emparejamientos de forma manual.
               </p>
             </Card>
           )}
