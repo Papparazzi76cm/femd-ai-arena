@@ -563,13 +563,20 @@ export const TeamManager = () => {
           <Card key={team.id}>
             <CardHeader>
               <CardTitle className="flex items-center justify-between">
-                <span>{team.name}</span>
+                <div>
+                  <span>{team.name}</span>
+                  {team.parent_team_id && (
+                    <span className="ml-2 text-xs font-normal text-muted-foreground">
+                      (Filial de {teams.find(t => t.id === team.parent_team_id)?.name})
+                    </span>
+                  )}
+                </div>
                 <div className="flex gap-2">
                   <Button size="sm" variant="ghost" onClick={() => handleEdit(team)}>
                     <Edit className="w-4 h-4" />
                   </Button>
                   <Button size="sm" variant="ghost" onClick={() => handleDelete(team.id)}>
-                    <Trash2 className="w-4 h-4 text-red-600" />
+                    <Trash2 className="w-4 h-4 text-destructive" />
                   </Button>
                 </div>
               </CardTitle>
