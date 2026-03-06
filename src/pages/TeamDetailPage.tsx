@@ -104,14 +104,24 @@ export const TeamDetailPage = () => {
     <div className="min-h-screen bg-gradient-to-b from-muted/20 to-background py-16">
       <div className="container mx-auto px-4">
         {/* Back Button */}
-        <Button 
-          variant="ghost" 
-          onClick={() => navigate('/equipos')}
-          className="mb-6"
-        >
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          Volver a equipos
-        </Button>
+        <div className="flex gap-2 mb-6">
+          <Button 
+            variant="ghost" 
+            onClick={() => navigate('/equipos')}
+          >
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Volver a clubes
+          </Button>
+          {team.parent_team_id && (
+            <Button 
+              variant="outline" 
+              onClick={() => navigate(`/equipos/${team.parent_team_id}`)}
+            >
+              <Shield className="w-4 h-4 mr-2" />
+              Ver club principal
+            </Button>
+          )}
+        </div>
 
         {/* Team Header */}
         <Card className="mb-8 overflow-hidden border-2">
