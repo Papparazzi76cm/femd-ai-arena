@@ -33,13 +33,15 @@ export const TeamDetailPage = () => {
     if (!id) return;
     
     try {
-      const [teamData, participantsData, eventsData] = await Promise.all([
+      const [teamData, participantsData, eventsData, childTeamsData] = await Promise.all([
         teamService.getById(id),
         participantService.getByTeam(id),
-        eventService.getAll()
+        eventService.getAll(),
+        teamService.getChildTeams(id)
       ]);
 
       setTeam(teamData);
+      setChildTeams(childTeamsData);
       setParticipants(participantsData);
       
       // Filter events that include this team
