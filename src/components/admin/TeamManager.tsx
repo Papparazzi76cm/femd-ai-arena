@@ -4,6 +4,8 @@ import { participantService } from '@/services/participantService';
 import { Team, Participant } from '@/types/database';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
@@ -25,7 +27,9 @@ export const TeamManager = () => {
     logo_url: '',
     description: '',
     founded_year: '',
-    colors: ''
+    colors: '',
+    is_filial: false,
+    parent_team_id: ''
   });
   const [participantFormData, setParticipantFormData] = useState({
     name: '',
@@ -58,12 +62,13 @@ export const TeamManager = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const teamData = {
+      const teamData: any = {
         name: formData.name.trim(),
         logo_url: formData.logo_url.trim() || undefined,
         description: formData.description.trim() || undefined,
         founded_year: formData.founded_year ? parseInt(formData.founded_year) : undefined,
-        colors: formData.colors.trim() || undefined
+        colors: formData.colors.trim() || undefined,
+        parent_team_id: formData.is_filial && formData.parent_team_id ? formData.parent_team_id : null
       };
 
       if (editingId) {
@@ -91,7 +96,9 @@ export const TeamManager = () => {
       logo_url: team.logo_url || '',
       description: team.description || '',
       founded_year: team.founded_year?.toString() || '',
-      colors: team.colors || ''
+      colors: team.colors || '',
+      is_filial: !!team.parent_team_id,
+      parent_team_id: team.parent_team_id || ''
     });
     setEditingId(team.id);
     setShowForm(true);
@@ -253,7 +260,7 @@ export const TeamManager = () => {
   };
 
   const resetForm = () => {
-    setFormData({ name: '', logo_url: '', description: '', founded_year: '', colors: '' });
+    setFormData({ name: '', logo_url: '', description: '', founded_year: '', colors: '', is_filial: false, parent_team_id: '' });
     setEditingId(null);
     setShowForm(false);
     setShowParticipants(false);
@@ -365,6 +372,41 @@ export const TeamManager = () => {
                   />
                 </div>
               </div>
+
+              {/* Filial toggle */}
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <Checkbox
+                    id="is_filial"
+                    checked={formData.is_filial}
+                    onCheckedChange={(checked) => setFormData({ ...formData, is_filial: !!checked, parent_team_id: checked ? formData.parent_team_id : '' })}
+                  />
+                  <label htmlFor="is_filial" className="text-sm font-medium cursor-pointer">
+                    Es equipo filial (B, C, etc.)
+                  </label>
+                </div>
+                {formData.is_filial && (
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Club principal *</label>
+                    <Select
+                      value={formData.parent_team_id}
+                      onValueChange={(value) => setFormData({ ...formData, parent_team_id: value })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecciona el club principal" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {teams
+                          .filter(t => !t.parent_team_id && t.id !== editingId)
+                          .map(t => (
+                            <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>
+                          ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+              </div>
+
               <div className="flex gap-2">
                 <Button type="submit" className="bg-emerald-600 hover:bg-emerald-700">
                   <Save className="w-4 h-4 mr-2" />
@@ -521,13 +563,20 @@ export const TeamManager = () => {
           <Card key={team.id}>
             <CardHeader>
               <CardTitle className="flex items-center justify-between">
-                <span>{team.name}</span>
+                <div>
+                  <span>{team.name}</span>
+                  {team.parent_team_id && (
+                    <span className="ml-2 text-xs font-normal text-muted-foreground">
+                      (Filial de {teams.find(t => t.id === team.parent_team_id)?.name})
+                    </span>
+                  )}
+                </div>
                 <div className="flex gap-2">
                   <Button size="sm" variant="ghost" onClick={() => handleEdit(team)}>
                     <Edit className="w-4 h-4" />
                   </Button>
                   <Button size="sm" variant="ghost" onClick={() => handleDelete(team.id)}>
-                    <Trash2 className="w-4 h-4 text-red-600" />
+                    <Trash2 className="w-4 h-4 text-destructive" />
                   </Button>
                 </div>
               </CardTitle>
