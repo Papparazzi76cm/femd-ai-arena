@@ -825,7 +825,10 @@ export type Database = {
       }
       teams: {
         Row: {
+          autonomous_community: string | null
+          city: string | null
           colors: string | null
+          country: string | null
           created_at: string | null
           description: string | null
           founded_year: number | null
@@ -833,9 +836,13 @@ export type Database = {
           logo_url: string | null
           name: string
           parent_team_id: string | null
+          province: string | null
         }
         Insert: {
+          autonomous_community?: string | null
+          city?: string | null
           colors?: string | null
+          country?: string | null
           created_at?: string | null
           description?: string | null
           founded_year?: number | null
@@ -843,9 +850,13 @@ export type Database = {
           logo_url?: string | null
           name: string
           parent_team_id?: string | null
+          province?: string | null
         }
         Update: {
+          autonomous_community?: string | null
+          city?: string | null
           colors?: string | null
+          country?: string | null
           created_at?: string | null
           description?: string | null
           founded_year?: number | null
@@ -853,6 +864,7 @@ export type Database = {
           logo_url?: string | null
           name?: string
           parent_team_id?: string | null
+          province?: string | null
         }
         Relationships: [
           {
