@@ -372,6 +372,41 @@ export const TeamManager = () => {
                   />
                 </div>
               </div>
+
+              {/* Filial toggle */}
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <Checkbox
+                    id="is_filial"
+                    checked={formData.is_filial}
+                    onCheckedChange={(checked) => setFormData({ ...formData, is_filial: !!checked, parent_team_id: checked ? formData.parent_team_id : '' })}
+                  />
+                  <label htmlFor="is_filial" className="text-sm font-medium cursor-pointer">
+                    Es equipo filial (B, C, etc.)
+                  </label>
+                </div>
+                {formData.is_filial && (
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Club principal *</label>
+                    <Select
+                      value={formData.parent_team_id}
+                      onValueChange={(value) => setFormData({ ...formData, parent_team_id: value })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecciona el club principal" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {teams
+                          .filter(t => !t.parent_team_id && t.id !== editingId)
+                          .map(t => (
+                            <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>
+                          ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+              </div>
+
               <div className="flex gap-2">
                 <Button type="submit" className="bg-emerald-600 hover:bg-emerald-700">
                   <Save className="w-4 h-4 mr-2" />
