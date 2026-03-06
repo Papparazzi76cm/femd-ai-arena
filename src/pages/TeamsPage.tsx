@@ -1,15 +1,17 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { teamService } from '@/services/teamService';
 import { Team } from '@/types/database';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { Users, Calendar, Palette, Loader2 } from 'lucide-react';
+import { Users, Calendar, Palette, Loader2, Search, MapPin } from 'lucide-react';
 
 export const TeamsPage = () => {
   const navigate = useNavigate();
   const [teams, setTeams] = useState<Team[]>([]);
   const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState('');
   const { toast } = useToast();
 
   useEffect(() => {
@@ -31,11 +33,23 @@ export const TeamsPage = () => {
     }
   };
 
+  const filteredTeams = useMemo(() => {
+    if (!search.trim()) return teams;
+    const q = search.toLowerCase();
+    return teams.filter(t =>
+      t.name.toLowerCase().includes(q) ||
+      t.city?.toLowerCase().includes(q) ||
+      t.province?.toLowerCase().includes(q) ||
+      t.autonomous_community?.toLowerCase().includes(q) ||
+      t.country?.toLowerCase().includes(q)
+    );
+  }, [teams, search]);
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center space-y-4">
-          <Loader2 className="w-12 h-12 animate-spin text-emerald-600 mx-auto" />
+          <Loader2 className="w-12 h-12 animate-spin text-primary mx-auto" />
           <p className="text-muted-foreground">Cargando equipos...</p>
         </div>
       </div>
@@ -57,23 +71,36 @@ export const TeamsPage = () => {
             Conoce a todos los equipos que participan en los torneos de FEMD
           </p>
           <div className="mt-4 flex items-center justify-center gap-2 text-sm text-muted-foreground">
-            <div className="h-px w-16 bg-gradient-to-r from-transparent to-emerald-600"></div>
-            <span>{teams.length} Equipos Registrados</span>
-            <div className="h-px w-16 bg-gradient-to-l from-transparent to-emerald-600"></div>
+            <div className="h-px w-16 bg-gradient-to-r from-transparent to-primary"></div>
+            <span>{teams.length} Clubes Registrados</span>
+            <div className="h-px w-16 bg-gradient-to-l from-transparent to-primary"></div>
+          </div>
+        </div>
+
+        {/* Search Bar */}
+        <div className="max-w-md mx-auto mb-10">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+            <Input
+              placeholder="Buscar por nombre o localidad..."
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              className="pl-10"
+            />
           </div>
         </div>
 
         {/* Teams Grid */}
-        {teams.length === 0 ? (
+        {filteredTeams.length === 0 ? (
           <div className="text-center py-16">
             <Users className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
             <p className="text-xl text-muted-foreground">
-              No hay equipos registrados aún
+              {search ? 'No se encontraron clubes con esa búsqueda' : 'No hay equipos registrados aún'}
             </p>
           </div>
         ) : (
           <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
-            {teams.map((team, index) => (
+            {filteredTeams.map((team, index) => (
               <Card 
                 key={team.id}
                 className="group hover-scale overflow-hidden border-2 hover:border-emerald-600/50 transition-all duration-300 hover:shadow-xl animate-fade-in cursor-pointer"
@@ -105,6 +132,14 @@ export const TeamsPage = () => {
                 </CardHeader>
 
                 <CardContent className="space-y-4 pt-6">
+                  {/* Location */}
+                  {(team.city || team.province) && (
+                    <div className="flex items-center justify-center gap-1 text-sm text-muted-foreground">
+                      <MapPin className="w-4 h-4 text-primary" />
+                      <span>{[team.city, team.province].filter(Boolean).join(', ')}</span>
+                    </div>
+                  )}
+
                   {/* Description */}
                   {team.description && (
                     <p className="text-sm text-muted-foreground text-center line-clamp-3 leading-relaxed">

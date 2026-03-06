@@ -6,6 +6,10 @@ export interface Team {
   founded_year?: number;
   colors?: string;
   parent_team_id?: string;
+  country?: string;
+  autonomous_community?: string;
+  province?: string;
+  city?: string;
   created_at: string;
 }
 
