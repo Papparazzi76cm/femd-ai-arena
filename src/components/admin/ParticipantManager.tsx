@@ -45,6 +45,17 @@ export const ParticipantManager = () => {
       ]);
       setParticipants(participantsData);
       setTeams(teamsData);
+
+      // Load histories for all participants
+      const histories: Record<string, PlayerTeamHistory[]> = {};
+      await Promise.all(
+        participantsData.map(async (p) => {
+          try {
+            histories[p.id] = await playerHistoryService.getByPlayer(p.id);
+          } catch { histories[p.id] = []; }
+        })
+      );
+      setPlayerHistories(histories);
     } catch (error) {
       toast({
         title: 'Error',
