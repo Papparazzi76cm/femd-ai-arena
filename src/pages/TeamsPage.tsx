@@ -18,7 +18,7 @@ export const TeamsPage = () => {
 
   const loadTeams = async () => {
     try {
-      const data = await teamService.getAll();
+      const data = await teamService.getClubs();
       setTeams(data);
     } catch (error) {
       toast({
