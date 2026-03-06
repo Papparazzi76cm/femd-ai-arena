@@ -235,6 +235,23 @@ export const ParticipantManager = () => {
         </div>
       </div>
 
+      <div className="flex items-center gap-2">
+        <Filter className="w-4 h-4 text-muted-foreground" />
+        <Select value={filterTeamId} onValueChange={setFilterTeamId}>
+          <SelectTrigger className="w-[280px]">
+            <SelectValue placeholder="Filtrar por equipo" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todos los equipos</SelectItem>
+            <SelectItem value="none">Sin equipo</SelectItem>
+            {teams.map(team => (
+              <SelectItem key={team.id} value={team.id}>{team.name}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <span className="text-sm text-muted-foreground">{filteredParticipants.length} jugador(es)</span>
+      </div>
+
       {showForm && (
         <Card>
           <CardHeader>
