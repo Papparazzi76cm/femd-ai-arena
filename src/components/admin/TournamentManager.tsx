@@ -39,6 +39,7 @@ export const TournamentManager = ({ eventId }: TournamentManagerProps) => {
   const [teamDialogOpen, setTeamDialogOpen] = useState(false);
   const [categoryDialogOpen, setCategoryDialogOpen] = useState(false);
   const [facilityDialogOpen, setFacilityDialogOpen] = useState(false);
+  const [matchDialogOpen, setMatchDialogOpen] = useState(false);
   
   // Category form
   const [newCategoryId, setNewCategoryId] = useState('');
@@ -47,6 +48,15 @@ export const TournamentManager = ({ eventId }: TournamentManagerProps) => {
   
   // Facility form
   const [newFacilityId, setNewFacilityId] = useState('');
+
+  // Match form
+  const [newMatchHomeTeamId, setNewMatchHomeTeamId] = useState('');
+  const [newMatchAwayTeamId, setNewMatchAwayTeamId] = useState('');
+  const [newMatchPhase, setNewMatchPhase] = useState<string>('group');
+  const [newMatchGroup, setNewMatchGroup] = useState('');
+  const [newMatchCategoryId, setNewMatchCategoryId] = useState('');
+  const [newMatchDate, setNewMatchDate] = useState('');
+  const [newMatchFieldId, setNewMatchFieldId] = useState('');
   
   const { toast } = useToast();
 
@@ -209,6 +219,71 @@ export const TournamentManager = ({ eventId }: TournamentManagerProps) => {
       toast({ title: 'Error', description: 'No se pudo actualizar', variant: 'destructive' });
     }
   };
+
+  const handleCreateMatch = async () => {
+    if (!newMatchHomeTeamId || !newMatchAwayTeamId) {
+      toast({ title: 'Error', description: 'Selecciona equipo local y visitante', variant: 'destructive' });
+      return;
+    }
+    if (newMatchHomeTeamId === newMatchAwayTeamId) {
+      toast({ title: 'Error', description: 'El equipo local y visitante no pueden ser el mismo', variant: 'destructive' });
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const matchData: any = {
+        event_id: eventId,
+        home_team_id: newMatchHomeTeamId,
+        away_team_id: newMatchAwayTeamId,
+        phase: newMatchPhase,
+        status: 'scheduled',
+      };
+      if (newMatchGroup) matchData.group_name = newMatchGroup;
+      if (newMatchCategoryId) matchData.category_id = newMatchCategoryId;
+      if (newMatchDate) matchData.match_date = newMatchDate;
+      if (newMatchFieldId) matchData.field_id = newMatchFieldId;
+      matchData.match_number = matches.length + 1;
+
+      await tournamentService.createMatch(matchData);
+      toast({ title: 'Partido creado' });
+      
+      // Reset form
+      setNewMatchHomeTeamId('');
+      setNewMatchAwayTeamId('');
+      setNewMatchPhase('group');
+      setNewMatchGroup('');
+      setNewMatchCategoryId('');
+      setNewMatchDate('');
+      setNewMatchFieldId('');
+      setMatchDialogOpen(false);
+      await loadData();
+    } catch (error) {
+      console.error('Error creando partido:', error);
+      toast({ title: 'Error', description: 'No se pudo crear el partido', variant: 'destructive' });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDeleteMatch = async (matchId: string) => {
+    if (!confirm('¿Eliminar este partido?')) return;
+    try {
+      await tournamentService.deleteMatch(matchId);
+      toast({ title: 'Partido eliminado' });
+      await loadData();
+    } catch (error) {
+      toast({ title: 'Error', description: 'No se pudo eliminar', variant: 'destructive' });
+    }
+  };
+
+  // Get all fields from event facilities
+  const allFields = eventFacilities.flatMap((ef: any) => 
+    (ef.facility?.fields || []).map((f: any) => ({
+      ...f,
+      facilityName: ef.facility?.name || '',
+    }))
+  );
 
   // Helpers
   const getTeamName = (teamId: string) => {
@@ -498,7 +573,145 @@ export const TournamentManager = ({ eventId }: TournamentManagerProps) => {
         </TabsContent>
 
         {/* Calendario */}
-        <TabsContent value="calendario" className="mt-6">
+        <TabsContent value="calendario" className="mt-6 space-y-4">
+          <div className="flex justify-end">
+            <Dialog open={matchDialogOpen} onOpenChange={setMatchDialogOpen}>
+              <DialogTrigger asChild>
+                <Button disabled={eventTeams.length < 2}>
+                  <Plus className="w-4 h-4 mr-2" />
+                  Crear Partido
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-lg">
+                <DialogHeader>
+                  <DialogTitle>Nuevo Partido</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label>Equipo Local</Label>
+                      <Select value={newMatchHomeTeamId} onValueChange={setNewMatchHomeTeamId}>
+                        <SelectTrigger><SelectValue placeholder="Seleccionar" /></SelectTrigger>
+                        <SelectContent>
+                          {eventTeams.map(et => (
+                            <SelectItem key={et.id} value={et.team_id}>
+                              {getTeamName(et.team_id)}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <Label>Equipo Visitante</Label>
+                      <Select value={newMatchAwayTeamId} onValueChange={setNewMatchAwayTeamId}>
+                        <SelectTrigger><SelectValue placeholder="Seleccionar" /></SelectTrigger>
+                        <SelectContent>
+                          {eventTeams.map(et => (
+                            <SelectItem key={et.id} value={et.team_id}>
+                              {getTeamName(et.team_id)}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label>Fase</Label>
+                      <Select value={newMatchPhase} onValueChange={setNewMatchPhase}>
+                        <SelectTrigger><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          {Object.entries({
+                            'group': 'Fase de Grupos',
+                            'round_of_16': 'Octavos',
+                            'quarter_final': 'Cuartos',
+                            'semi_final': 'Semifinales',
+                            'third_place': 'Tercer Puesto',
+                            'final': 'Final',
+                            'gold_round_of_16': 'Oro - Octavos',
+                            'gold_quarter_final': 'Oro - Cuartos',
+                            'gold_semi_final': 'Oro - Semifinales',
+                            'gold_third_place': 'Oro - 3er Puesto',
+                            'gold_final': 'Oro - Final',
+                            'silver_round_of_16': 'Plata - Octavos',
+                            'silver_quarter_final': 'Plata - Cuartos',
+                            'silver_semi_final': 'Plata - Semifinales',
+                            'silver_third_place': 'Plata - 3er Puesto',
+                            'silver_final': 'Plata - Final',
+                            'bronze_round_of_16': 'Bronce - Octavos',
+                            'bronze_quarter_final': 'Bronce - Cuartos',
+                            'bronze_semi_final': 'Bronce - Semifinales',
+                            'bronze_third_place': 'Bronce - 3er Puesto',
+                            'bronze_final': 'Bronce - Final',
+                          }).map(([value, label]) => (
+                            <SelectItem key={value} value={value}>{label}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <Label>Grupo (opcional)</Label>
+                      <Input
+                        placeholder="Ej: A, B, C..."
+                        value={newMatchGroup}
+                        onChange={(e) => setNewMatchGroup(e.target.value.toUpperCase())}
+                        maxLength={2}
+                      />
+                    </div>
+                  </div>
+
+                  {eventCategories.length > 0 && (
+                    <div>
+                      <Label>Categoría (opcional)</Label>
+                      <Select value={newMatchCategoryId} onValueChange={setNewMatchCategoryId}>
+                        <SelectTrigger><SelectValue placeholder="Sin categoría" /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="">Sin categoría</SelectItem>
+                          {eventCategories.map(ec => (
+                            <SelectItem key={ec.id} value={ec.id}>
+                              {ec.category?.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
+
+                  {allFields.length > 0 && (
+                    <div>
+                      <Label>Campo (opcional)</Label>
+                      <Select value={newMatchFieldId} onValueChange={setNewMatchFieldId}>
+                        <SelectTrigger><SelectValue placeholder="Sin asignar" /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="">Sin asignar</SelectItem>
+                          {allFields.map((f: any) => (
+                            <SelectItem key={f.id} value={f.id}>
+                              {f.facilityName} - {f.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
+
+                  <div>
+                    <Label>Fecha y hora (opcional)</Label>
+                    <Input
+                      type="datetime-local"
+                      value={newMatchDate}
+                      onChange={(e) => setNewMatchDate(e.target.value)}
+                    />
+                  </div>
+
+                  <Button onClick={handleCreateMatch} disabled={loading} className="w-full">
+                    Crear Partido
+                  </Button>
+                </div>
+              </DialogContent>
+            </Dialog>
+          </div>
+
           {matches.length > 0 ? (
             <Card className="p-6">
               <h3 className="text-xl font-bold mb-4">Calendario de Partidos</h3>
@@ -537,7 +750,19 @@ export const TournamentManager = ({ eventId }: TournamentManagerProps) => {
                               <div className="flex-1 text-right">
                                 <div className="font-semibold">{getTeamName(match.away_team_id)}</div>
                               </div>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => handleDeleteMatch(match.id)}
+                              >
+                                <Trash2 className="w-4 h-4 text-destructive" />
+                              </Button>
                             </div>
+                            {match.match_date && (
+                              <p className="text-xs text-muted-foreground mt-1">
+                                {new Date(match.match_date).toLocaleString('es-ES')}
+                              </p>
+                            )}
                           </Card>
                         ))}
                       </div>
