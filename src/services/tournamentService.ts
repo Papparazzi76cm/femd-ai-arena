@@ -115,66 +115,6 @@ export const tournamentService = {
     if (error) throw error;
   },
 
-  // Tournament Generation
-  async generateTournament(eventId: string, teamIds: string[]): Promise<void> {
-    if (teamIds.length !== 24) {
-      throw new Error('Se requieren exactamente 24 equipos para el torneo');
-    }
-
-    // Shuffle teams for random draw
-    const shuffledTeams = [...teamIds].sort(() => Math.random() - 0.5);
-    
-    // Assign teams to groups (A, B, C, D, E, F)
-    const groups = ['A', 'B', 'C', 'D', 'E', 'F'];
-    const eventTeams: any[] = [];
-    
-    shuffledTeams.forEach((teamId, index) => {
-      const groupIndex = Math.floor(index / 4);
-      eventTeams.push({
-        event_id: eventId,
-        team_id: teamId,
-        group_name: groups[groupIndex],
-      });
-    });
-
-    // Insert event teams with groups
-    const { error: teamsError } = await supabase
-      .from('event_teams')
-      .upsert(eventTeams, { onConflict: 'event_id,team_id' });
-    
-    if (teamsError) throw teamsError;
-
-    // Generate group stage matches
-    const matches: any[] = [];
-    let matchNumber = 1;
-
-    groups.forEach((group, groupIndex) => {
-      const groupTeams = shuffledTeams.slice(groupIndex * 4, (groupIndex + 1) * 4);
-      
-      // Each team plays against the other 3 in the group
-      for (let i = 0; i < groupTeams.length; i++) {
-        for (let j = i + 1; j < groupTeams.length; j++) {
-          matches.push({
-            event_id: eventId,
-            home_team_id: groupTeams[i],
-            away_team_id: groupTeams[j],
-            phase: 'group',
-            group_name: group,
-            match_number: matchNumber++,
-            status: 'scheduled',
-          });
-        }
-      }
-    });
-
-    // Insert matches
-    const { error: matchesError } = await supabase
-      .from('matches')
-      .insert(matches);
-    
-    if (matchesError) throw matchesError;
-  },
-
   // Update team statistics based on match results
   async updateTeamStatistics(eventId: string): Promise<void> {
     // Get all group stage matches for this event (including Jornada phases)
@@ -344,56 +284,6 @@ export const tournamentService = {
     }
 
     return sorted;
-  },
-
-  // Generate knockout phase (Round of 16)
-  async generateKnockoutPhase(eventId: string): Promise<void> {
-    const groups = ['A', 'B', 'C', 'D', 'E', 'F'];
-    const qualifiedTeams: { teamId: string; group: string; position: number }[] = [];
-
-    // Get top 2 from each group
-    for (const group of groups) {
-      const { data: groupTeams } = await supabase
-        .from('event_teams')
-        .select('*')
-        .eq('event_id', eventId)
-        .eq('group_name', group);
-
-      if (!groupTeams || groupTeams.length === 0) continue;
-
-      const sorted = await this.sortTeamsByStandings(eventId, groupTeams as EventTeam[]);
-      qualifiedTeams.push({ teamId: sorted[0].team_id, group, position: 1 });
-      qualifiedTeams.push({ teamId: sorted[1].team_id, group, position: 2 });
-    }
-
-    if (qualifiedTeams.length !== 12) {
-      throw new Error('No se encontraron 12 equipos clasificados');
-    }
-
-    // Create Round of 16 matchups (1st of group vs 2nd of another group)
-    const matches: any[] = [
-      { home: qualifiedTeams[0].teamId, away: qualifiedTeams[7].teamId },  // 1A vs 2D
-      { home: qualifiedTeams[6].teamId, away: qualifiedTeams[1].teamId },  // 1D vs 2A
-      { home: qualifiedTeams[2].teamId, away: qualifiedTeams[9].teamId },  // 1B vs 2E
-      { home: qualifiedTeams[8].teamId, away: qualifiedTeams[3].teamId },  // 1E vs 2B
-      { home: qualifiedTeams[4].teamId, away: qualifiedTeams[11].teamId }, // 1C vs 2F
-      { home: qualifiedTeams[10].teamId, away: qualifiedTeams[5].teamId }, // 1F vs 2C
-    ];
-
-    const matchRecords = matches.map((match, index) => ({
-      event_id: eventId,
-      home_team_id: match.home,
-      away_team_id: match.away,
-      phase: 'round_of_16',
-      match_number: index + 1,
-      status: 'scheduled',
-    }));
-
-    const { error } = await supabase
-      .from('matches')
-      .insert(matchRecords);
-
-    if (error) throw error;
   },
 
   // Añadir equipo con letra automática si ya existe el mismo club
