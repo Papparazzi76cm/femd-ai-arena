@@ -132,6 +132,14 @@ export const TeamsPage = () => {
                 </CardHeader>
 
                 <CardContent className="space-y-4 pt-6">
+                  {/* Location */}
+                  {(team.city || team.province) && (
+                    <div className="flex items-center justify-center gap-1 text-sm text-muted-foreground">
+                      <MapPin className="w-4 h-4 text-primary" />
+                      <span>{[team.city, team.province].filter(Boolean).join(', ')}</span>
+                    </div>
+                  )}
+
                   {/* Description */}
                   {team.description && (
                     <p className="text-sm text-muted-foreground text-center line-clamp-3 leading-relaxed">
