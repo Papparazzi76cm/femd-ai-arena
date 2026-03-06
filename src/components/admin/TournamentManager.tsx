@@ -208,6 +208,15 @@ export const TournamentManager = ({ eventId }: TournamentManagerProps) => {
     }
   };
 
+  const handleUpdateGroup = async (eventTeamId: string, groupName: string) => {
+    try {
+      await tournamentService.updateEventTeam(eventTeamId, { group_name: groupName || null });
+      await loadData();
+    } catch (error) {
+      toast({ title: 'Error', description: 'No se pudo actualizar el grupo', variant: 'destructive' });
+    }
+  };
+
 
   const handleUpdateMatchScore = async (matchId: string, field: string, value: string) => {
     try {
@@ -534,40 +543,88 @@ export const TournamentManager = ({ eventId }: TournamentManagerProps) => {
 
           </div>
 
-          {Object.keys(groupedTeams).length > 0 && (
+          {eventTeams.length > 0 && (
             <Card className="p-6">
               <h3 className="text-xl font-bold mb-4">
                 Clubes Inscritos ({eventTeams.length})
               </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {Object.entries(groupedTeams).sort().map(([group, teams]) => (
-                  <Card key={group} className="p-4">
-                    <h4 className="font-bold mb-3 text-center">Grupo {group}</h4>
-                    <table className="w-full text-xs">
-                      <thead>
-                        <tr className="border-b">
-                          <th className="text-left py-1">#</th>
-                          <th className="text-left py-1">Equipo</th>
-                          <th className="text-center py-1">PJ</th>
-                          <th className="text-center py-1">Pts</th>
-                          <th className="text-center py-1">DG</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {teams.map((et, index) => (
-                          <tr key={et.id} className={`border-b ${index < 2 ? 'bg-green-500/10' : ''}`}>
-                            <td className="py-1">{index + 1}</td>
-                            <td className="py-1">{getTeamName(et.team_id)}</td>
-                            <td className="text-center py-1">{et.matches_played}</td>
-                            <td className="text-center py-1 font-bold">{et.points}</td>
-                            <td className="text-center py-1">{et.goal_difference}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </Card>
-                ))}
+              <div className="space-y-2">
+                {eventTeams.map(et => {
+                  const team = teams.find(t => t.id === et.team_id);
+                  const catName = eventCategories.find(ec => ec.id === et.category_id)?.category?.name;
+                  return (
+                    <div key={et.id} className="flex items-center gap-3 p-3 rounded-lg border bg-card">
+                      <div className="flex-1 min-w-0">
+                        <span className="font-medium text-sm">
+                          {team?.name || 'Desconocido'}
+                          {et.team_letter && <span className="text-muted-foreground ml-1">{et.team_letter}</span>}
+                        </span>
+                        {catName && (
+                          <Badge variant="outline" className="ml-2 text-xs">{catName}</Badge>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Label className="text-xs text-muted-foreground whitespace-nowrap">Grupo:</Label>
+                        <Input
+                          className="w-16 h-8 text-center text-sm"
+                          placeholder="-"
+                          maxLength={2}
+                          value={et.group_name || ''}
+                          onChange={(e) => handleUpdateGroup(et.id, e.target.value.toUpperCase())}
+                        />
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8"
+                        onClick={async () => {
+                          if (!confirm('¿Eliminar este club del torneo?')) return;
+                          await tournamentService.removeTeamFromEvent(et.id);
+                          await loadData();
+                        }}
+                      >
+                        <Trash2 className="w-4 h-4 text-destructive" />
+                      </Button>
+                    </div>
+                  );
+                })}
               </div>
+
+              {/* Resumen de grupos */}
+              {Object.keys(groupedTeams).filter(g => g !== 'Sin grupo').length > 0 && (
+                <div className="mt-6">
+                  <h4 className="font-bold mb-3">Clasificación por Grupos</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {Object.entries(groupedTeams).filter(([g]) => g !== 'Sin grupo').sort().map(([group, gTeams]) => (
+                      <Card key={group} className="p-4">
+                        <h4 className="font-bold mb-3 text-center">Grupo {group}</h4>
+                        <table className="w-full text-xs">
+                          <thead>
+                            <tr className="border-b">
+                              <th className="text-left py-1">#</th>
+                              <th className="text-left py-1">Equipo</th>
+                              <th className="text-center py-1">PJ</th>
+                              <th className="text-center py-1">Pts</th>
+                              <th className="text-center py-1">DG</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {gTeams.map((et, index) => (
+                              <tr key={et.id} className={`border-b ${index < 2 ? 'bg-green-500/10' : ''}`}>
+                                <td className="py-1">{index + 1}</td>
+                                <td className="py-1">{getTeamName(et.team_id)}</td>
+                                <td className="text-center py-1">{et.matches_played}</td>
+                                <td className="text-center py-1 font-bold">{et.points}</td>
+                                <td className="text-center py-1">{et.goal_difference}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </Card>
+                    ))}
+                  </div>
+                </div>
+              )}
             </Card>
           )}
         </TabsContent>
