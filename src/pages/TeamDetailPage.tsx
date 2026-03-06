@@ -19,6 +19,7 @@ export const TeamDetailPage = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [team, setTeam] = useState<Team | null>(null);
+  const [childTeams, setChildTeams] = useState<Team[]>([]);
   const [participants, setParticipants] = useState<Participant[]>([]);
   const [events, setEvents] = useState<Event[]>([]);
   const [matches, setMatches] = useState<any[]>([]);
