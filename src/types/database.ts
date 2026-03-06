@@ -5,6 +5,7 @@ export interface Team {
   description?: string;
   founded_year?: number;
   colors?: string;
+  parent_team_id?: string;
   created_at: string;
 }
 
