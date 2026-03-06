@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, Edit, Trash2, Save, X, Upload, History, ArrowRightLeft } from 'lucide-react';
+import { Plus, Edit, Trash2, Save, X, Upload, History, ArrowRightLeft, Filter } from 'lucide-react';
 import { PlayerTeamChangeDialog } from './PlayerTeamChangeDialog';
 import { PlayerTransferDialog } from './PlayerTransferDialog';
 import { playerHistoryService, PlayerTeamHistory } from '@/services/playerHistoryService';
@@ -16,6 +16,7 @@ export const ParticipantManager = () => {
   const [participants, setParticipants] = useState<Participant[]>([]);
   const [teams, setTeams] = useState<Team[]>([]);
   const [loading, setLoading] = useState(true);
+  const [filterTeamId, setFilterTeamId] = useState<string>('all');
   const [editingId, setEditingId] = useState<string | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [formData, setFormData] = useState({
@@ -192,6 +193,12 @@ export const ParticipantManager = () => {
     }
   };
 
+  const filteredParticipants = filterTeamId === 'all'
+    ? participants
+    : filterTeamId === 'none'
+      ? participants.filter(p => !p.team_id)
+      : participants.filter(p => p.team_id === filterTeamId);
+
   const getTeamName = (teamId?: string) => {
     if (!teamId) return 'Sin equipo';
     return teams.find(t => t.id === teamId)?.name || 'Sin equipo';
@@ -226,6 +233,23 @@ export const ParticipantManager = () => {
             {showForm ? 'Cancelar' : 'Nuevo Participante'}
           </Button>
         </div>
+      </div>
+
+      <div className="flex items-center gap-2">
+        <Filter className="w-4 h-4 text-muted-foreground" />
+        <Select value={filterTeamId} onValueChange={setFilterTeamId}>
+          <SelectTrigger className="w-[280px]">
+            <SelectValue placeholder="Filtrar por equipo" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todos los equipos</SelectItem>
+            <SelectItem value="none">Sin equipo</SelectItem>
+            {teams.map(team => (
+              <SelectItem key={team.id} value={team.id}>{team.name}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <span className="text-sm text-muted-foreground">{filteredParticipants.length} jugador(es)</span>
       </div>
 
       {showForm && (
@@ -312,7 +336,7 @@ export const ParticipantManager = () => {
       )}
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {participants.map((participant) => (
+        {filteredParticipants.map((participant) => (
           <Card key={participant.id}>
             <CardHeader>
               <CardTitle className="flex items-center justify-between">
