@@ -2,10 +2,34 @@ import { supabase } from '@/integrations/supabase/client';
 import { Team } from '@/types/database';
 
 export const teamService = {
+  // Get only parent clubs (no child/filial teams)
+  async getClubs(): Promise<Team[]> {
+    const { data, error } = await supabase
+      .from('teams')
+      .select('*')
+      .is('parent_team_id', null)
+      .order('name');
+    
+    if (error) throw error;
+    return data || [];
+  },
+
   async getAll(): Promise<Team[]> {
     const { data, error } = await supabase
       .from('teams')
       .select('*')
+      .order('name');
+    
+    if (error) throw error;
+    return data || [];
+  },
+
+  // Get child teams of a parent club
+  async getChildTeams(parentId: string): Promise<Team[]> {
+    const { data, error } = await supabase
+      .from('teams')
+      .select('*')
+      .eq('parent_team_id', parentId)
       .order('name');
     
     if (error) throw error;

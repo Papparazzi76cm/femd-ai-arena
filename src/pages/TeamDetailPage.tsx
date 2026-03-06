@@ -19,6 +19,7 @@ export const TeamDetailPage = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [team, setTeam] = useState<Team | null>(null);
+  const [childTeams, setChildTeams] = useState<Team[]>([]);
   const [participants, setParticipants] = useState<Participant[]>([]);
   const [events, setEvents] = useState<Event[]>([]);
   const [matches, setMatches] = useState<any[]>([]);
@@ -32,13 +33,15 @@ export const TeamDetailPage = () => {
     if (!id) return;
     
     try {
-      const [teamData, participantsData, eventsData] = await Promise.all([
+      const [teamData, participantsData, eventsData, childTeamsData] = await Promise.all([
         teamService.getById(id),
         participantService.getByTeam(id),
-        eventService.getAll()
+        eventService.getAll(),
+        teamService.getChildTeams(id)
       ]);
 
       setTeam(teamData);
+      setChildTeams(childTeamsData);
       setParticipants(participantsData);
       
       // Filter events that include this team
@@ -101,14 +104,24 @@ export const TeamDetailPage = () => {
     <div className="min-h-screen bg-gradient-to-b from-muted/20 to-background py-16">
       <div className="container mx-auto px-4">
         {/* Back Button */}
-        <Button 
-          variant="ghost" 
-          onClick={() => navigate('/equipos')}
-          className="mb-6"
-        >
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          Volver a equipos
-        </Button>
+        <div className="flex gap-2 mb-6">
+          <Button 
+            variant="ghost" 
+            onClick={() => navigate('/equipos')}
+          >
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Volver a clubes
+          </Button>
+          {team.parent_team_id && (
+            <Button 
+              variant="outline" 
+              onClick={() => navigate(`/equipos/${team.parent_team_id}`)}
+            >
+              <Shield className="w-4 h-4 mr-2" />
+              Ver club principal
+            </Button>
+          )}
+        </div>
 
         {/* Team Header */}
         <Card className="mb-8 overflow-hidden border-2">
@@ -157,12 +170,14 @@ export const TeamDetailPage = () => {
         </Card>
 
         {/* Tabs for different sections */}
-        <Tabs defaultValue="plantilla" className="w-full">
-          <TabsList className="grid w-full grid-cols-4 lg:w-auto mb-8">
-            <TabsTrigger value="plantilla" className="flex items-center gap-2">
-              <Users className="w-4 h-4" />
-              Plantilla
-            </TabsTrigger>
+        <Tabs defaultValue={childTeams.length > 0 ? "equipos" : "estadisticas"} className="w-full">
+          <TabsList className={`grid w-full ${childTeams.length > 0 ? 'grid-cols-5' : 'grid-cols-4'} lg:w-auto mb-8`}>
+            {childTeams.length > 0 && (
+              <TabsTrigger value="equipos" className="flex items-center gap-2">
+                <Shield className="w-4 h-4" />
+                Equipos
+              </TabsTrigger>
+            )}
             <TabsTrigger value="estadisticas" className="flex items-center gap-2">
               <TrendingUp className="w-4 h-4" />
               Estadísticas
@@ -171,11 +186,69 @@ export const TeamDetailPage = () => {
               <Trophy className="w-4 h-4" />
               Partidos
             </TabsTrigger>
+            <TabsTrigger value="plantilla" className="flex items-center gap-2">
+              <Users className="w-4 h-4" />
+              Plantilla
+            </TabsTrigger>
             <TabsTrigger value="galeria" className="flex items-center gap-2">
               <Image className="w-4 h-4" />
               Galería
             </TabsTrigger>
           </TabsList>
+
+          {/* Equipos del Club Tab */}
+          {childTeams.length > 0 && (
+            <TabsContent value="equipos">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Equipos del Club</CardTitle>
+                  <CardDescription>Todos los equipos que pertenecen a {team.name}</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                    {/* Main team card */}
+                    <Card className="border-2 border-primary/30 bg-primary/5">
+                      <CardContent className="flex items-center gap-4 p-4">
+                        {team.logo_url ? (
+                          <img src={team.logo_url} alt={team.name} className="w-16 h-16 object-contain" />
+                        ) : (
+                          <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center">
+                            <Shield className="w-8 h-8 text-primary" />
+                          </div>
+                        )}
+                        <div>
+                          <p className="font-semibold text-lg">{team.name}</p>
+                          <Badge variant="default">Equipo Principal</Badge>
+                        </div>
+                      </CardContent>
+                    </Card>
+                    {/* Child team cards */}
+                    {childTeams.map((child) => (
+                      <Card 
+                        key={child.id} 
+                        className="hover:border-primary/30 transition-colors cursor-pointer"
+                        onClick={() => navigate(`/equipos/${child.id}`)}
+                      >
+                        <CardContent className="flex items-center gap-4 p-4">
+                          {child.logo_url || team.logo_url ? (
+                            <img src={child.logo_url || team.logo_url} alt={child.name} className="w-16 h-16 object-contain" />
+                          ) : (
+                            <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center">
+                              <Shield className="w-8 h-8 text-muted-foreground" />
+                            </div>
+                          )}
+                          <div>
+                            <p className="font-semibold text-lg">{child.name}</p>
+                            <Badge variant="outline">Filial</Badge>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+          )}
 
           {/* Plantilla Tab */}
           <TabsContent value="plantilla">
