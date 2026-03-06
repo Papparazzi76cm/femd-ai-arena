@@ -7,8 +7,10 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, Edit, Trash2, Save, X, Upload, History } from 'lucide-react';
+import { Plus, Edit, Trash2, Save, X, Upload, History, ArrowRightLeft } from 'lucide-react';
 import { PlayerTeamChangeDialog } from './PlayerTeamChangeDialog';
+import { PlayerTransferDialog } from './PlayerTransferDialog';
+import { playerHistoryService, PlayerTeamHistory } from '@/services/playerHistoryService';
 
 export const ParticipantManager = () => {
   const [participants, setParticipants] = useState<Participant[]>([]);
@@ -26,6 +28,9 @@ export const ParticipantManager = () => {
   });
   const [historyDialogOpen, setHistoryDialogOpen] = useState(false);
   const [selectedParticipant, setSelectedParticipant] = useState<Participant | null>(null);
+  const [transferDialogOpen, setTransferDialogOpen] = useState(false);
+  const [transferParticipant, setTransferParticipant] = useState<Participant | null>(null);
+  const [playerHistories, setPlayerHistories] = useState<Record<string, PlayerTeamHistory[]>>({});
   const { toast } = useToast();
 
   useEffect(() => {
@@ -40,6 +45,17 @@ export const ParticipantManager = () => {
       ]);
       setParticipants(participantsData);
       setTeams(teamsData);
+
+      // Load histories for all participants
+      const histories: Record<string, PlayerTeamHistory[]> = {};
+      await Promise.all(
+        participantsData.map(async (p) => {
+          try {
+            histories[p.id] = await playerHistoryService.getByPlayer(p.id);
+          } catch { histories[p.id] = []; }
+        })
+      );
+      setPlayerHistories(histories);
     } catch (error) {
       toast({
         title: 'Error',
@@ -303,6 +319,12 @@ export const ParticipantManager = () => {
                 <span className="truncate">{participant.name}</span>
                 <div className="flex gap-1">
                   <Button size="sm" variant="ghost" onClick={() => {
+                    setTransferParticipant(participant);
+                    setTransferDialogOpen(true);
+                  }} title="Traspaso a otro club">
+                    <ArrowRightLeft className="w-4 h-4 text-blue-600" />
+                  </Button>
+                  <Button size="sm" variant="ghost" onClick={() => {
                     setSelectedParticipant(participant);
                     setHistoryDialogOpen(true);
                   }} title="Historial de equipos">
@@ -328,6 +350,23 @@ export const ParticipantManager = () => {
               {participant.number && (
                 <p className="text-sm"><strong>Número:</strong> {participant.number}</p>
               )}
+
+              {/* Histórico de clubes */}
+              {playerHistories[participant.id] && playerHistories[participant.id].length > 0 && (
+                <div className="mt-3 pt-3 border-t">
+                  <p className="text-xs font-semibold text-muted-foreground mb-1 flex items-center gap-1">
+                    <History className="w-3 h-3" /> Histórico de clubes
+                  </p>
+                  <div className="space-y-1">
+                    {playerHistories[participant.id].map(h => (
+                      <div key={h.id} className="text-xs flex items-center gap-1 text-muted-foreground">
+                        <span className="font-medium text-foreground">{getTeamName(h.team_id)}</span>
+                        <span>({h.start_date}{h.end_date ? ` → ${h.end_date}` : ' → actual'})</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </CardContent>
           </Card>
         ))}
@@ -338,6 +377,16 @@ export const ParticipantManager = () => {
           open={historyDialogOpen}
           onOpenChange={setHistoryDialogOpen}
           participant={selectedParticipant}
+          teams={teams}
+          onSuccess={loadData}
+        />
+      )}
+
+      {transferParticipant && (
+        <PlayerTransferDialog
+          open={transferDialogOpen}
+          onOpenChange={setTransferDialogOpen}
+          participant={transferParticipant}
           teams={teams}
           onSuccess={loadData}
         />
