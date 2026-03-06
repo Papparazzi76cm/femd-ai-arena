@@ -89,13 +89,15 @@ export const ContactPage = () => {
     }
   };
 
+  const phoneContacts = [
+    { name: 'Jesús de la Iglesia', phone: '673391649' },
+    { name: 'Felipe Fernández', phone: '616931153' },
+    { name: 'Daniel Escudero', phone: '666242094' },
+    { name: 'Sergio Fernández', phone: '672266074' },
+    { name: 'Rodrigo Manrique', phone: '605373649' },
+  ];
+
   const contactInfo = [
-    {
-      icon: Phone,
-      title: 'Teléfono',
-      content: '+34 XXX XXX XXX',
-      link: 'tel:+34XXXXXXXXX'
-    },
     {
       icon: Mail,
       title: 'Email',
@@ -105,8 +107,8 @@ export const ContactPage = () => {
     {
       icon: MapPin,
       title: 'Ubicación',
-      content: 'Aranda de Duero, Burgos, España',
-      link: 'https://maps.google.com/?q=Aranda+de+Duero,Burgos,España'
+      content: 'Calle Toreros, 6, Bajo Derecha - 47007 (Valladolid, España)',
+      link: 'https://maps.google.com/?q=Calle+Toreros+6+Valladolid+España'
     }
   ];
 
@@ -276,6 +278,29 @@ export const ContactPage = () => {
                 <CardTitle className="text-xl">Información de Contacto</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
+                {/* Phone contacts */}
+                <div className="p-4 rounded-lg bg-muted/50">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="p-3 bg-primary/10 rounded-lg">
+                      <Phone className="w-5 h-5 text-primary" />
+                    </div>
+                    <h3 className="font-semibold text-sm">Teléfonos</h3>
+                  </div>
+                  <div className="space-y-2 ml-14">
+                    {phoneContacts.map((contact, i) => (
+                      <a
+                        key={i}
+                        href={`tel:+34${contact.phone}`}
+                        className="flex items-center gap-2 text-sm hover:text-primary transition-colors"
+                      >
+                        <Phone className="w-3.5 h-3.5 text-primary" />
+                        <span className="font-medium">{contact.phone}</span>
+                        <span className="text-muted-foreground">{contact.name}</span>
+                      </a>
+                    ))}
+                  </div>
+                </div>
+
                 {contactInfo.map((info, index) => (
                   <a
                     key={index}
@@ -284,8 +309,8 @@ export const ContactPage = () => {
                     rel="noopener noreferrer"
                     className="flex items-start gap-4 p-4 rounded-lg bg-muted/50 hover:bg-muted transition-all duration-300 hover:scale-105 group"
                   >
-                    <div className="p-3 bg-emerald-600/10 rounded-lg group-hover:bg-emerald-600/20 transition-colors">
-                      <info.icon className="w-5 h-5 text-emerald-600" />
+                    <div className="p-3 bg-primary/10 rounded-lg group-hover:bg-primary/20 transition-colors">
+                      <info.icon className="w-5 h-5 text-primary" />
                     </div>
                     <div className="flex-1">
                       <h3 className="font-semibold text-sm mb-1">{info.title}</h3>
@@ -357,7 +382,7 @@ export const ContactPage = () => {
             <CardContent className="p-0">
               <div className="w-full h-96 bg-muted relative overflow-hidden">
                 <iframe
-                  src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d47556.91524724!2d-3.7049!3d41.67!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0xd443e6b3dfe7d7f%3A0x408a0efb42a44b0!2sAranda%20de%20Duero%2C%20Burgos!5e0!3m2!1ses!2ses!4v1234567890"
+                  src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2959.5!2d-4.7245!3d41.6520!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0xd475f8a!2sCalle+Toreros+6+Valladolid!5e0!3m2!1ses!2ses"
                   width="100%"
                   height="100%"
                   style={{ border: 0 }}
