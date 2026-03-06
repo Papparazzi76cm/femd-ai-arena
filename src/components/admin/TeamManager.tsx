@@ -4,6 +4,8 @@ import { participantService } from '@/services/participantService';
 import { Team, Participant } from '@/types/database';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
@@ -25,7 +27,9 @@ export const TeamManager = () => {
     logo_url: '',
     description: '',
     founded_year: '',
-    colors: ''
+    colors: '',
+    is_filial: false,
+    parent_team_id: ''
   });
   const [participantFormData, setParticipantFormData] = useState({
     name: '',
@@ -58,12 +62,13 @@ export const TeamManager = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const teamData = {
+      const teamData: any = {
         name: formData.name.trim(),
         logo_url: formData.logo_url.trim() || undefined,
         description: formData.description.trim() || undefined,
         founded_year: formData.founded_year ? parseInt(formData.founded_year) : undefined,
-        colors: formData.colors.trim() || undefined
+        colors: formData.colors.trim() || undefined,
+        parent_team_id: formData.is_filial && formData.parent_team_id ? formData.parent_team_id : null
       };
 
       if (editingId) {
@@ -91,7 +96,9 @@ export const TeamManager = () => {
       logo_url: team.logo_url || '',
       description: team.description || '',
       founded_year: team.founded_year?.toString() || '',
-      colors: team.colors || ''
+      colors: team.colors || '',
+      is_filial: !!team.parent_team_id,
+      parent_team_id: team.parent_team_id || ''
     });
     setEditingId(team.id);
     setShowForm(true);
@@ -253,7 +260,7 @@ export const TeamManager = () => {
   };
 
   const resetForm = () => {
-    setFormData({ name: '', logo_url: '', description: '', founded_year: '', colors: '' });
+    setFormData({ name: '', logo_url: '', description: '', founded_year: '', colors: '', is_filial: false, parent_team_id: '' });
     setEditingId(null);
     setShowForm(false);
     setShowParticipants(false);
