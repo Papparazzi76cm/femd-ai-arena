@@ -342,6 +342,61 @@ export const EventManager = () => {
                 </div>
               </div>
               
+              {/* Category Selection */}
+              <div>
+                <label className="block text-sm font-medium mb-1">Categorías del Evento</label>
+                <Dialog open={showCategoriesDialog} onOpenChange={setShowCategoriesDialog}>
+                  <DialogTrigger asChild>
+                    <Button type="button" variant="outline" className="w-full justify-start">
+                      <Tag className="w-4 h-4 mr-2" />
+                      {selectedCategoryIds.length > 0
+                        ? `${selectedCategoryIds.length} categoría(s) seleccionada(s)`
+                        : 'Seleccionar categorías'}
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="max-w-md">
+                    <DialogHeader>
+                      <DialogTitle>Seleccionar Categorías</DialogTitle>
+                    </DialogHeader>
+                    <ScrollArea className="h-[300px] pr-4">
+                      <div className="space-y-2">
+                        {categories.map(cat => (
+                          <div
+                            key={cat.id}
+                            className="flex items-center space-x-3 p-2 rounded hover:bg-muted cursor-pointer"
+                            onClick={() => handleCategoryToggle(cat.id)}
+                          >
+                            <Checkbox
+                              checked={selectedCategoryIds.includes(cat.id)}
+                              onCheckedChange={() => handleCategoryToggle(cat.id)}
+                            />
+                            <div className="flex-1">
+                              <span className="font-medium">{cat.name}</span>
+                              {cat.age_group && (
+                                <span className="ml-2 text-xs text-muted-foreground">({cat.age_group})</span>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                        {categories.length === 0 && (
+                          <p className="text-sm text-muted-foreground text-center py-4">
+                            No hay categorías creadas. Créalas primero en "Gestión de Categorías".
+                          </p>
+                        )}
+                      </div>
+                    </ScrollArea>
+                    <div className="flex justify-between items-center pt-4 border-t">
+                      <span className="text-sm text-muted-foreground">
+                        {selectedCategoryIds.length} seleccionada(s)
+                      </span>
+                      <Button onClick={() => setShowCategoriesDialog(false)}>
+                        Confirmar
+                      </Button>
+                    </div>
+                  </DialogContent>
+                </Dialog>
+              </div>
+
               {/* Team Selection */}
               <div>
                 <label className="block text-sm font-medium mb-1">Equipos Participantes</label>
