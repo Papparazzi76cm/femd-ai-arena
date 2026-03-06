@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { eventService } from '@/services/eventService';
 import { teamService } from '@/services/teamService';
-import { Event, Team } from '@/types/database';
+import { categoryService } from '@/services/categoryService';
+import { Event, Team, Category } from '@/types/database';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -11,7 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Checkbox } from '@/components/ui/checkbox';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, Edit, Trash2, Save, X, Calendar, Upload, Trophy, History as HistoryIcon, Users } from 'lucide-react';
+import { Plus, Edit, Trash2, Save, X, Calendar, Upload, Trophy, History as HistoryIcon, Users, Tag } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { TournamentManager } from './TournamentManager';
 import { HistoricalTournamentManager } from './HistoricalTournamentManager';
@@ -20,6 +21,7 @@ import { TournamentGalleryManager } from './TournamentGalleryManager';
 export const EventManager = () => {
   const [events, setEvents] = useState<Event[]>([]);
   const [teams, setTeams] = useState<Team[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [showForm, setShowForm] = useState(false);
@@ -27,7 +29,9 @@ export const EventManager = () => {
   const [expandedTournament, setExpandedTournament] = useState<string | null>(null);
   const [tournamentMode, setTournamentMode] = useState<'automatic' | 'historical'>('automatic');
   const [showTeamsDialog, setShowTeamsDialog] = useState(false);
+  const [showCategoriesDialog, setShowCategoriesDialog] = useState(false);
   const [selectedTeamIds, setSelectedTeamIds] = useState<string[]>([]);
+  const [selectedCategoryIds, setSelectedCategoryIds] = useState<string[]>([]);
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -43,12 +47,14 @@ export const EventManager = () => {
 
   const loadData = async () => {
     try {
-      const [eventsData, teamsData] = await Promise.all([
+      const [eventsData, teamsData, categoriesData] = await Promise.all([
         eventService.getAll(),
-        teamService.getAll()
+        teamService.getAll(),
+        categoryService.getAll()
       ]);
       setEvents(eventsData);
       setTeams(teamsData);
+      setCategories(categoriesData);
     } catch (error) {
       toast({
         title: 'Error',
@@ -72,12 +78,35 @@ export const EventManager = () => {
         team_ids: selectedTeamIds
       };
 
+      let eventId = editingId;
+
       if (editingId) {
         await eventService.update(editingId, eventData);
         toast({ title: 'Evento actualizado con éxito' });
       } else {
-        await eventService.create(eventData);
+        const created = await eventService.create(eventData);
+        eventId = created.id;
         toast({ title: 'Evento creado con éxito' });
+      }
+
+      // Sync event categories
+      if (eventId) {
+        const existingCategories = await categoryService.getEventCategories(eventId);
+        const existingCategoryIds = existingCategories.map((ec: any) => ec.category_id);
+
+        // Remove categories no longer selected
+        for (const ec of existingCategories) {
+          if (!selectedCategoryIds.includes((ec as any).category_id)) {
+            await categoryService.removeCategoryFromEvent(ec.id);
+          }
+        }
+
+        // Add newly selected categories
+        for (const catId of selectedCategoryIds) {
+          if (!existingCategoryIds.includes(catId)) {
+            await categoryService.addCategoryToEvent(eventId, catId);
+          }
+        }
       }
 
       resetForm();
@@ -91,7 +120,7 @@ export const EventManager = () => {
     }
   };
 
-  const handleEdit = (event: Event) => {
+  const handleEdit = async (event: Event) => {
     setFormData({
       title: event.title,
       description: event.description || '',
@@ -100,6 +129,15 @@ export const EventManager = () => {
       poster_url: (event as any).poster_url || ''
     });
     setSelectedTeamIds((event as any).team_ids || []);
+
+    // Load existing categories for this event
+    try {
+      const eventCategories = await categoryService.getEventCategories(event.id);
+      setSelectedCategoryIds(eventCategories.map((ec: any) => ec.category_id));
+    } catch {
+      setSelectedCategoryIds([]);
+    }
+
     setEditingId(event.id);
     setShowForm(true);
   };
@@ -180,8 +218,17 @@ export const EventManager = () => {
   const resetForm = () => {
     setFormData({ title: '', description: '', date: '', location: '', poster_url: '' });
     setSelectedTeamIds([]);
+    setSelectedCategoryIds([]);
     setEditingId(null);
     setShowForm(false);
+  };
+
+  const handleCategoryToggle = (catId: string) => {
+    setSelectedCategoryIds(prev =>
+      prev.includes(catId)
+        ? prev.filter(id => id !== catId)
+        : [...prev, catId]
+    );
   };
 
   const handleTeamToggle = (teamId: string) => {
@@ -295,6 +342,61 @@ export const EventManager = () => {
                 </div>
               </div>
               
+              {/* Category Selection */}
+              <div>
+                <label className="block text-sm font-medium mb-1">Categorías del Evento</label>
+                <Dialog open={showCategoriesDialog} onOpenChange={setShowCategoriesDialog}>
+                  <DialogTrigger asChild>
+                    <Button type="button" variant="outline" className="w-full justify-start">
+                      <Tag className="w-4 h-4 mr-2" />
+                      {selectedCategoryIds.length > 0
+                        ? `${selectedCategoryIds.length} categoría(s) seleccionada(s)`
+                        : 'Seleccionar categorías'}
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="max-w-md">
+                    <DialogHeader>
+                      <DialogTitle>Seleccionar Categorías</DialogTitle>
+                    </DialogHeader>
+                    <ScrollArea className="h-[300px] pr-4">
+                      <div className="space-y-2">
+                        {categories.map(cat => (
+                          <div
+                            key={cat.id}
+                            className="flex items-center space-x-3 p-2 rounded hover:bg-muted cursor-pointer"
+                            onClick={() => handleCategoryToggle(cat.id)}
+                          >
+                            <Checkbox
+                              checked={selectedCategoryIds.includes(cat.id)}
+                              onCheckedChange={() => handleCategoryToggle(cat.id)}
+                            />
+                            <div className="flex-1">
+                              <span className="font-medium">{cat.name}</span>
+                              {cat.age_group && (
+                                <span className="ml-2 text-xs text-muted-foreground">({cat.age_group})</span>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                        {categories.length === 0 && (
+                          <p className="text-sm text-muted-foreground text-center py-4">
+                            No hay categorías creadas. Créalas primero en "Gestión de Categorías".
+                          </p>
+                        )}
+                      </div>
+                    </ScrollArea>
+                    <div className="flex justify-between items-center pt-4 border-t">
+                      <span className="text-sm text-muted-foreground">
+                        {selectedCategoryIds.length} seleccionada(s)
+                      </span>
+                      <Button onClick={() => setShowCategoriesDialog(false)}>
+                        Confirmar
+                      </Button>
+                    </div>
+                  </DialogContent>
+                </Dialog>
+              </div>
+
               {/* Team Selection */}
               <div>
                 <label className="block text-sm font-medium mb-1">Equipos Participantes</label>
