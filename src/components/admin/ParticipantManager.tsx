@@ -381,6 +381,16 @@ export const ParticipantManager = () => {
           onSuccess={loadData}
         />
       )}
+
+      {transferParticipant && (
+        <PlayerTransferDialog
+          open={transferDialogOpen}
+          onOpenChange={setTransferDialogOpen}
+          participant={transferParticipant}
+          teams={teams}
+          onSuccess={loadData}
+        />
+      )}
     </div>
   );
 };
