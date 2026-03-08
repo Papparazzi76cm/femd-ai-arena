@@ -3,9 +3,8 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Newspaper, Calendar, ArrowRight, Instagram } from "lucide-react";
-import { sponsorService } from "@/services/sponsorService";
 import { postService } from "@/services/postService";
-import { Sponsor, Post } from "@/types/database";
+import { Post } from "@/types/database";
 import { EventGallery } from "@/components/EventGallery";
 import { AudioPlayer } from "@/components/AudioPlayer";
 
