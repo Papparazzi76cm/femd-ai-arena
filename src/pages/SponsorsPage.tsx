@@ -62,8 +62,10 @@ export function SponsorsPage() {
     loadSponsors();
   }, []);
 
+  const tierMap: Record<string, string> = { gold: 'Oro', silver: 'Plata', bronze: 'Bronce' };
+  
   const groupedSponsors = sponsors.reduce((acc, sponsor) => {
-    const tier = sponsor.tier || "Otros";
+    const tier = tierMap[sponsor.tier || ''] || "Otros";
     if (!acc[tier]) acc[tier] = [];
     acc[tier].push(sponsor);
     return acc;
