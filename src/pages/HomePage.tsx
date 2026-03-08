@@ -10,7 +10,6 @@ import { AudioPlayer } from "@/components/AudioPlayer";
 
 export function HomePage() {
   const [currentSlide, setCurrentSlide] = useState(0);
-  const [sponsors, setSponsors] = useState<Sponsor[]>([]);
   const [posts, setPosts] = useState<Post[]>([]);
 
   const heroImages = [
