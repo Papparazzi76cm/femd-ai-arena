@@ -25,17 +25,6 @@ export function HomePage() {
     return () => clearInterval(timer);
   }, []);
 
-  useEffect(() => {
-    const loadSponsors = async () => {
-      try {
-        const data = await sponsorService.getAll();
-        setSponsors(data);
-      } catch (error) {
-        console.error("Error loading sponsors:", error);
-      }
-    };
-    loadSponsors();
-  }, []);
 
   useEffect(() => {
     const loadPosts = async () => {
