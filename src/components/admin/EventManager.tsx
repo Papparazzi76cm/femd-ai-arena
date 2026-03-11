@@ -69,13 +69,13 @@ export const EventManager = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const eventData = {
+      const eventData: any = {
         title: formData.title.trim(),
-        description: formData.description.trim() || undefined,
-        date: formData.date,
-        location: formData.location.trim() || undefined,
-        poster_url: formData.poster_url.trim() || undefined,
-        team_ids: selectedTeamIds
+        description: formData.description.trim() || null,
+        date: new Date(formData.date).toISOString(),
+        location: formData.location.trim() || null,
+        poster_url: formData.poster_url.trim() || null,
+        team_ids: selectedTeamIds.length > 0 ? selectedTeamIds : []
       };
 
       let eventId = editingId;
@@ -90,31 +90,41 @@ export const EventManager = () => {
       }
 
       // Sync event categories
-      if (eventId) {
-        const existingCategories = await categoryService.getEventCategories(eventId);
-        const existingCategoryIds = existingCategories.map((ec: any) => ec.category_id);
+      if (eventId && selectedCategoryIds.length > 0) {
+        try {
+          const existingCategories = await categoryService.getEventCategories(eventId);
+          const existingCategoryIds = existingCategories.map((ec: any) => ec.category_id);
 
-        // Remove categories no longer selected
-        for (const ec of existingCategories) {
-          if (!selectedCategoryIds.includes((ec as any).category_id)) {
-            await categoryService.removeCategoryFromEvent(ec.id);
+          // Remove categories no longer selected
+          for (const ec of existingCategories) {
+            if (!selectedCategoryIds.includes((ec as any).category_id)) {
+              await categoryService.removeCategoryFromEvent(ec.id);
+            }
           }
-        }
 
-        // Add newly selected categories
-        for (const catId of selectedCategoryIds) {
-          if (!existingCategoryIds.includes(catId)) {
-            await categoryService.addCategoryToEvent(eventId, catId);
+          // Add newly selected categories
+          for (const catId of selectedCategoryIds) {
+            if (!existingCategoryIds.includes(catId)) {
+              await categoryService.addCategoryToEvent(eventId, catId);
+            }
           }
+        } catch (catError) {
+          console.error('Error syncing categories:', catError);
+          toast({
+            title: 'Aviso',
+            description: 'El evento se creó pero hubo un error al asignar categorías',
+            variant: 'destructive'
+          });
         }
       }
 
       resetForm();
       loadData();
-    } catch (error) {
+    } catch (error: any) {
+      console.error('Error guardando evento:', error);
       toast({
         title: 'Error',
-        description: 'No se pudo guardar el evento',
+        description: error?.message || 'No se pudo guardar el evento',
         variant: 'destructive'
       });
     }
