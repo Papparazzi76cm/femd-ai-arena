@@ -721,10 +721,10 @@ export const TournamentManager = ({ eventId }: TournamentManagerProps) => {
                   {eventCategories.length > 0 && (
                     <div>
                       <Label>Categoría (opcional)</Label>
-                      <Select value={newMatchCategoryId} onValueChange={setNewMatchCategoryId}>
+                      <Select value={newMatchCategoryId || '__none__'} onValueChange={(v) => setNewMatchCategoryId(v === '__none__' ? '' : v)}>
                         <SelectTrigger><SelectValue placeholder="Sin categoría" /></SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="">Sin categoría</SelectItem>
+                          <SelectItem value="__none__">Sin categoría</SelectItem>
                           {eventCategories.map(ec => (
                             <SelectItem key={ec.id} value={ec.id}>
                               {ec.category?.name}
