@@ -32,6 +32,7 @@ export const EventManager = () => {
   const [showCategoriesDialog, setShowCategoriesDialog] = useState(false);
   const [selectedTeamIds, setSelectedTeamIds] = useState<string[]>([]);
   const [selectedCategoryIds, setSelectedCategoryIds] = useState<string[]>([]);
+  const [teamGroups, setTeamGroups] = useState<Record<string, string>>({});
   const [formData, setFormData] = useState({
     title: '',
     description: '',
