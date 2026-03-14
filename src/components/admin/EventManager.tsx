@@ -34,6 +34,7 @@ export const EventManager = () => {
   const [selectedTeamIds, setSelectedTeamIds] = useState<string[]>([]);
   const [selectedCategoryIds, setSelectedCategoryIds] = useState<string[]>([]);
   const [teamGroups, setTeamGroups] = useState<Record<string, string>>({});
+  const [selectedBrand, setSelectedBrand] = useState<string>('__none__');
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -42,6 +43,21 @@ export const EventManager = () => {
     poster_url: ''
   });
   const { toast } = useToast();
+
+  const tournamentBrands = [
+    { slug: 'copa-cyl', name: 'Copa Castilla y León', logoUrl: '/logos-torneos/copa-cyl.png' },
+    { slug: 'copa-rioseco', name: 'Copa Internacional Rioseco Caramanzana', logoUrl: '/logos-torneos/copa-rioseco.png' },
+    { slug: 'villa-aranda', name: 'Torneo Internacional Villa de Aranda', logoUrl: '/logos-torneos/villa-aranda.png' },
+    { slug: 'medina-cup', name: 'Medina International Cup', logoUrl: '/logos-torneos/medina-cup.png' },
+  ];
+
+  const updateTitleFromBrand = (brandSlug: string, date: string) => {
+    if (brandSlug === '__none__') return;
+    const brand = tournamentBrands.find(b => b.slug === brandSlug);
+    if (!brand) return;
+    const year = date ? new Date(date).getFullYear() : new Date().getFullYear();
+    setFormData(prev => ({ ...prev, title: `${brand.name} ${year}` }));
+  };
 
   useEffect(() => {
     loadData();
