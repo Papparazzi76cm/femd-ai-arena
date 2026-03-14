@@ -183,6 +183,21 @@ export const EventManager = () => {
       setSelectedCategoryIds([]);
     }
 
+    // Load existing group assignments
+    try {
+      const { data: eventTeams } = await supabase
+        .from('event_teams')
+        .select('team_id, group_name')
+        .eq('event_id', event.id);
+      const groups: Record<string, string> = {};
+      (eventTeams || []).forEach((et: any) => {
+        if (et.group_name) groups[et.team_id] = et.group_name;
+      });
+      setTeamGroups(groups);
+    } catch {
+      setTeamGroups({});
+    }
+
     setEditingId(event.id);
     setShowForm(true);
   };
