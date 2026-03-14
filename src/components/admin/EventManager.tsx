@@ -120,6 +120,22 @@ export const EventManager = () => {
         }
       }
 
+      // Create event_teams with group assignments
+      if (eventId && selectedTeamIds.length > 0) {
+        try {
+          for (const teamId of selectedTeamIds) {
+            const groupName = teamGroups[teamId] || null;
+            await supabase.from('event_teams').upsert({
+              event_id: eventId,
+              team_id: teamId,
+              group_name: groupName,
+            }, { onConflict: 'event_id,team_id' }).select();
+          }
+        } catch (teamError) {
+          console.error('Error creating event teams:', teamError);
+        }
+      }
+
       resetForm();
       loadData();
     } catch (error: any) {
