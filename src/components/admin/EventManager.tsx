@@ -34,6 +34,7 @@ export const EventManager = () => {
   const [selectedTeamIds, setSelectedTeamIds] = useState<string[]>([]);
   const [selectedCategoryIds, setSelectedCategoryIds] = useState<string[]>([]);
   const [teamGroups, setTeamGroups] = useState<Record<string, string>>({});
+  const [selectedBrand, setSelectedBrand] = useState<string>('__none__');
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -42,6 +43,21 @@ export const EventManager = () => {
     poster_url: ''
   });
   const { toast } = useToast();
+
+  const tournamentBrands = [
+    { slug: 'copa-cyl', name: 'Copa Castilla y León', logoUrl: '/logos-torneos/copa-cyl.png' },
+    { slug: 'copa-rioseco', name: 'Copa Internacional Rioseco Caramanzana', logoUrl: '/logos-torneos/copa-rioseco.png' },
+    { slug: 'villa-aranda', name: 'Torneo Internacional Villa de Aranda', logoUrl: '/logos-torneos/villa-aranda.png' },
+    { slug: 'medina-cup', name: 'Medina International Cup', logoUrl: '/logos-torneos/medina-cup.png' },
+  ];
+
+  const updateTitleFromBrand = (brandSlug: string, date: string) => {
+    if (brandSlug === '__none__') return;
+    const brand = tournamentBrands.find(b => b.slug === brandSlug);
+    if (!brand) return;
+    const year = date ? new Date(date).getFullYear() : new Date().getFullYear();
+    setFormData(prev => ({ ...prev, title: `${brand.name} ${year}` }));
+  };
 
   useEffect(() => {
     loadData();
@@ -175,6 +191,13 @@ export const EventManager = () => {
     });
     setSelectedTeamIds((event as any).team_ids || []);
 
+    // Detect brand from title
+    const titleLower = event.title.toLowerCase();
+    const matchedBrand = tournamentBrands.find(b => 
+      titleLower.includes(b.name.toLowerCase())
+    );
+    setSelectedBrand(matchedBrand ? matchedBrand.slug : '__none__');
+
     // Load existing categories for this event
     try {
       const eventCategories = await categoryService.getEventCategories(event.id);
@@ -280,6 +303,7 @@ export const EventManager = () => {
     setSelectedTeamIds([]);
     setSelectedCategoryIds([]);
     setTeamGroups({});
+    setSelectedBrand('__none__');
     setEditingId(null);
     setShowForm(false);
   };
@@ -327,6 +351,37 @@ export const EventManager = () => {
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
+              {/* Tournament Brand Selector */}
+              <div>
+                <label className="block text-sm font-medium mb-1">Torneo</label>
+                <Select
+                  value={selectedBrand}
+                  onValueChange={(val) => {
+                    setSelectedBrand(val);
+                    if (val === '__none__') {
+                      setFormData(prev => ({ ...prev, title: 'Evento Nuevo' }));
+                    } else {
+                      updateTitleFromBrand(val, formData.date);
+                    }
+                  }}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecciona un torneo" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="__none__">Evento Nuevo (sin torneo)</SelectItem>
+                    {tournamentBrands.map(brand => (
+                      <SelectItem key={brand.slug} value={brand.slug}>
+                        <div className="flex items-center gap-2">
+                          <img src={brand.logoUrl} alt={brand.name} className="w-5 h-5 object-contain" />
+                          <span>{brand.name}</span>
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
               <div>
                 <label className="block text-sm font-medium mb-1">Título *</label>
                 <Input
@@ -351,7 +406,12 @@ export const EventManager = () => {
                   <label className="block text-sm font-medium mb-1">Fecha *</label>
                   <Input
                     value={formData.date}
-                    onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+                    onChange={(e) => {
+                      setFormData(prev => ({ ...prev, date: e.target.value }));
+                      if (selectedBrand !== '__none__') {
+                        updateTitleFromBrand(selectedBrand, e.target.value);
+                      }
+                    }}
                     type="date"
                     required
                   />
