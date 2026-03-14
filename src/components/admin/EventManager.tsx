@@ -123,13 +123,30 @@ export const EventManager = () => {
       // Create event_teams with group assignments
       if (eventId && selectedTeamIds.length > 0) {
         try {
+          // Check existing event_teams
+          const { data: existingET } = await supabase
+            .from('event_teams')
+            .select('id, team_id')
+            .eq('event_id', eventId);
+          
+          const existingTeamIds = new Set((existingET || []).map((et: any) => et.team_id));
+
           for (const teamId of selectedTeamIds) {
             const groupName = teamGroups[teamId] || null;
-            await supabase.from('event_teams').upsert({
-              event_id: eventId,
-              team_id: teamId,
-              group_name: groupName,
-            }, { onConflict: 'event_id,team_id' }).select();
+            if (existingTeamIds.has(teamId)) {
+              // Update group
+              const et = existingET!.find((e: any) => e.team_id === teamId);
+              if (et) {
+                await supabase.from('event_teams').update({ group_name: groupName }).eq('id', et.id);
+              }
+            } else {
+              // Insert new
+              await supabase.from('event_teams').insert({
+                event_id: eventId,
+                team_id: teamId,
+                group_name: groupName,
+              });
+            }
           }
         } catch (teamError) {
           console.error('Error creating event teams:', teamError);
