@@ -738,10 +738,10 @@ export const TournamentManager = ({ eventId }: TournamentManagerProps) => {
                   {allFields.length > 0 && (
                     <div>
                       <Label>Campo (opcional)</Label>
-                      <Select value={newMatchFieldId} onValueChange={setNewMatchFieldId}>
+                      <Select value={newMatchFieldId || '__none__'} onValueChange={(v) => setNewMatchFieldId(v === '__none__' ? '' : v)}>
                         <SelectTrigger><SelectValue placeholder="Sin asignar" /></SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="">Sin asignar</SelectItem>
+                          <SelectItem value="__none__">Sin asignar</SelectItem>
                           {allFields.map((f: any) => (
                             <SelectItem key={f.id} value={f.id}>
                               {f.facilityName} - {f.name}
