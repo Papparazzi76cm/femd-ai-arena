@@ -230,6 +230,7 @@ export const EventManager = () => {
     setFormData({ title: '', description: '', date: '', location: '', poster_url: '' });
     setSelectedTeamIds([]);
     setSelectedCategoryIds([]);
+    setTeamGroups({});
     setEditingId(null);
     setShowForm(false);
   };
