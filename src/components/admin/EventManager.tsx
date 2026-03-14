@@ -343,6 +343,37 @@ export const EventManager = () => {
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
+              {/* Tournament Brand Selector */}
+              <div>
+                <label className="block text-sm font-medium mb-1">Torneo</label>
+                <Select
+                  value={selectedBrand}
+                  onValueChange={(val) => {
+                    setSelectedBrand(val);
+                    if (val === '__none__') {
+                      setFormData(prev => ({ ...prev, title: 'Evento Nuevo' }));
+                    } else {
+                      updateTitleFromBrand(val, formData.date);
+                    }
+                  }}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecciona un torneo" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="__none__">Evento Nuevo (sin torneo)</SelectItem>
+                    {tournamentBrands.map(brand => (
+                      <SelectItem key={brand.slug} value={brand.slug}>
+                        <div className="flex items-center gap-2">
+                          <img src={brand.logoUrl} alt={brand.name} className="w-5 h-5 object-contain" />
+                          <span>{brand.name}</span>
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
               <div>
                 <label className="block text-sm font-medium mb-1">Título *</label>
                 <Input
