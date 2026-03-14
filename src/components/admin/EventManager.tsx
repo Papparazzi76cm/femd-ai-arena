@@ -462,6 +462,62 @@ export const EventManager = () => {
                 </Dialog>
               </div>
 
+              {/* Group Assignment for selected teams */}
+              {selectedTeamIds.length > 0 && (
+                <div>
+                  <label className="block text-sm font-medium mb-2">Asignar Grupos a los Equipos</label>
+                  <Card>
+                    <CardContent className="pt-4">
+                      <div className="space-y-2 max-h-[300px] overflow-y-auto">
+                        {selectedTeamIds.map(teamId => {
+                          const team = teams.find(t => t.id === teamId);
+                          if (!team) return null;
+                          return (
+                            <div key={teamId} className="flex items-center gap-3 p-2 rounded hover:bg-muted">
+                              {team.logo_url && (
+                                <img src={team.logo_url} alt={team.name} className="w-7 h-7 object-contain" />
+                              )}
+                              <span className="flex-1 text-sm truncate">{team.name}</span>
+                              <Select
+                                value={teamGroups[teamId] || ''}
+                                onValueChange={(val) => setTeamGroups(prev => ({ ...prev, [teamId]: val === 'none' ? '' : val }))}
+                              >
+                                <SelectTrigger className="w-24 h-8 text-xs">
+                                  <SelectValue placeholder="Grupo" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="none">Sin grupo</SelectItem>
+                                  {['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'].map(g => (
+                                    <SelectItem key={g} value={g}>Grupo {g}</SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            </div>
+                          );
+                        })}
+                      </div>
+                      <div className="flex gap-2 mt-3 pt-3 border-t">
+                        <span className="text-xs text-muted-foreground">Asignar a todos:</span>
+                        {['A', 'B', 'C', 'D'].map(g => (
+                          <Button
+                            key={g}
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            className="h-6 px-2 text-xs"
+                            onClick={() => {
+                              // No hacer nada, es solo referencia visual
+                            }}
+                          >
+                            {g}
+                          </Button>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              )}
+
               <div className="flex gap-2">
                 <Button type="submit" className="bg-emerald-600 hover:bg-emerald-700">
                   <Save className="w-4 h-4 mr-2" />
