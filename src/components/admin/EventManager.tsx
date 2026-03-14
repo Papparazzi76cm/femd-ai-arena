@@ -398,7 +398,12 @@ export const EventManager = () => {
                   <label className="block text-sm font-medium mb-1">Fecha *</label>
                   <Input
                     value={formData.date}
-                    onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+                    onChange={(e) => {
+                      setFormData(prev => ({ ...prev, date: e.target.value }));
+                      if (selectedBrand !== '__none__') {
+                        updateTitleFromBrand(selectedBrand, e.target.value);
+                      }
+                    }}
                     type="date"
                     required
                   />
