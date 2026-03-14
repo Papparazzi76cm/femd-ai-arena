@@ -13,6 +13,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useToast } from '@/hooks/use-toast';
 import { Plus, Edit, Trash2, Save, X, Calendar, Upload, Trophy, History as HistoryIcon, Users, Tag } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { supabase } from '@/integrations/supabase/client';
 import { TournamentManager } from './TournamentManager';
 import { HistoricalTournamentManager } from './HistoricalTournamentManager';
@@ -32,6 +33,7 @@ export const EventManager = () => {
   const [showCategoriesDialog, setShowCategoriesDialog] = useState(false);
   const [selectedTeamIds, setSelectedTeamIds] = useState<string[]>([]);
   const [selectedCategoryIds, setSelectedCategoryIds] = useState<string[]>([]);
+  const [teamGroups, setTeamGroups] = useState<Record<string, string>>({});
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -118,6 +120,39 @@ export const EventManager = () => {
         }
       }
 
+      // Create event_teams with group assignments
+      if (eventId && selectedTeamIds.length > 0) {
+        try {
+          // Check existing event_teams
+          const { data: existingET } = await supabase
+            .from('event_teams')
+            .select('id, team_id')
+            .eq('event_id', eventId);
+          
+          const existingTeamIds = new Set((existingET || []).map((et: any) => et.team_id));
+
+          for (const teamId of selectedTeamIds) {
+            const groupName = teamGroups[teamId] || null;
+            if (existingTeamIds.has(teamId)) {
+              // Update group
+              const et = existingET!.find((e: any) => e.team_id === teamId);
+              if (et) {
+                await supabase.from('event_teams').update({ group_name: groupName }).eq('id', et.id);
+              }
+            } else {
+              // Insert new
+              await supabase.from('event_teams').insert({
+                event_id: eventId,
+                team_id: teamId,
+                group_name: groupName,
+              });
+            }
+          }
+        } catch (teamError) {
+          console.error('Error creating event teams:', teamError);
+        }
+      }
+
       resetForm();
       loadData();
     } catch (error: any) {
@@ -146,6 +181,21 @@ export const EventManager = () => {
       setSelectedCategoryIds(eventCategories.map((ec: any) => ec.category_id));
     } catch {
       setSelectedCategoryIds([]);
+    }
+
+    // Load existing group assignments
+    try {
+      const { data: eventTeams } = await supabase
+        .from('event_teams')
+        .select('team_id, group_name')
+        .eq('event_id', event.id);
+      const groups: Record<string, string> = {};
+      (eventTeams || []).forEach((et: any) => {
+        if (et.group_name) groups[et.team_id] = et.group_name;
+      });
+      setTeamGroups(groups);
+    } catch {
+      setTeamGroups({});
     }
 
     setEditingId(event.id);
@@ -229,6 +279,7 @@ export const EventManager = () => {
     setFormData({ title: '', description: '', date: '', location: '', poster_url: '' });
     setSelectedTeamIds([]);
     setSelectedCategoryIds([]);
+    setTeamGroups({});
     setEditingId(null);
     setShowForm(false);
   };
@@ -242,11 +293,17 @@ export const EventManager = () => {
   };
 
   const handleTeamToggle = (teamId: string) => {
-    setSelectedTeamIds(prev => 
-      prev.includes(teamId) 
-        ? prev.filter(id => id !== teamId)
-        : [...prev, teamId]
-    );
+    setSelectedTeamIds(prev => {
+      if (prev.includes(teamId)) {
+        setTeamGroups(g => {
+          const copy = { ...g };
+          delete copy[teamId];
+          return copy;
+        });
+        return prev.filter(id => id !== teamId);
+      }
+      return [...prev, teamId];
+    });
   };
 
   if (loading) {
@@ -459,6 +516,62 @@ export const EventManager = () => {
                   </DialogContent>
                 </Dialog>
               </div>
+
+              {/* Group Assignment for selected teams */}
+              {selectedTeamIds.length > 0 && (
+                <div>
+                  <label className="block text-sm font-medium mb-2">Asignar Grupos a los Equipos</label>
+                  <Card>
+                    <CardContent className="pt-4">
+                      <div className="space-y-2 max-h-[300px] overflow-y-auto">
+                        {selectedTeamIds.map(teamId => {
+                          const team = teams.find(t => t.id === teamId);
+                          if (!team) return null;
+                          return (
+                            <div key={teamId} className="flex items-center gap-3 p-2 rounded hover:bg-muted">
+                              {team.logo_url && (
+                                <img src={team.logo_url} alt={team.name} className="w-7 h-7 object-contain" />
+                              )}
+                              <span className="flex-1 text-sm truncate">{team.name}</span>
+                              <Select
+                                value={teamGroups[teamId] || ''}
+                                onValueChange={(val) => setTeamGroups(prev => ({ ...prev, [teamId]: val === 'none' ? '' : val }))}
+                              >
+                                <SelectTrigger className="w-24 h-8 text-xs">
+                                  <SelectValue placeholder="Grupo" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="none">Sin grupo</SelectItem>
+                                  {['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'].map(g => (
+                                    <SelectItem key={g} value={g}>Grupo {g}</SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            </div>
+                          );
+                        })}
+                      </div>
+                      <div className="flex gap-2 mt-3 pt-3 border-t">
+                        <span className="text-xs text-muted-foreground">Asignar a todos:</span>
+                        {['A', 'B', 'C', 'D'].map(g => (
+                          <Button
+                            key={g}
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            className="h-6 px-2 text-xs"
+                            onClick={() => {
+                              // No hacer nada, es solo referencia visual
+                            }}
+                          >
+                            {g}
+                          </Button>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              )}
 
               <div className="flex gap-2">
                 <Button type="submit" className="bg-emerald-600 hover:bg-emerald-700">
