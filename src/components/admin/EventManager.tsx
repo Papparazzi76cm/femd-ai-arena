@@ -296,6 +296,7 @@ export const EventManager = () => {
     setSelectedTeamIds([]);
     setSelectedCategoryIds([]);
     setTeamGroups({});
+    setSelectedBrand('__none__');
     setEditingId(null);
     setShowForm(false);
   };
