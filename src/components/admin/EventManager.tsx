@@ -261,11 +261,17 @@ export const EventManager = () => {
   };
 
   const handleTeamToggle = (teamId: string) => {
-    setSelectedTeamIds(prev => 
-      prev.includes(teamId) 
-        ? prev.filter(id => id !== teamId)
-        : [...prev, teamId]
-    );
+    setSelectedTeamIds(prev => {
+      if (prev.includes(teamId)) {
+        setTeamGroups(g => {
+          const copy = { ...g };
+          delete copy[teamId];
+          return copy;
+        });
+        return prev.filter(id => id !== teamId);
+      }
+      return [...prev, teamId];
+    });
   };
 
   if (loading) {
