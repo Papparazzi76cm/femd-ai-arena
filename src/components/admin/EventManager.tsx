@@ -191,6 +191,13 @@ export const EventManager = () => {
     });
     setSelectedTeamIds((event as any).team_ids || []);
 
+    // Detect brand from title
+    const titleLower = event.title.toLowerCase();
+    const matchedBrand = tournamentBrands.find(b => 
+      titleLower.includes(b.name.toLowerCase())
+    );
+    setSelectedBrand(matchedBrand ? matchedBrand.slug : '__none__');
+
     // Load existing categories for this event
     try {
       const eventCategories = await categoryService.getEventCategories(event.id);
