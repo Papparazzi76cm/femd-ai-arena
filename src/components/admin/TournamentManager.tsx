@@ -721,10 +721,10 @@ export const TournamentManager = ({ eventId }: TournamentManagerProps) => {
                   {eventCategories.length > 0 && (
                     <div>
                       <Label>Categoría (opcional)</Label>
-                      <Select value={newMatchCategoryId} onValueChange={setNewMatchCategoryId}>
+                      <Select value={newMatchCategoryId || '__none__'} onValueChange={(v) => setNewMatchCategoryId(v === '__none__' ? '' : v)}>
                         <SelectTrigger><SelectValue placeholder="Sin categoría" /></SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="">Sin categoría</SelectItem>
+                          <SelectItem value="__none__">Sin categoría</SelectItem>
                           {eventCategories.map(ec => (
                             <SelectItem key={ec.id} value={ec.id}>
                               {ec.category?.name}
@@ -738,10 +738,10 @@ export const TournamentManager = ({ eventId }: TournamentManagerProps) => {
                   {allFields.length > 0 && (
                     <div>
                       <Label>Campo (opcional)</Label>
-                      <Select value={newMatchFieldId} onValueChange={setNewMatchFieldId}>
+                      <Select value={newMatchFieldId || '__none__'} onValueChange={(v) => setNewMatchFieldId(v === '__none__' ? '' : v)}>
                         <SelectTrigger><SelectValue placeholder="Sin asignar" /></SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="">Sin asignar</SelectItem>
+                          <SelectItem value="__none__">Sin asignar</SelectItem>
                           {allFields.map((f: any) => (
                             <SelectItem key={f.id} value={f.id}>
                               {f.facilityName} - {f.name}
