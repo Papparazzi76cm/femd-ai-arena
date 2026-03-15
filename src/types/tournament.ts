@@ -60,8 +60,8 @@ export interface Match {
   match_date?: string;
   status: 'scheduled' | 'in_progress' | 'finished';
   referee_user_id?: string;
-  match_halves: number; // 1 = solo 1 tiempo, 2 = partido completo
-  match_duration_minutes: number; // duración total del partido
+  match_halves?: number; // 1 = solo 1 tiempo, 2 = partido completo (default 1)
+  match_duration_minutes?: number; // duración total del partido (default 40)
   started_at?: string; // timestamp de inicio real del partido
   created_at: string;
 }
