@@ -269,6 +269,8 @@ export const TournamentManager = ({ eventId }: TournamentManagerProps) => {
       setNewMatchCategoryId('');
       setNewMatchDate('');
       setNewMatchFieldId('');
+      setNewMatchHalves(1);
+      setNewMatchDuration(40);
       setMatchDialogOpen(false);
       await loadData();
     } catch (error) {
