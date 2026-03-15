@@ -92,12 +92,19 @@ export const MatchCard = ({
         status: 'in_progress',
         home_score: homeScore,
         away_score: awayScore,
+        started_at: new Date().toISOString(),
       });
       setIsEditing(true);
       notifyMatchStarted(homeTeamName, awayTeamName);
     } finally {
       setSaving(false);
     }
+  };
+
+  const handleSaveStartedAt = async () => {
+    await onUpdate(match.id, {
+      started_at: new Date().toISOString(),
+    });
   };
 
   const handleEndMatch = async () => {
@@ -203,8 +210,15 @@ export const MatchCard = ({
         </div>
 
         {/* Match Timer for live matches */}
-        {isLive && canEdit && (
-          <MatchTimer isLive={isLive} />
+        {isLive && (
+          <MatchTimer 
+            isLive={isLive} 
+            matchDurationMinutes={match.match_duration_minutes || 40}
+            matchHalves={match.match_halves || 1}
+            startedAt={match.started_at}
+            onStartTimer={handleSaveStartedAt}
+            readOnly={readOnly}
+          />
         )}
 
         {/* Teams and Scores */}

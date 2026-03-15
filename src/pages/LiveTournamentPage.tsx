@@ -4,8 +4,9 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Loader2, Trophy, Users, BarChart3, Radio, Bell, BellOff, Goal } from 'lucide-react';
+import { Loader2, Trophy, Users, BarChart3, Radio, Bell, BellOff, Goal, MapPin, Clock } from 'lucide-react';
 import { Match } from '@/types/tournament';
+import { MatchTimer } from '@/components/referee/MatchTimer';
 import { Team, Participant } from '@/types/database';
 import { useMatchNotifications } from '@/hooks/useMatchNotifications';
 import { useGoalSound } from '@/hooks/useGoalSound';
@@ -383,11 +384,21 @@ export const LiveTournamentPage = () => {
             <div className="grid md:grid-cols-2 gap-4">
               {liveMatches.map((match) => (
                 <Card key={match.id} className="p-6 border-2 border-red-500/50 bg-gradient-to-br from-red-500/5 to-orange-500/5">
-                  <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center justify-between mb-2">
                     <Badge className="bg-red-500 text-white animate-pulse-live">EN JUEGO</Badge>
                     <span className="text-sm text-muted-foreground">{match.group_name}</span>
                   </div>
-                  <div className="grid grid-cols-3 items-center gap-4">
+
+                  {/* Real-time Timer */}
+                  <MatchTimer
+                    isLive={true}
+                    matchDurationMinutes={match.match_duration_minutes || 40}
+                    matchHalves={match.match_halves || 1}
+                    startedAt={match.started_at}
+                    readOnly={true}
+                  />
+
+                  <div className="grid grid-cols-3 items-center gap-4 mt-4">
                     <div className="text-center">
                       {getTeamLogo(match.home_team_id) && (
                         <img 

@@ -514,9 +514,12 @@ export type Database = {
           home_yellow_cards: number | null
           id: string
           match_date: string | null
+          match_duration_minutes: number
+          match_halves: number
           match_number: number | null
           phase: string
           referee_user_id: string | null
+          started_at: string | null
           status: string | null
         }
         Insert: {
@@ -535,9 +538,12 @@ export type Database = {
           home_yellow_cards?: number | null
           id?: string
           match_date?: string | null
+          match_duration_minutes?: number
+          match_halves?: number
           match_number?: number | null
           phase: string
           referee_user_id?: string | null
+          started_at?: string | null
           status?: string | null
         }
         Update: {
@@ -556,9 +562,12 @@ export type Database = {
           home_yellow_cards?: number | null
           id?: string
           match_date?: string | null
+          match_duration_minutes?: number
+          match_halves?: number
           match_number?: number | null
           phase?: string
           referee_user_id?: string | null
+          started_at?: string | null
           status?: string | null
         }
         Relationships: [

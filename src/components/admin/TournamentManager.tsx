@@ -57,6 +57,8 @@ export const TournamentManager = ({ eventId }: TournamentManagerProps) => {
   const [newMatchCategoryId, setNewMatchCategoryId] = useState('');
   const [newMatchDate, setNewMatchDate] = useState('');
   const [newMatchFieldId, setNewMatchFieldId] = useState('');
+  const [newMatchHalves, setNewMatchHalves] = useState(1);
+  const [newMatchDuration, setNewMatchDuration] = useState(40);
   
   const { toast } = useToast();
 
@@ -247,6 +249,8 @@ export const TournamentManager = ({ eventId }: TournamentManagerProps) => {
         away_team_id: newMatchAwayTeamId,
         phase: newMatchPhase,
         status: 'scheduled',
+        match_halves: newMatchHalves,
+        match_duration_minutes: newMatchDuration,
       };
       if (newMatchGroup) matchData.group_name = newMatchGroup;
       if (newMatchCategoryId) matchData.category_id = newMatchCategoryId;
@@ -265,6 +269,8 @@ export const TournamentManager = ({ eventId }: TournamentManagerProps) => {
       setNewMatchCategoryId('');
       setNewMatchDate('');
       setNewMatchFieldId('');
+      setNewMatchHalves(1);
+      setNewMatchDuration(40);
       setMatchDialogOpen(false);
       await loadData();
     } catch (error) {
@@ -737,15 +743,17 @@ export const TournamentManager = ({ eventId }: TournamentManagerProps) => {
 
                   {allFields.length > 0 && (
                     <div>
-                      <Label>Campo (opcional)</Label>
+                      <Label>Instalación y Campo</Label>
                       <Select value={newMatchFieldId || '__none__'} onValueChange={(v) => setNewMatchFieldId(v === '__none__' ? '' : v)}>
                         <SelectTrigger><SelectValue placeholder="Sin asignar" /></SelectTrigger>
                         <SelectContent>
                           <SelectItem value="__none__">Sin asignar</SelectItem>
-                          {allFields.map((f: any) => (
-                            <SelectItem key={f.id} value={f.id}>
-                              {f.facilityName} - {f.name}
-                            </SelectItem>
+                          {eventFacilities.map((ef: any) => (
+                            ef.facility?.fields?.map((f: any) => (
+                              <SelectItem key={f.id} value={f.id}>
+                                📍 {ef.facility?.name} → {f.name}
+                              </SelectItem>
+                            ))
                           ))}
                         </SelectContent>
                       </Select>
@@ -753,12 +761,35 @@ export const TournamentManager = ({ eventId }: TournamentManagerProps) => {
                   )}
 
                   <div>
-                    <Label>Fecha y hora (opcional)</Label>
+                    <Label>Fecha y hora de inicio</Label>
                     <Input
                       type="datetime-local"
                       value={newMatchDate}
                       onChange={(e) => setNewMatchDate(e.target.value)}
                     />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label>Formato de partido</Label>
+                      <Select value={String(newMatchHalves)} onValueChange={(v) => setNewMatchHalves(Number(v))}>
+                        <SelectTrigger><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="1">1 solo tiempo</SelectItem>
+                          <SelectItem value="2">Partido completo (2 tiempos)</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <Label>Duración total (min)</Label>
+                      <Input
+                        type="number"
+                        min="5"
+                        max="120"
+                        value={newMatchDuration}
+                        onChange={(e) => setNewMatchDuration(parseInt(e.target.value) || 40)}
+                      />
+                    </div>
                   </div>
 
                   <Button onClick={handleCreateMatch} disabled={loading} className="w-full">
@@ -817,7 +848,21 @@ export const TournamentManager = ({ eventId }: TournamentManagerProps) => {
                             </div>
                             {match.match_date && (
                               <p className="text-xs text-muted-foreground mt-1">
-                                {new Date(match.match_date).toLocaleString('es-ES')}
+                                📅 {new Date(match.match_date).toLocaleString('es-ES')}
+                                {match.field_id && (() => {
+                                  const field = allFields.find((f: any) => f.id === match.field_id);
+                                  return field ? ` • 📍 ${field.facilityName} → ${field.name}` : '';
+                                })()}
+                                {' • '}⏱️ {match.match_duration_minutes || 40} min ({match.match_halves === 2 ? '2 tiempos' : '1 tiempo'})
+                              </p>
+                            )}
+                            {!match.match_date && match.field_id && (
+                              <p className="text-xs text-muted-foreground mt-1">
+                                {(() => {
+                                  const field = allFields.find((f: any) => f.id === match.field_id);
+                                  return field ? `📍 ${field.facilityName} → ${field.name}` : '';
+                                })()}
+                                {' • '}⏱️ {match.match_duration_minutes || 40} min ({match.match_halves === 2 ? '2 tiempos' : '1 tiempo'})
                               </p>
                             )}
                           </Card>
