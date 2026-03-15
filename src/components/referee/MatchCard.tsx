@@ -210,8 +210,15 @@ export const MatchCard = ({
         </div>
 
         {/* Match Timer for live matches */}
-        {isLive && canEdit && (
-          <MatchTimer isLive={isLive} />
+        {isLive && (
+          <MatchTimer 
+            isLive={isLive} 
+            matchDurationMinutes={match.match_duration_minutes || 40}
+            matchHalves={match.match_halves || 1}
+            startedAt={match.started_at}
+            onStartTimer={handleSaveStartedAt}
+            readOnly={readOnly}
+          />
         )}
 
         {/* Teams and Scores */}

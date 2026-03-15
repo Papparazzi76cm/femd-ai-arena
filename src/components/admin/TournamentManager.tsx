@@ -848,7 +848,21 @@ export const TournamentManager = ({ eventId }: TournamentManagerProps) => {
                             </div>
                             {match.match_date && (
                               <p className="text-xs text-muted-foreground mt-1">
-                                {new Date(match.match_date).toLocaleString('es-ES')}
+                                📅 {new Date(match.match_date).toLocaleString('es-ES')}
+                                {match.field_id && (() => {
+                                  const field = allFields.find((f: any) => f.id === match.field_id);
+                                  return field ? ` • 📍 ${field.facilityName} → ${field.name}` : '';
+                                })()}
+                                {' • '}⏱️ {match.match_duration_minutes || 40} min ({match.match_halves === 2 ? '2 tiempos' : '1 tiempo'})
+                              </p>
+                            )}
+                            {!match.match_date && match.field_id && (
+                              <p className="text-xs text-muted-foreground mt-1">
+                                {(() => {
+                                  const field = allFields.find((f: any) => f.id === match.field_id);
+                                  return field ? `📍 ${field.facilityName} → ${field.name}` : '';
+                                })()}
+                                {' • '}⏱️ {match.match_duration_minutes || 40} min ({match.match_halves === 2 ? '2 tiempos' : '1 tiempo'})
                               </p>
                             )}
                           </Card>
