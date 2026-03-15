@@ -249,6 +249,8 @@ export const TournamentManager = ({ eventId }: TournamentManagerProps) => {
         away_team_id: newMatchAwayTeamId,
         phase: newMatchPhase,
         status: 'scheduled',
+        match_halves: newMatchHalves,
+        match_duration_minutes: newMatchDuration,
       };
       if (newMatchGroup) matchData.group_name = newMatchGroup;
       if (newMatchCategoryId) matchData.category_id = newMatchCategoryId;
