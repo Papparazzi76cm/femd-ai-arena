@@ -508,13 +508,16 @@ export const TournamentManager = ({ eventId }: TournamentManagerProps) => {
                   {eventCategories.length > 0 && (
                     <div>
                       <Label>Categoría (opcional)</Label>
-                      <Select value={selectedCategoryId} onValueChange={setSelectedCategoryId}>
+                      <Select
+                        value={selectedCategoryId || '__all__'}
+                        onValueChange={(v) => setSelectedCategoryId(v === '__all__' ? '' : v)}
+                      >
                         <SelectTrigger>
                           <SelectValue placeholder="Todas las categorías" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="">Todas</SelectItem>
-                          {eventCategories.map(ec => (
+                          <SelectItem value="__all__">Todas</SelectItem>
+                          {eventCategories.map((ec) => (
                             <SelectItem key={ec.id} value={ec.id}>
                               {ec.category?.name}
                             </SelectItem>
