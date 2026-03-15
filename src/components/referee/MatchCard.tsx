@@ -92,12 +92,19 @@ export const MatchCard = ({
         status: 'in_progress',
         home_score: homeScore,
         away_score: awayScore,
+        started_at: new Date().toISOString(),
       });
       setIsEditing(true);
       notifyMatchStarted(homeTeamName, awayTeamName);
     } finally {
       setSaving(false);
     }
+  };
+
+  const handleSaveStartedAt = async () => {
+    await onUpdate(match.id, {
+      started_at: new Date().toISOString(),
+    });
   };
 
   const handleEndMatch = async () => {
