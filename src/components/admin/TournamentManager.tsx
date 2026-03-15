@@ -57,6 +57,8 @@ export const TournamentManager = ({ eventId }: TournamentManagerProps) => {
   const [newMatchCategoryId, setNewMatchCategoryId] = useState('');
   const [newMatchDate, setNewMatchDate] = useState('');
   const [newMatchFieldId, setNewMatchFieldId] = useState('');
+  const [newMatchHalves, setNewMatchHalves] = useState(1);
+  const [newMatchDuration, setNewMatchDuration] = useState(40);
   
   const { toast } = useToast();
 
