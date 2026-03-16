@@ -46,6 +46,7 @@ interface TopScorer {
 export const LiveTournamentPage = () => {
   const [loading, setLoading] = useState(true);
   const [activeEvent, setActiveEvent] = useState<any>(null);
+  const [isLiveEvent, setIsLiveEvent] = useState(false);
   const [liveMatches, setLiveMatches] = useState<Match[]>([]);
   const [allMatches, setAllMatches] = useState<Match[]>([]);
   const [teams, setTeams] = useState<Team[]>([]);
