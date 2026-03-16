@@ -220,14 +220,95 @@ export const TournamentManager = ({ eventId }: TournamentManagerProps) => {
     }
   };
 
-  const handleUpdateGroup = async (eventTeamId: string, groupName: string) => {
+  // Field management in facilities
+  const handleAddFieldToFacility = (facilityId: string) => {
+    const facility = eventFacilities.find((ef: any) => ef.facility?.id === facilityId)?.facility;
+    const fieldsCount = facility?.fields?.length || 0;
+    if (fieldsCount >= 20) {
+      toast({ title: 'Límite alcanzado', description: 'Máximo 20 campos por instalación', variant: 'destructive' });
+      return;
+    }
+    setFieldFacilityId(facilityId);
+    setEditingFieldId(null);
+    setFieldName(`Campo ${fieldsCount + 1}`);
+    setFieldSurface('cesped_artificial');
+    setFieldOrder(fieldsCount + 1);
+    setFieldDialogOpen(true);
+  };
+
+  const handleEditField = (field: any) => {
+    setEditingFieldId(field.id);
+    setFieldFacilityId(field.facility_id);
+    setFieldName(field.name);
+    setFieldSurface(field.surface);
+    setFieldOrder(field.display_order || 0);
+    setFieldDialogOpen(true);
+  };
+
+  const handleSaveField = async () => {
+    if (!fieldName.trim()) {
+      toast({ title: 'Error', description: 'El nombre es obligatorio', variant: 'destructive' });
+      return;
+    }
     try {
-      await tournamentService.updateEventTeam(eventTeamId, { group_name: groupName || null });
+      setLoading(true);
+      if (editingFieldId) {
+        await facilityService.updateField(editingFieldId, { name: fieldName, surface: fieldSurface, display_order: fieldOrder });
+        toast({ title: 'Campo actualizado' });
+      } else {
+        await facilityService.createField({ facility_id: fieldFacilityId, name: fieldName, surface: fieldSurface, display_order: fieldOrder });
+        toast({ title: 'Campo creado' });
+      }
+      setFieldDialogOpen(false);
       await loadData();
     } catch (error) {
-      toast({ title: 'Error', description: 'No se pudo actualizar el grupo', variant: 'destructive' });
+      toast({ title: 'Error', description: 'No se pudo guardar el campo', variant: 'destructive' });
+    } finally {
+      setLoading(false);
     }
   };
+
+  const handleDeleteField = async (fieldId: string) => {
+    if (!confirm('¿Eliminar este campo?')) return;
+    try {
+      await facilityService.deleteField(fieldId);
+      toast({ title: 'Campo eliminado' });
+      await loadData();
+    } catch (error) {
+      toast({ title: 'Error', description: 'No se pudo eliminar el campo', variant: 'destructive' });
+    }
+  };
+
+  // Schedule conflict checking
+  const checkConflict = async (fieldId: string, matchDate: string, duration: number) => {
+    if (!fieldId || !matchDate) {
+      setScheduleConflict(null);
+      return;
+    }
+    try {
+      const { data } = await supabase.rpc('check_match_schedule_conflict', {
+        p_event_id: eventId,
+        p_field_id: fieldId,
+        p_match_date: new Date(matchDate).toISOString(),
+        p_duration_minutes: duration,
+      });
+      if (data && data.length > 0) {
+        const conflicting = data[0];
+        const homeTeam = getTeamName(conflicting.home_team_id);
+        const awayTeam = getTeamName(conflicting.away_team_id);
+        setScheduleConflict(`⚠️ Conflicto: ${homeTeam} vs ${awayTeam} a las ${new Date(conflicting.scheduled_date).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}`);
+      } else {
+        setScheduleConflict(null);
+      }
+    } catch {
+      setScheduleConflict(null);
+    }
+  };
+
+  // Effect to auto-check conflicts when field/date/duration changes
+  useEffect(() => {
+    checkConflict(newMatchFieldId, newMatchDate, newMatchDuration);
+  }, [newMatchFieldId, newMatchDate, newMatchDuration]);
 
 
   const handleUpdateMatchScore = async (matchId: string, field: string, value: string) => {
