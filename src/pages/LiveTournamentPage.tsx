@@ -4,7 +4,7 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Loader2, Trophy, Users, BarChart3, Radio, Bell, BellOff, Goal, MapPin, Clock } from 'lucide-react';
+import { Loader2, Trophy, Users, BarChart3, Radio, Bell, BellOff, Goal, MapPin, Clock, Calendar } from 'lucide-react';
 import { Match } from '@/types/tournament';
 import { MatchTimer } from '@/components/referee/MatchTimer';
 import { Team, Participant } from '@/types/database';
@@ -46,6 +46,7 @@ interface TopScorer {
 export const LiveTournamentPage = () => {
   const [loading, setLoading] = useState(true);
   const [activeEvent, setActiveEvent] = useState<any>(null);
+  const [isLiveEvent, setIsLiveEvent] = useState(false);
   const [liveMatches, setLiveMatches] = useState<Match[]>([]);
   const [allMatches, setAllMatches] = useState<Match[]>([]);
   const [teams, setTeams] = useState<Team[]>([]);
@@ -174,21 +175,46 @@ export const LiveTournamentPage = () => {
         return;
       }
 
-      // Find event with live matches or the most recent
-      let activeEventId = events[0].id;
-      
+      // 1) Check if any event has in_progress matches → that's the live event
       const { data: liveMatchesCheck } = await supabase
         .from('matches')
         .select('event_id')
         .eq('status', 'in_progress')
         .limit(1);
 
+      let selectedEvent: any = null;
+      let isLive = false;
+
       if (liveMatchesCheck && liveMatchesCheck.length > 0) {
-        activeEventId = liveMatchesCheck[0].event_id;
+        // There's a live event
+        selectedEvent = events.find(e => e.id === liveMatchesCheck[0].event_id) || null;
+        isLive = true;
       }
 
-      const selectedEvent = events.find(e => e.id === activeEventId) || events[0];
+      if (!selectedEvent) {
+        // 2) No live event → find the next upcoming event (date >= now)
+        const now = new Date().toISOString();
+        const upcoming = events
+          .filter(e => e.date >= now)
+          .sort((a: any, b: any) => new Date(a.date).getTime() - new Date(b.date).getTime());
+        
+        if (upcoming.length > 0) {
+          selectedEvent = upcoming[0];
+        }
+        isLive = false;
+      }
+
+      if (!selectedEvent) {
+        // No live and no upcoming events
+        setActiveEvent(null);
+        setIsLiveEvent(false);
+        setLoading(false);
+        return;
+      }
+
       setActiveEvent(selectedEvent);
+      setIsLiveEvent(isLive);
+      const activeEventId = selectedEvent.id;
 
       // Load matches for the active event
       const { data: matchesData } = await supabase
@@ -337,39 +363,58 @@ export const LiveTournamentPage = () => {
   return (
     <div className="min-h-screen bg-gradient-to-b from-muted/20 to-background pt-20">
       {/* Hero Header */}
-      <div className="bg-gradient-to-r from-red-600 via-orange-500 to-yellow-500 text-white py-8 px-4">
+      <div className={`${isLiveEvent ? 'bg-gradient-to-r from-red-600 via-orange-500 to-yellow-500' : 'bg-gradient-to-r from-primary via-primary/80 to-primary/60'} text-white py-8 px-4`}>
         <div className="container mx-auto">
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-3">
-              <div className="relative">
-                <Radio className="w-8 h-8" />
-                <span className="absolute -top-1 -right-1 w-3 h-3 bg-white rounded-full animate-pulse-live" />
-              </div>
-              <Badge className="bg-white/20 text-white border-white/30 text-lg px-4 py-1">
-                EN VIVO
-              </Badge>
-            </div>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleEnableNotifications}
-              className={`text-white hover:bg-white/20 ${notificationsEnabled ? 'bg-white/20' : ''}`}
-            >
-              {notificationsEnabled ? (
+              {isLiveEvent ? (
                 <>
-                  <Bell className="w-4 h-4 mr-2" />
-                  Notificaciones activas
+                  <div className="relative">
+                    <Radio className="w-8 h-8" />
+                    <span className="absolute -top-1 -right-1 w-3 h-3 bg-white rounded-full animate-pulse-live" />
+                  </div>
+                  <Badge className="bg-white/20 text-white border-white/30 text-lg px-4 py-1">
+                    EN VIVO
+                  </Badge>
                 </>
               ) : (
                 <>
-                  <BellOff className="w-4 h-4 mr-2" />
-                  Activar notificaciones
+                  <Calendar className="w-8 h-8" />
+                  <Badge className="bg-white/20 text-white border-white/30 text-lg px-4 py-1">
+                    PRÓXIMO EVENTO
+                  </Badge>
                 </>
               )}
-            </Button>
+            </div>
+            {isLiveEvent && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleEnableNotifications}
+                className={`text-white hover:bg-white/20 ${notificationsEnabled ? 'bg-white/20' : ''}`}
+              >
+                {notificationsEnabled ? (
+                  <>
+                    <Bell className="w-4 h-4 mr-2" />
+                    Notificaciones activas
+                  </>
+                ) : (
+                  <>
+                    <BellOff className="w-4 h-4 mr-2" />
+                    Activar notificaciones
+                  </>
+                )}
+              </Button>
+            )}
           </div>
           <h1 className="text-3xl md:text-4xl font-bold">{activeEvent.title}</h1>
           <p className="text-white/80 mt-2">{activeEvent.location}</p>
+          {!isLiveEvent && activeEvent.date && (
+            <p className="text-white/70 mt-1 flex items-center gap-2">
+              <Clock className="w-4 h-4" />
+              {new Date(activeEvent.date).toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+            </p>
+          )}
         </div>
       </div>
 
