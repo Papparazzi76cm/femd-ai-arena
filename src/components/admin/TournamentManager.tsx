@@ -50,6 +50,14 @@ export const TournamentManager = ({ eventId }: TournamentManagerProps) => {
   // Facility form
   const [newFacilityId, setNewFacilityId] = useState('');
 
+  // Field management
+  const [fieldDialogOpen, setFieldDialogOpen] = useState(false);
+  const [editingFieldId, setEditingFieldId] = useState<string | null>(null);
+  const [fieldFacilityId, setFieldFacilityId] = useState('');
+  const [fieldName, setFieldName] = useState('');
+  const [fieldSurface, setFieldSurface] = useState<FieldSurface>('cesped_artificial');
+  const [fieldOrder, setFieldOrder] = useState(0);
+
   // Match form
   const [newMatchHomeTeamId, setNewMatchHomeTeamId] = useState('');
   const [newMatchAwayTeamId, setNewMatchAwayTeamId] = useState('');
@@ -60,6 +68,7 @@ export const TournamentManager = ({ eventId }: TournamentManagerProps) => {
   const [newMatchFieldId, setNewMatchFieldId] = useState('');
   const [newMatchHalves, setNewMatchHalves] = useState(1);
   const [newMatchDuration, setNewMatchDuration] = useState(40);
+  const [scheduleConflict, setScheduleConflict] = useState<string | null>(null);
   
   const { toast } = useToast();
 
