@@ -895,7 +895,14 @@ export const TournamentManager = ({ eventId }: TournamentManagerProps) => {
                     </div>
                   </div>
 
-                  <Button onClick={handleCreateMatch} disabled={loading} className="w-full">
+                  {scheduleConflict && (
+                    <div className="flex items-center gap-2 p-3 rounded-lg bg-destructive/10 text-destructive text-sm">
+                      <AlertTriangle className="w-4 h-4 shrink-0" />
+                      {scheduleConflict}
+                    </div>
+                  )}
+
+                  <Button onClick={handleCreateMatch} disabled={loading || !!scheduleConflict} className="w-full">
                     Crear Partido
                   </Button>
                 </div>
