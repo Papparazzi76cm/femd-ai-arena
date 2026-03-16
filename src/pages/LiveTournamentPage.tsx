@@ -4,7 +4,7 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Loader2, Trophy, Users, BarChart3, Radio, Bell, BellOff, Goal, MapPin, Clock } from 'lucide-react';
+import { Loader2, Trophy, Users, BarChart3, Radio, Bell, BellOff, Goal, MapPin, Clock, Calendar } from 'lucide-react';
 import { Match } from '@/types/tournament';
 import { MatchTimer } from '@/components/referee/MatchTimer';
 import { Team, Participant } from '@/types/database';
