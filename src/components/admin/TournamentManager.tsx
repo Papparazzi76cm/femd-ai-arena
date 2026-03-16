@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -12,7 +13,8 @@ import { facilityService } from '@/services/facilityService';
 import { teamService } from '@/services/teamService';
 import { Team, Category, EventCategory, Facility, FootballModality } from '@/types/database';
 import { EventTeam, Match, TournamentPhase } from '@/types/tournament';
-import { Trophy, Users, Calendar, UserCog, Tag, Building2, Plus, Trash2, MapPin, AlertTriangle } from 'lucide-react';
+import { FieldSurface } from '@/types/database';
+import { Trophy, Users, Calendar, UserCog, Tag, Building2, Plus, Trash2, MapPin, AlertTriangle, Edit2 } from 'lucide-react';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { RefereeManager } from './RefereeManager';
@@ -49,6 +51,14 @@ export const TournamentManager = ({ eventId }: TournamentManagerProps) => {
   // Facility form
   const [newFacilityId, setNewFacilityId] = useState('');
 
+  // Field management
+  const [fieldDialogOpen, setFieldDialogOpen] = useState(false);
+  const [editingFieldId, setEditingFieldId] = useState<string | null>(null);
+  const [fieldFacilityId, setFieldFacilityId] = useState('');
+  const [fieldName, setFieldName] = useState('');
+  const [fieldSurface, setFieldSurface] = useState<FieldSurface>('cesped_artificial');
+  const [fieldOrder, setFieldOrder] = useState(0);
+
   // Match form
   const [newMatchHomeTeamId, setNewMatchHomeTeamId] = useState('');
   const [newMatchAwayTeamId, setNewMatchAwayTeamId] = useState('');
@@ -59,6 +69,7 @@ export const TournamentManager = ({ eventId }: TournamentManagerProps) => {
   const [newMatchFieldId, setNewMatchFieldId] = useState('');
   const [newMatchHalves, setNewMatchHalves] = useState(1);
   const [newMatchDuration, setNewMatchDuration] = useState(40);
+  const [scheduleConflict, setScheduleConflict] = useState<string | null>(null);
   
   const { toast } = useToast();
 
@@ -210,6 +221,96 @@ export const TournamentManager = ({ eventId }: TournamentManagerProps) => {
     }
   };
 
+  // Field management in facilities
+  const handleAddFieldToFacility = (facilityId: string) => {
+    const facility = eventFacilities.find((ef: any) => ef.facility?.id === facilityId)?.facility;
+    const fieldsCount = facility?.fields?.length || 0;
+    if (fieldsCount >= 20) {
+      toast({ title: 'Límite alcanzado', description: 'Máximo 20 campos por instalación', variant: 'destructive' });
+      return;
+    }
+    setFieldFacilityId(facilityId);
+    setEditingFieldId(null);
+    setFieldName(`Campo ${fieldsCount + 1}`);
+    setFieldSurface('cesped_artificial');
+    setFieldOrder(fieldsCount + 1);
+    setFieldDialogOpen(true);
+  };
+
+  const handleEditField = (field: any) => {
+    setEditingFieldId(field.id);
+    setFieldFacilityId(field.facility_id);
+    setFieldName(field.name);
+    setFieldSurface(field.surface);
+    setFieldOrder(field.display_order || 0);
+    setFieldDialogOpen(true);
+  };
+
+  const handleSaveField = async () => {
+    if (!fieldName.trim()) {
+      toast({ title: 'Error', description: 'El nombre es obligatorio', variant: 'destructive' });
+      return;
+    }
+    try {
+      setLoading(true);
+      if (editingFieldId) {
+        await facilityService.updateField(editingFieldId, { name: fieldName, surface: fieldSurface, display_order: fieldOrder });
+        toast({ title: 'Campo actualizado' });
+      } else {
+        await facilityService.createField({ facility_id: fieldFacilityId, name: fieldName, surface: fieldSurface, display_order: fieldOrder });
+        toast({ title: 'Campo creado' });
+      }
+      setFieldDialogOpen(false);
+      await loadData();
+    } catch (error) {
+      toast({ title: 'Error', description: 'No se pudo guardar el campo', variant: 'destructive' });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDeleteField = async (fieldId: string) => {
+    if (!confirm('¿Eliminar este campo?')) return;
+    try {
+      await facilityService.deleteField(fieldId);
+      toast({ title: 'Campo eliminado' });
+      await loadData();
+    } catch (error) {
+      toast({ title: 'Error', description: 'No se pudo eliminar el campo', variant: 'destructive' });
+    }
+  };
+
+  // Schedule conflict checking
+  const checkConflict = async (fieldId: string, matchDate: string, duration: number) => {
+    if (!fieldId || !matchDate) {
+      setScheduleConflict(null);
+      return;
+    }
+    try {
+      const { data } = await supabase.rpc('check_match_schedule_conflict', {
+        p_event_id: eventId,
+        p_field_id: fieldId,
+        p_match_date: new Date(matchDate).toISOString(),
+        p_duration_minutes: duration,
+      });
+      if (data && data.length > 0) {
+        const conflicting = data[0];
+        const homeTeam = getTeamName(conflicting.home_team_id);
+        const awayTeam = getTeamName(conflicting.away_team_id);
+        setScheduleConflict(`⚠️ Conflicto: ${homeTeam} vs ${awayTeam} a las ${new Date(conflicting.scheduled_date).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}`);
+      } else {
+        setScheduleConflict(null);
+      }
+    } catch {
+      setScheduleConflict(null);
+    }
+  };
+
+  // Effect to auto-check conflicts when field/date/duration changes
+  useEffect(() => {
+    checkConflict(newMatchFieldId, newMatchDate, newMatchDuration);
+  }, [newMatchFieldId, newMatchDate, newMatchDuration]);
+
   const handleUpdateGroup = async (eventTeamId: string, groupName: string) => {
     try {
       await tournamentService.updateEventTeam(eventTeamId, { group_name: groupName || null });
@@ -218,7 +319,6 @@ export const TournamentManager = ({ eventId }: TournamentManagerProps) => {
       toast({ title: 'Error', description: 'No se pudo actualizar el grupo', variant: 'destructive' });
     }
   };
-
 
   const handleUpdateMatchScore = async (matchId: string, field: string, value: string) => {
     try {
@@ -795,7 +895,14 @@ export const TournamentManager = ({ eventId }: TournamentManagerProps) => {
                     </div>
                   </div>
 
-                  <Button onClick={handleCreateMatch} disabled={loading} className="w-full">
+                  {scheduleConflict && (
+                    <div className="flex items-center gap-2 p-3 rounded-lg bg-destructive/10 text-destructive text-sm">
+                      <AlertTriangle className="w-4 h-4 shrink-0" />
+                      {scheduleConflict}
+                    </div>
+                  )}
+
+                  <Button onClick={handleCreateMatch} disabled={loading || !!scheduleConflict} className="w-full">
                     Crear Partido
                   </Button>
                 </div>
@@ -935,7 +1042,7 @@ export const TournamentManager = ({ eventId }: TournamentManagerProps) => {
             ) : (
               <div className="grid gap-4">
                 {eventFacilities.map(ef => (
-                  <div key={ef.id} className="p-4 bg-muted/50 rounded-lg">
+                  <div key={ef.id} className="p-4 bg-muted/50 rounded-lg space-y-3">
                     <div className="flex items-start justify-between">
                       <div>
                         <h4 className="font-bold">{ef.facility?.name}</h4>
@@ -944,15 +1051,6 @@ export const TournamentManager = ({ eventId }: TournamentManagerProps) => {
                             <MapPin className="w-3 h-3" />
                             {ef.facility.city}{ef.facility.province ? `, ${ef.facility.province}` : ''}
                           </p>
-                        )}
-                        {ef.facility?.fields && ef.facility.fields.length > 0 && (
-                          <div className="mt-2 flex flex-wrap gap-2">
-                            {ef.facility.fields.map((field: any) => (
-                              <Badge key={field.id} variant="outline">
-                                {field.name}
-                              </Badge>
-                            ))}
-                          </div>
                         )}
                       </div>
                       <Button
@@ -963,11 +1061,96 @@ export const TournamentManager = ({ eventId }: TournamentManagerProps) => {
                         <Trash2 className="w-4 h-4 text-destructive" />
                       </Button>
                     </div>
+
+                    {/* Campos de esta instalación */}
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm font-medium">Campos ({ef.facility?.fields?.length || 0}/20)</span>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          disabled={(ef.facility?.fields?.length || 0) >= 20}
+                          onClick={() => handleAddFieldToFacility(ef.facility?.id)}
+                        >
+                          <Plus className="w-3 h-3 mr-1" />
+                          Añadir Campo
+                        </Button>
+                      </div>
+                      {ef.facility?.fields && ef.facility.fields.length > 0 ? (
+                        <div className="grid gap-1">
+                          {ef.facility.fields
+                            .sort((a: any, b: any) => (a.display_order || 0) - (b.display_order || 0))
+                            .map((field: any) => (
+                            <div key={field.id} className="flex items-center justify-between px-3 py-2 bg-background rounded border">
+                              <div className="flex items-center gap-2">
+                                <span className="text-sm font-medium">{field.name}</span>
+                                <Badge variant="secondary" className="text-xs">
+                                  {field.surface === 'cesped_artificial' ? 'C. Artificial' : 'C. Natural'}
+                                </Badge>
+                              </div>
+                              <div className="flex gap-1">
+                                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleEditField(field)}>
+                                  <Edit2 className="w-3 h-3" />
+                                </Button>
+                                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleDeleteField(field.id)}>
+                                  <Trash2 className="w-3 h-3 text-destructive" />
+                                </Button>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="text-xs text-muted-foreground text-center py-2">Sin campos. Añade al menos uno.</p>
+                      )}
+                    </div>
                   </div>
                 ))}
               </div>
             )}
           </Card>
+
+          {/* Field Dialog */}
+          <Dialog open={fieldDialogOpen} onOpenChange={(open) => {
+            setFieldDialogOpen(open);
+            if (!open) setEditingFieldId(null);
+          }}>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>{editingFieldId ? 'Editar Campo' : 'Nuevo Campo'}</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4">
+                <div>
+                  <Label>Nombre del Campo</Label>
+                  <Input
+                    value={fieldName}
+                    onChange={(e) => setFieldName(e.target.value)}
+                    placeholder="Ej: Campo Patrocinador X"
+                  />
+                </div>
+                <div>
+                  <Label>Superficie</Label>
+                  <Select value={fieldSurface} onValueChange={(v: FieldSurface) => setFieldSurface(v)}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="cesped_artificial">Césped Artificial</SelectItem>
+                      <SelectItem value="cesped_natural">Césped Natural</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label>Orden</Label>
+                  <Input
+                    type="number"
+                    value={fieldOrder}
+                    onChange={(e) => setFieldOrder(parseInt(e.target.value) || 0)}
+                  />
+                </div>
+                <Button onClick={handleSaveField} disabled={loading} className="w-full">
+                  {editingFieldId ? 'Actualizar' : 'Crear'}
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
         </TabsContent>
 
         {/* Mesas */}
