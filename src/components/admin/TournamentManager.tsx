@@ -1042,7 +1042,7 @@ export const TournamentManager = ({ eventId }: TournamentManagerProps) => {
             ) : (
               <div className="grid gap-4">
                 {eventFacilities.map(ef => (
-                  <div key={ef.id} className="p-4 bg-muted/50 rounded-lg">
+                  <div key={ef.id} className="p-4 bg-muted/50 rounded-lg space-y-3">
                     <div className="flex items-start justify-between">
                       <div>
                         <h4 className="font-bold">{ef.facility?.name}</h4>
@@ -1051,15 +1051,6 @@ export const TournamentManager = ({ eventId }: TournamentManagerProps) => {
                             <MapPin className="w-3 h-3" />
                             {ef.facility.city}{ef.facility.province ? `, ${ef.facility.province}` : ''}
                           </p>
-                        )}
-                        {ef.facility?.fields && ef.facility.fields.length > 0 && (
-                          <div className="mt-2 flex flex-wrap gap-2">
-                            {ef.facility.fields.map((field: any) => (
-                              <Badge key={field.id} variant="outline">
-                                {field.name}
-                              </Badge>
-                            ))}
-                          </div>
                         )}
                       </div>
                       <Button
@@ -1070,11 +1061,96 @@ export const TournamentManager = ({ eventId }: TournamentManagerProps) => {
                         <Trash2 className="w-4 h-4 text-destructive" />
                       </Button>
                     </div>
+
+                    {/* Campos de esta instalación */}
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm font-medium">Campos ({ef.facility?.fields?.length || 0}/20)</span>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          disabled={(ef.facility?.fields?.length || 0) >= 20}
+                          onClick={() => handleAddFieldToFacility(ef.facility?.id)}
+                        >
+                          <Plus className="w-3 h-3 mr-1" />
+                          Añadir Campo
+                        </Button>
+                      </div>
+                      {ef.facility?.fields && ef.facility.fields.length > 0 ? (
+                        <div className="grid gap-1">
+                          {ef.facility.fields
+                            .sort((a: any, b: any) => (a.display_order || 0) - (b.display_order || 0))
+                            .map((field: any) => (
+                            <div key={field.id} className="flex items-center justify-between px-3 py-2 bg-background rounded border">
+                              <div className="flex items-center gap-2">
+                                <span className="text-sm font-medium">{field.name}</span>
+                                <Badge variant="secondary" className="text-xs">
+                                  {field.surface === 'cesped_artificial' ? 'C. Artificial' : 'C. Natural'}
+                                </Badge>
+                              </div>
+                              <div className="flex gap-1">
+                                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleEditField(field)}>
+                                  <Edit2 className="w-3 h-3" />
+                                </Button>
+                                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleDeleteField(field.id)}>
+                                  <Trash2 className="w-3 h-3 text-destructive" />
+                                </Button>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="text-xs text-muted-foreground text-center py-2">Sin campos. Añade al menos uno.</p>
+                      )}
+                    </div>
                   </div>
                 ))}
               </div>
             )}
           </Card>
+
+          {/* Field Dialog */}
+          <Dialog open={fieldDialogOpen} onOpenChange={(open) => {
+            setFieldDialogOpen(open);
+            if (!open) setEditingFieldId(null);
+          }}>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>{editingFieldId ? 'Editar Campo' : 'Nuevo Campo'}</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4">
+                <div>
+                  <Label>Nombre del Campo</Label>
+                  <Input
+                    value={fieldName}
+                    onChange={(e) => setFieldName(e.target.value)}
+                    placeholder="Ej: Campo Patrocinador X"
+                  />
+                </div>
+                <div>
+                  <Label>Superficie</Label>
+                  <Select value={fieldSurface} onValueChange={(v: FieldSurface) => setFieldSurface(v)}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="cesped_artificial">Césped Artificial</SelectItem>
+                      <SelectItem value="cesped_natural">Césped Natural</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label>Orden</Label>
+                  <Input
+                    type="number"
+                    value={fieldOrder}
+                    onChange={(e) => setFieldOrder(parseInt(e.target.value) || 0)}
+                  />
+                </div>
+                <Button onClick={handleSaveField} disabled={loading} className="w-full">
+                  {editingFieldId ? 'Actualizar' : 'Crear'}
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
         </TabsContent>
 
         {/* Mesas */}
