@@ -311,6 +311,14 @@ export const TournamentManager = ({ eventId }: TournamentManagerProps) => {
     checkConflict(newMatchFieldId, newMatchDate, newMatchDuration);
   }, [newMatchFieldId, newMatchDate, newMatchDuration]);
 
+  const handleUpdateGroup = async (eventTeamId: string, groupName: string) => {
+    try {
+      await tournamentService.updateEventTeam(eventTeamId, { group_name: groupName || null });
+      await loadData();
+    } catch (error) {
+      toast({ title: 'Error', description: 'No se pudo actualizar el grupo', variant: 'destructive' });
+    }
+  };
 
   const handleUpdateMatchScore = async (matchId: string, field: string, value: string) => {
     try {
