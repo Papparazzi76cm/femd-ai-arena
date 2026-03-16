@@ -99,6 +99,7 @@ export const HistoricalTournamentManager = ({ eventId }: HistoricalTournamentMan
     team => !eventTeams.some(et => et.team_id === team.id)
   );
 
+  // Aplanar todos los campos de todas las instalaciones para un acceso más fácil
   const allFields = eventFacilities.flatMap((ef: any) => 
     (ef.facility?.fields || []).map((f: any) => ({
       ...f,
@@ -187,6 +188,7 @@ export const HistoricalTournamentManager = ({ eventId }: HistoricalTournamentMan
 
   const handleEditMatch = (match: Match) => {
     setEditingMatch(match);
+    // Extraer los primeros 16 caracteres para adaptarlo al input datetime-local (YYYY-MM-DDTHH:mm)
     const dateFormatted = match.match_date ? match.match_date.substring(0, 16) : '';
     setMatchForm({
       home_team_id: match.home_team_id,
@@ -231,7 +233,7 @@ export const HistoricalTournamentManager = ({ eventId }: HistoricalTournamentMan
       const payload: any = {
         ...matchForm,
         event_id: eventId,
-        field_id: matchForm.field_id || null, // Guardar null si está vacío
+        field_id: matchForm.field_id || null, // Convertimos campos vacíos en null
       };
 
       if (editingMatch) {
@@ -752,6 +754,7 @@ export const HistoricalTournamentManager = ({ eventId }: HistoricalTournamentMan
                     />
                   </div>
 
+                  {/* NUEVO: Selector de Fecha y Hora adaptado */}
                   <div>
                     <Label htmlFor="match-date">Fecha y Hora</Label>
                     <Input
@@ -762,6 +765,7 @@ export const HistoricalTournamentManager = ({ eventId }: HistoricalTournamentMan
                     />
                   </div>
 
+                  {/* NUEVO: Selector de Instalaciones y Campo */}
                   {allFields.length > 0 && (
                     <div>
                       <Label>Instalación y Campo</Label>
@@ -909,6 +913,7 @@ export const HistoricalTournamentManager = ({ eventId }: HistoricalTournamentMan
                           {new Date(match.match_date).toLocaleString('es-ES', { dateStyle: 'short', timeStyle: 'short' })}
                         </span>
                       )}
+                      {/* Mostrar el campo e instalación si están seleccionados */}
                       {match.field_id && (() => {
                         const field = allFields.find((f: any) => f.id === match.field_id);
                         return field ? (
