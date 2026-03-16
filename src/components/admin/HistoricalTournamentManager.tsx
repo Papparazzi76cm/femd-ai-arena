@@ -9,6 +9,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { tournamentService } from '@/services/tournamentService';
 import { teamService } from '@/services/teamService';
+import { facilityService } from '@/services/facilityService';
 import { Team } from '@/types/database';
 import { EventTeam, Match, TournamentPhase } from '@/types/tournament';
 import { History, Plus, Save, Trash2, Edit2, Calendar, Download, Upload, FileText } from 'lucide-react';
@@ -32,6 +33,7 @@ export const HistoricalTournamentManager = ({ eventId }: HistoricalTournamentMan
   const [teams, setTeams] = useState<Team[]>([]);
   const [eventTeams, setEventTeams] = useState<EventTeam[]>([]);
   const [matches, setMatches] = useState<Match[]>([]);
+  const [eventFacilities, setEventFacilities] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   
   // Team selection dialog
@@ -52,6 +54,7 @@ export const HistoricalTournamentManager = ({ eventId }: HistoricalTournamentMan
     phase: 'group' as TournamentPhase,
     group_name: '',
     match_date: '',
+    field_id: '',
     home_score: 0,
     away_score: 0,
     home_yellow_cards: 0,
@@ -70,14 +73,16 @@ export const HistoricalTournamentManager = ({ eventId }: HistoricalTournamentMan
   const loadData = async () => {
     try {
       setLoading(true);
-      const [allTeams, tournamentTeams, tournamentMatches] = await Promise.all([
+      const [allTeams, tournamentTeams, tournamentMatches, eventFacs] = await Promise.all([
         teamService.getAll(),
         tournamentService.getEventTeams(eventId),
         tournamentService.getMatches(eventId),
+        facilityService.getEventFacilities(eventId),
       ]);
       setTeams(allTeams);
       setEventTeams(tournamentTeams);
       setMatches(tournamentMatches);
+      setEventFacilities(eventFacs);
     } catch (error) {
       console.error('Error cargando datos:', error);
       toast({
@@ -92,6 +97,13 @@ export const HistoricalTournamentManager = ({ eventId }: HistoricalTournamentMan
 
   const availableTeams = teams.filter(
     team => !eventTeams.some(et => et.team_id === team.id)
+  );
+
+  const allFields = eventFacilities.flatMap((ef: any) => 
+    (ef.facility?.fields || []).map((f: any) => ({
+      ...f,
+      facilityName: ef.facility?.name || '',
+    }))
   );
 
   const handleTeamSelection = (teamId: string, checked: boolean) => {
@@ -161,6 +173,7 @@ export const HistoricalTournamentManager = ({ eventId }: HistoricalTournamentMan
       phase: 'group' as TournamentPhase,
       group_name: '',
       match_date: '',
+      field_id: '',
       home_score: 0,
       away_score: 0,
       home_yellow_cards: 0,
@@ -174,12 +187,14 @@ export const HistoricalTournamentManager = ({ eventId }: HistoricalTournamentMan
 
   const handleEditMatch = (match: Match) => {
     setEditingMatch(match);
+    const dateFormatted = match.match_date ? match.match_date.substring(0, 16) : '';
     setMatchForm({
       home_team_id: match.home_team_id,
       away_team_id: match.away_team_id,
       phase: match.phase,
       group_name: match.group_name || '',
-      match_date: match.match_date || '',
+      match_date: dateFormatted,
+      field_id: match.field_id || '',
       home_score: match.home_score || 0,
       away_score: match.away_score || 0,
       home_yellow_cards: match.home_yellow_cards || 0,
@@ -212,21 +227,23 @@ export const HistoricalTournamentManager = ({ eventId }: HistoricalTournamentMan
 
     try {
       setLoading(true);
+      
+      const payload: any = {
+        ...matchForm,
+        event_id: eventId,
+        field_id: matchForm.field_id || null, // Guardar null si está vacío
+      };
 
       if (editingMatch) {
         // Update existing match
-        await tournamentService.updateMatch(editingMatch.id, matchForm);
+        await tournamentService.updateMatch(editingMatch.id, payload);
         toast({
           title: 'Partido actualizado',
           description: 'El partido se actualizó correctamente',
         });
       } else {
         // Create new match
-        const newMatch = {
-          ...matchForm,
-          event_id: eventId,
-        };
-        await tournamentService.createMatch(newMatch);
+        await tournamentService.createMatch(payload);
         toast({
           title: 'Partido creado',
           description: 'El partido se creó correctamente',
@@ -705,7 +722,7 @@ export const HistoricalTournamentManager = ({ eventId }: HistoricalTournamentMan
                   </div>
                 </div>
 
-                <div className="grid md:grid-cols-3 gap-4">
+                <div className="grid md:grid-cols-2 gap-4">
                   <div>
                     <Label htmlFor="phase">Fase</Label>
                     <Select
@@ -736,14 +753,36 @@ export const HistoricalTournamentManager = ({ eventId }: HistoricalTournamentMan
                   </div>
 
                   <div>
-                    <Label htmlFor="match-date">Fecha</Label>
+                    <Label htmlFor="match-date">Fecha y Hora</Label>
                     <Input
                       id="match-date"
-                      type="date"
+                      type="datetime-local"
                       value={matchForm.match_date}
                       onChange={(e) => setMatchForm({ ...matchForm, match_date: e.target.value })}
                     />
                   </div>
+
+                  {allFields.length > 0 && (
+                    <div>
+                      <Label>Instalación y Campo</Label>
+                      <Select
+                        value={matchForm.field_id || '__none__'}
+                        onValueChange={(v) => setMatchForm({ ...matchForm, field_id: v === '__none__' ? '' : v })}
+                      >
+                        <SelectTrigger><SelectValue placeholder="Sin asignar" /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="__none__">Sin asignar</SelectItem>
+                          {eventFacilities.map((ef: any) => (
+                            ef.facility?.fields?.map((f: any) => (
+                              <SelectItem key={f.id} value={f.id}>
+                                📍 {ef.facility?.name} → {f.name}
+                              </SelectItem>
+                            ))
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
                 </div>
 
                 <div className="border-t pt-4">
@@ -867,9 +906,17 @@ export const HistoricalTournamentManager = ({ eventId }: HistoricalTournamentMan
                       {match.match_date && (
                         <span className="text-xs text-muted-foreground flex items-center gap-1">
                           <Calendar className="w-3 h-3" />
-                          {new Date(match.match_date).toLocaleDateString('es-ES')}
+                          {new Date(match.match_date).toLocaleString('es-ES', { dateStyle: 'short', timeStyle: 'short' })}
                         </span>
                       )}
+                      {match.field_id && (() => {
+                        const field = allFields.find((f: any) => f.id === match.field_id);
+                        return field ? (
+                          <span className="text-xs text-muted-foreground ml-2">
+                            📍 {field.facilityName} → {field.name}
+                          </span>
+                        ) : null;
+                      })()}
                     </div>
                     <div className="flex items-center gap-4">
                       <span className="font-semibold">{getTeamName(match.home_team_id)}</span>
