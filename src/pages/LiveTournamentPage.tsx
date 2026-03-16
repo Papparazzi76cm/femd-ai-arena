@@ -175,21 +175,46 @@ export const LiveTournamentPage = () => {
         return;
       }
 
-      // Find event with live matches or the most recent
-      let activeEventId = events[0].id;
-      
+      // 1) Check if any event has in_progress matches → that's the live event
       const { data: liveMatchesCheck } = await supabase
         .from('matches')
         .select('event_id')
         .eq('status', 'in_progress')
         .limit(1);
 
+      let selectedEvent: any = null;
+      let isLive = false;
+
       if (liveMatchesCheck && liveMatchesCheck.length > 0) {
-        activeEventId = liveMatchesCheck[0].event_id;
+        // There's a live event
+        selectedEvent = events.find(e => e.id === liveMatchesCheck[0].event_id) || null;
+        isLive = true;
       }
 
-      const selectedEvent = events.find(e => e.id === activeEventId) || events[0];
+      if (!selectedEvent) {
+        // 2) No live event → find the next upcoming event (date >= now)
+        const now = new Date().toISOString();
+        const upcoming = events
+          .filter(e => e.date >= now)
+          .sort((a: any, b: any) => new Date(a.date).getTime() - new Date(b.date).getTime());
+        
+        if (upcoming.length > 0) {
+          selectedEvent = upcoming[0];
+        }
+        isLive = false;
+      }
+
+      if (!selectedEvent) {
+        // No live and no upcoming events
+        setActiveEvent(null);
+        setIsLiveEvent(false);
+        setLoading(false);
+        return;
+      }
+
       setActiveEvent(selectedEvent);
+      setIsLiveEvent(isLive);
+      const activeEventId = selectedEvent.id;
 
       // Load matches for the active event
       const { data: matchesData } = await supabase
