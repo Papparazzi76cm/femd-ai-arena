@@ -340,6 +340,14 @@ export const TournamentManager = ({ eventId }: TournamentManagerProps) => {
       toast({ title: 'Error', description: 'El equipo local y visitante no pueden ser el mismo', variant: 'destructive' });
       return;
     }
+    if (!newMatchDate) {
+      toast({ title: 'Error', description: 'La fecha y hora son obligatorias', variant: 'destructive' });
+      return;
+    }
+    if (!newMatchFieldId) {
+      toast({ title: 'Error', description: 'Debes seleccionar una instalación y campo', variant: 'destructive' });
+      return;
+    }
 
     try {
       setLoading(true);
@@ -351,11 +359,11 @@ export const TournamentManager = ({ eventId }: TournamentManagerProps) => {
         status: 'scheduled',
         match_halves: newMatchHalves,
         match_duration_minutes: newMatchDuration,
+        match_date: newMatchDate,
+        field_id: newMatchFieldId,
       };
       if (newMatchGroup) matchData.group_name = newMatchGroup;
       if (newMatchCategoryId) matchData.category_id = newMatchCategoryId;
-      if (newMatchDate) matchData.match_date = newMatchDate;
-      if (newMatchFieldId) matchData.field_id = newMatchFieldId;
       matchData.match_number = matches.length + 1;
 
       await tournamentService.createMatch(matchData);
@@ -844,13 +852,15 @@ export const TournamentManager = ({ eventId }: TournamentManagerProps) => {
                     </div>
                   )}
 
-                  {allFields.length > 0 && (
-                    <div>
-                      <Label>Instalación y Campo</Label>
+                  <div>
+                    <Label>Instalación y Campo <span className="text-destructive">*</span></Label>
+                    {allFields.length > 0 ? (
                       <Select value={newMatchFieldId || '__none__'} onValueChange={(v) => setNewMatchFieldId(v === '__none__' ? '' : v)}>
-                        <SelectTrigger><SelectValue placeholder="Sin asignar" /></SelectTrigger>
+                        <SelectTrigger className={!newMatchFieldId ? 'border-destructive/50' : ''}>
+                          <SelectValue placeholder="Seleccionar campo" />
+                        </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="__none__">Sin asignar</SelectItem>
+                          <SelectItem value="__none__" disabled>Seleccionar campo...</SelectItem>
                           {eventFacilities.map((ef: any) => (
                             ef.facility?.fields?.map((f: any) => (
                               <SelectItem key={f.id} value={f.id}>
@@ -860,15 +870,19 @@ export const TournamentManager = ({ eventId }: TournamentManagerProps) => {
                           ))}
                         </SelectContent>
                       </Select>
-                    </div>
-                  )}
+                    ) : (
+                      <p className="text-sm text-destructive mt-1">⚠️ Añade una instalación con campos en la pestaña "Instalaciones" primero.</p>
+                    )}
+                  </div>
 
                   <div>
-                    <Label>Fecha y hora de inicio</Label>
+                    <Label>Fecha y hora de inicio <span className="text-destructive">*</span></Label>
                     <Input
                       type="datetime-local"
                       value={newMatchDate}
                       onChange={(e) => setNewMatchDate(e.target.value)}
+                      className={!newMatchDate ? 'border-destructive/50' : ''}
+                      required
                     />
                   </div>
 
@@ -902,7 +916,7 @@ export const TournamentManager = ({ eventId }: TournamentManagerProps) => {
                     </div>
                   )}
 
-                  <Button onClick={handleCreateMatch} disabled={loading || !!scheduleConflict} className="w-full">
+                  <Button onClick={handleCreateMatch} disabled={loading || !!scheduleConflict || !newMatchHomeTeamId || !newMatchAwayTeamId || !newMatchDate || !newMatchFieldId} className="w-full">
                     Crear Partido
                   </Button>
                 </div>

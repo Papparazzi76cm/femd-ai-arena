@@ -12,11 +12,11 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Checkbox } from '@/components/ui/checkbox';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, Edit, Trash2, Save, X, Calendar, Upload, Trophy, History as HistoryIcon, Users, Tag } from 'lucide-react';
+import { Plus, Edit, Trash2, Save, X, Calendar, Upload, Trophy, Users, Tag } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { supabase } from '@/integrations/supabase/client';
 import { TournamentManager } from './TournamentManager';
-import { HistoricalTournamentManager } from './HistoricalTournamentManager';
+
 import { TournamentGalleryManager } from './TournamentGalleryManager';
 
 export const EventManager = () => {
@@ -28,7 +28,7 @@ export const EventManager = () => {
   const [showForm, setShowForm] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [expandedTournament, setExpandedTournament] = useState<string | null>(null);
-  const [tournamentMode, setTournamentMode] = useState<'automatic' | 'historical'>('automatic');
+  
   const [showTeamsDialog, setShowTeamsDialog] = useState(false);
   const [showCategoriesDialog, setShowCategoriesDialog] = useState(false);
   const [selectedTeamIds, setSelectedTeamIds] = useState<string[]>([]);
@@ -694,26 +694,7 @@ export const EventManager = () => {
               
               {expandedTournament === event.id && (
                 <div className="border-t pt-4 space-y-6">
-                  <Tabs value={tournamentMode} onValueChange={(v: any) => setTournamentMode(v)}>
-                    <TabsList className="grid w-full grid-cols-2">
-                      <TabsTrigger value="automatic">
-                        <Trophy className="w-4 h-4 mr-2" />
-                        Torneo Automático
-                      </TabsTrigger>
-                      <TabsTrigger value="historical">
-                        <HistoryIcon className="w-4 h-4 mr-2" />
-                        Entrada Manual
-                      </TabsTrigger>
-                    </TabsList>
-                    
-                    <TabsContent value="automatic" className="mt-4">
-                      <TournamentManager eventId={event.id} />
-                    </TabsContent>
-                    
-                    <TabsContent value="historical" className="mt-4">
-                      <HistoricalTournamentManager eventId={event.id} />
-                    </TabsContent>
-                  </Tabs>
+                  <TournamentManager eventId={event.id} />
                   
                   {/* Tournament Gallery */}
                   <div className="border-t pt-6">
