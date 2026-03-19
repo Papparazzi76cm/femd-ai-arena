@@ -499,18 +499,20 @@ export type Database = {
       }
       matches: {
         Row: {
+          away_placeholder: string | null
           away_red_cards: number | null
           away_score: number | null
-          away_team_id: string
+          away_team_id: string | null
           away_yellow_cards: number | null
           category_id: string | null
           created_at: string | null
           event_id: string
           field_id: string | null
           group_name: string | null
+          home_placeholder: string | null
           home_red_cards: number | null
           home_score: number | null
-          home_team_id: string
+          home_team_id: string | null
           home_yellow_cards: number | null
           id: string
           match_date: string | null
@@ -523,18 +525,20 @@ export type Database = {
           status: string | null
         }
         Insert: {
+          away_placeholder?: string | null
           away_red_cards?: number | null
           away_score?: number | null
-          away_team_id: string
+          away_team_id?: string | null
           away_yellow_cards?: number | null
           category_id?: string | null
           created_at?: string | null
           event_id: string
           field_id?: string | null
           group_name?: string | null
+          home_placeholder?: string | null
           home_red_cards?: number | null
           home_score?: number | null
-          home_team_id: string
+          home_team_id?: string | null
           home_yellow_cards?: number | null
           id?: string
           match_date?: string | null
@@ -547,18 +551,20 @@ export type Database = {
           status?: string | null
         }
         Update: {
+          away_placeholder?: string | null
           away_red_cards?: number | null
           away_score?: number | null
-          away_team_id?: string
+          away_team_id?: string | null
           away_yellow_cards?: number | null
           category_id?: string | null
           created_at?: string | null
           event_id?: string
           field_id?: string | null
           group_name?: string | null
+          home_placeholder?: string | null
           home_red_cards?: number | null
           home_score?: number | null
-          home_team_id?: string
+          home_team_id?: string | null
           home_yellow_cards?: number | null
           id?: string
           match_date?: string | null

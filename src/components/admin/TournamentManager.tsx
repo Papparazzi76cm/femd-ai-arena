@@ -410,11 +410,20 @@ export const TournamentManager = ({ eventId }: TournamentManagerProps) => {
   );
 
   // Helpers
-  const getTeamName = (teamId: string) => {
+  const getTeamName = (teamId: string | null) => {
+    if (!teamId) return null;
     const eventTeam = eventTeams.find(et => et.team_id === teamId);
     const team = teams.find(t => t.id === teamId);
     const name = team?.name || 'Desconocido';
     return eventTeam?.team_letter ? `${name} ${eventTeam.team_letter}` : name;
+  };
+
+  const getMatchTeamLabel = (match: Match, side: 'home' | 'away') => {
+    const teamId = side === 'home' ? match.home_team_id : match.away_team_id;
+    const placeholder = side === 'home' ? (match as any).home_placeholder : (match as any).away_placeholder;
+    if (teamId) return getTeamName(teamId);
+    if (placeholder) return placeholder;
+    return 'Por determinar';
   };
 
   const getModalityLabel = (modality: FootballModality) => {
@@ -945,7 +954,7 @@ export const TournamentManager = ({ eventId }: TournamentManagerProps) => {
                           <Card key={match.id} className="p-4">
                             <div className="flex items-center justify-between gap-4">
                               <div className="flex-1">
-                                <div className="font-semibold">{getTeamName(match.home_team_id)}</div>
+                                <div className={`font-semibold ${!match.home_team_id ? 'text-muted-foreground italic' : ''}`}>{getMatchTeamLabel(match, 'home')}</div>
                               </div>
                               <div className="flex gap-2 items-center">
                                 <Input
@@ -965,7 +974,7 @@ export const TournamentManager = ({ eventId }: TournamentManagerProps) => {
                                 />
                               </div>
                               <div className="flex-1 text-right">
-                                <div className="font-semibold">{getTeamName(match.away_team_id)}</div>
+                                <div className={`font-semibold ${!match.away_team_id ? 'text-muted-foreground italic' : ''}`}>{getMatchTeamLabel(match, 'away')}</div>
                               </div>
                               <Button
                                 variant="ghost"
