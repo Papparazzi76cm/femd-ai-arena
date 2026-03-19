@@ -876,11 +876,13 @@ export const TournamentManager = ({ eventId }: TournamentManagerProps) => {
                   </div>
 
                   <div>
-                    <Label>Fecha y hora de inicio</Label>
+                    <Label>Fecha y hora de inicio <span className="text-destructive">*</span></Label>
                     <Input
                       type="datetime-local"
                       value={newMatchDate}
                       onChange={(e) => setNewMatchDate(e.target.value)}
+                      className={!newMatchDate ? 'border-destructive/50' : ''}
+                      required
                     />
                   </div>
 
