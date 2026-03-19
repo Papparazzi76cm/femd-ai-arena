@@ -954,7 +954,7 @@ export const TournamentManager = ({ eventId }: TournamentManagerProps) => {
                           <Card key={match.id} className="p-4">
                             <div className="flex items-center justify-between gap-4">
                               <div className="flex-1">
-                                <div className="font-semibold">{getTeamName(match.home_team_id)}</div>
+                                <div className={`font-semibold ${!match.home_team_id ? 'text-muted-foreground italic' : ''}`}>{getMatchTeamLabel(match, 'home')}</div>
                               </div>
                               <div className="flex gap-2 items-center">
                                 <Input
