@@ -59,6 +59,7 @@ const App = () => (
                       <Route path="/auth" element={<AuthPage />} />
                       <Route path="/admin" element={<AdminDashboard />} />
                       <Route path="/mesa" element={<MesaDashboard />} />
+                      <Route path="/mesa/partido/:token" element={<MesaMatchPanel />} />
                       {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                       <Route path="*" element={<NotFound />} />
                     </Routes>
