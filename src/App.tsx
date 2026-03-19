@@ -13,6 +13,7 @@ import { HomePage } from "@/pages/HomePage";
 import { AdminDashboard } from "@/pages/AdminDashboard";
 import { AuthPage } from "@/pages/AuthPage";
 import { MesaDashboard } from "@/pages/MesaDashboard";
+import { MesaMatchPanel } from "@/pages/MesaMatchPanel";
 import { TeamsPage } from "@/pages/TeamsPage";
 import { TeamDetailPage } from "@/pages/TeamDetailPage";
 import { PlayerDetailPage } from "@/pages/PlayerDetailPage";
@@ -58,6 +59,7 @@ const App = () => (
                       <Route path="/auth" element={<AuthPage />} />
                       <Route path="/admin" element={<AdminDashboard />} />
                       <Route path="/mesa" element={<MesaDashboard />} />
+                      <Route path="/mesa/partido/:token" element={<MesaMatchPanel />} />
                       {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                       <Route path="*" element={<NotFound />} />
                     </Routes>

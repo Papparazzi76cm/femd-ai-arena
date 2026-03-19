@@ -608,6 +608,50 @@ export type Database = {
           },
         ]
       }
+      mesa_assignments: {
+        Row: {
+          accepted_at: string | null
+          assigned_at: string | null
+          created_at: string | null
+          id: string
+          match_id: string
+          mesa_name: string
+          phone: string
+          status: string
+          token: string
+        }
+        Insert: {
+          accepted_at?: string | null
+          assigned_at?: string | null
+          created_at?: string | null
+          id?: string
+          match_id: string
+          mesa_name: string
+          phone: string
+          status?: string
+          token?: string
+        }
+        Update: {
+          accepted_at?: string | null
+          assigned_at?: string | null
+          created_at?: string | null
+          id?: string
+          match_id?: string
+          mesa_name?: string
+          phone?: string
+          status?: string
+          token?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mesa_assignments_match_id_fkey"
+            columns: ["match_id"]
+            isOneToOne: false
+            referencedRelation: "matches"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       participants: {
         Row: {
           age: number | null
