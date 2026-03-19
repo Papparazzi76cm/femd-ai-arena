@@ -987,24 +987,45 @@ export function TournamentDetailPage() {
   );
 }
 
+// Helper to get display name for a match side
+function getMatchSideName(match: Match, side: 'home' | 'away'): string {
+  const team = side === 'home' ? match.home_team : match.away_team;
+  const placeholder = side === 'home' ? match.home_placeholder : match.away_placeholder;
+  if (team) return team.name;
+  if (placeholder) return placeholder;
+  return 'Por determinar';
+}
+
+function getMatchSideLogo(match: Match, side: 'home' | 'away'): string | null {
+  const team = side === 'home' ? match.home_team : match.away_team;
+  return team?.logo_url || null;
+}
+
+function isPlaceholder(match: Match, side: 'home' | 'away'): boolean {
+  const team = side === 'home' ? match.home_team : match.away_team;
+  return !team;
+}
+
 // Result Row Component - New horizontal design
 function ResultRow({ match }: { match: Match }) {
   const isCompleted = isCompletedStatus(match.status);
   const hasHomeWon = isCompleted && match.home_score !== null && match.away_score !== null && match.home_score > match.away_score;
   const hasAwayWon = isCompleted && match.home_score !== null && match.away_score !== null && match.away_score > match.home_score;
+  const homeName = getMatchSideName(match, 'home');
+  const awayName = getMatchSideName(match, 'away');
+  const homeLogo = getMatchSideLogo(match, 'home');
+  const awayLogo = getMatchSideLogo(match, 'away');
+  const homeIsPlaceholder = isPlaceholder(match, 'home');
+  const awayIsPlaceholder = isPlaceholder(match, 'away');
 
   return (
     <div className="flex items-center justify-between py-3 border-b last:border-b-0 hover:bg-accent/30 transition-colors px-2 rounded">
       {/* Home Team */}
       <div className={`flex items-center gap-3 flex-1 justify-start ${hasHomeWon ? 'font-bold' : ''}`}>
-        {match.home_team.logo_url && (
-          <img
-            src={match.home_team.logo_url}
-            alt={match.home_team.name}
-            className="h-8 w-8 object-contain"
-          />
+        {homeLogo && (
+          <img src={homeLogo} alt={homeName} className="h-8 w-8 object-contain" />
         )}
-        <span className={`text-sm ${hasHomeWon ? 'text-primary' : ''}`}>{match.home_team.name}</span>
+        <span className={`text-sm ${hasHomeWon ? 'text-primary' : ''} ${homeIsPlaceholder ? 'italic text-muted-foreground' : ''}`}>{homeName}</span>
       </div>
 
       {/* Score, Phase and Date */}
@@ -1032,13 +1053,9 @@ function ResultRow({ match }: { match: Match }) {
 
       {/* Away Team */}
       <div className={`flex items-center gap-3 flex-1 justify-end ${hasAwayWon ? 'font-bold' : ''}`}>
-        <span className={`text-sm ${hasAwayWon ? 'text-primary' : ''}`}>{match.away_team.name}</span>
-        {match.away_team.logo_url && (
-          <img
-            src={match.away_team.logo_url}
-            alt={match.away_team.name}
-            className="h-8 w-8 object-contain"
-          />
+        <span className={`text-sm ${hasAwayWon ? 'text-primary' : ''} ${awayIsPlaceholder ? 'italic text-muted-foreground' : ''}`}>{awayName}</span>
+        {awayLogo && (
+          <img src={awayLogo} alt={awayName} className="h-8 w-8 object-contain" />
         )}
       </div>
     </div>
