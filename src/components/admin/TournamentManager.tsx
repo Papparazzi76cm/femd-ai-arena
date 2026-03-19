@@ -974,7 +974,7 @@ export const TournamentManager = ({ eventId }: TournamentManagerProps) => {
                                 />
                               </div>
                               <div className="flex-1 text-right">
-                                <div className="font-semibold">{getTeamName(match.away_team_id)}</div>
+                                <div className={`font-semibold ${!match.away_team_id ? 'text-muted-foreground italic' : ''}`}>{getMatchTeamLabel(match, 'away')}</div>
                               </div>
                               <Button
                                 variant="ghost"
