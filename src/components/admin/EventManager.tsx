@@ -16,7 +16,7 @@ import { Plus, Edit, Trash2, Save, X, Calendar, Upload, Trophy, Users, Tag } fro
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { supabase } from '@/integrations/supabase/client';
 import { TournamentManager } from './TournamentManager';
-import { HistoricalTournamentManager } from './HistoricalTournamentManager';
+
 import { TournamentGalleryManager } from './TournamentGalleryManager';
 
 export const EventManager = () => {
