@@ -28,7 +28,7 @@ export const EventManager = () => {
   const [showForm, setShowForm] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [expandedTournament, setExpandedTournament] = useState<string | null>(null);
-  const [tournamentMode, setTournamentMode] = useState<'automatic' | 'historical'>('automatic');
+  
   const [showTeamsDialog, setShowTeamsDialog] = useState(false);
   const [showCategoriesDialog, setShowCategoriesDialog] = useState(false);
   const [selectedTeamIds, setSelectedTeamIds] = useState<string[]>([]);
