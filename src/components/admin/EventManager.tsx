@@ -602,7 +602,7 @@ export const EventManager = () => {
                                 </SelectTrigger>
                                 <SelectContent>
                                   <SelectItem value="none">Sin grupo</SelectItem>
-                                  {['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'].map(g => (
+                                  {['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P'].map(g => (
                                     <SelectItem key={g} value={g}>Grupo {g}</SelectItem>
                                   ))}
                                 </SelectContent>
