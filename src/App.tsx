@@ -13,6 +13,7 @@ import { HomePage } from "@/pages/HomePage";
 import { AdminDashboard } from "@/pages/AdminDashboard";
 import { AuthPage } from "@/pages/AuthPage";
 import { MesaDashboard } from "@/pages/MesaDashboard";
+import { MesaMatchPanel } from "@/pages/MesaMatchPanel";
 import { TeamsPage } from "@/pages/TeamsPage";
 import { TeamDetailPage } from "@/pages/TeamDetailPage";
 import { PlayerDetailPage } from "@/pages/PlayerDetailPage";
