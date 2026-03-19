@@ -1172,6 +1172,19 @@ export const TournamentManager = ({ eventId }: TournamentManagerProps) => {
           </Dialog>
         </TabsContent>
 
+        {/* Cruces */}
+        <TabsContent value="cruces" className="mt-6">
+          <KnockoutBracketGenerator
+            eventId={eventId}
+            eventTeams={eventTeams}
+            matches={matches}
+            teams={teams}
+            eventCategories={eventCategories}
+            eventFacilities={eventFacilities}
+            onMatchesCreated={loadData}
+          />
+        </TabsContent>
+
         {/* Mesas */}
         <TabsContent value="mesas" className="mt-6">
           <RefereeManager eventId={eventId} />
