@@ -47,18 +47,20 @@ interface Match {
   home_red_cards: number;
   away_yellow_cards: number;
   away_red_cards: number;
-  home_team_id: string;
-  away_team_id: string;
+  home_team_id: string | null;
+  away_team_id: string | null;
+  home_placeholder: string | null;
+  away_placeholder: string | null;
   home_team: {
     id: string;
     name: string;
     logo_url: string | null;
-  };
+  } | null;
   away_team: {
     id: string;
     name: string;
     logo_url: string | null;
-  };
+  } | null;
 }
 
 interface Event {
