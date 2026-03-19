@@ -852,13 +852,15 @@ export const TournamentManager = ({ eventId }: TournamentManagerProps) => {
                     </div>
                   )}
 
-                  {allFields.length > 0 && (
-                    <div>
-                      <Label>Instalación y Campo</Label>
+                  <div>
+                    <Label>Instalación y Campo <span className="text-destructive">*</span></Label>
+                    {allFields.length > 0 ? (
                       <Select value={newMatchFieldId || '__none__'} onValueChange={(v) => setNewMatchFieldId(v === '__none__' ? '' : v)}>
-                        <SelectTrigger><SelectValue placeholder="Sin asignar" /></SelectTrigger>
+                        <SelectTrigger className={!newMatchFieldId ? 'border-destructive/50' : ''}>
+                          <SelectValue placeholder="Seleccionar campo" />
+                        </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="__none__">Sin asignar</SelectItem>
+                          <SelectItem value="__none__" disabled>Seleccionar campo...</SelectItem>
                           {eventFacilities.map((ef: any) => (
                             ef.facility?.fields?.map((f: any) => (
                               <SelectItem key={f.id} value={f.id}>
@@ -868,8 +870,10 @@ export const TournamentManager = ({ eventId }: TournamentManagerProps) => {
                           ))}
                         </SelectContent>
                       </Select>
-                    </div>
-                  )}
+                    ) : (
+                      <p className="text-sm text-destructive mt-1">⚠️ Añade una instalación con campos en la pestaña "Instalaciones" primero.</p>
+                    )}
+                  </div>
 
                   <div>
                     <Label>Fecha y hora de inicio</Label>
