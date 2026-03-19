@@ -1067,6 +1067,12 @@ function MatchCard({ match, isFinal = false }: { match: Match; isFinal?: boolean
   const isCompleted = isCompletedStatus(match.status);
   const hasHomeWon = isCompleted && match.home_score !== null && match.away_score !== null && match.home_score > match.away_score;
   const hasAwayWon = isCompleted && match.home_score !== null && match.away_score !== null && match.away_score > match.home_score;
+  const homeName = getMatchSideName(match, 'home');
+  const awayName = getMatchSideName(match, 'away');
+  const homeLogo = getMatchSideLogo(match, 'home');
+  const awayLogo = getMatchSideLogo(match, 'away');
+  const homeIsPlaceholder = isPlaceholder(match, 'home');
+  const awayIsPlaceholder = isPlaceholder(match, 'away');
 
   return (
     <div
@@ -1076,14 +1082,10 @@ function MatchCard({ match, isFinal = false }: { match: Match; isFinal?: boolean
         {/* Home Team */}
         <div className="flex items-center justify-between mb-2">
           <div className={`flex items-center gap-3 flex-1 ${hasHomeWon ? 'font-bold' : ''}`}>
-            {match.home_team.logo_url && (
-              <img
-                src={match.home_team.logo_url}
-                alt={match.home_team.name}
-                className="h-8 w-8 object-contain"
-              />
+            {homeLogo && (
+              <img src={homeLogo} alt={homeName} className="h-8 w-8 object-contain" />
             )}
-            <span className={hasHomeWon ? 'text-primary' : ''}>{match.home_team.name}</span>
+            <span className={`${hasHomeWon ? 'text-primary' : ''} ${homeIsPlaceholder ? 'italic text-muted-foreground' : ''}`}>{homeName}</span>
             {hasHomeWon && isFinal && <Crown className="h-4 w-4 text-yellow-500" />}
           </div>
           {isCompleted ? (
@@ -1097,14 +1099,10 @@ function MatchCard({ match, isFinal = false }: { match: Match; isFinal?: boolean
         {/* Away Team */}
         <div className="flex items-center justify-between">
           <div className={`flex items-center gap-3 flex-1 ${hasAwayWon ? 'font-bold' : ''}`}>
-            {match.away_team.logo_url && (
-              <img
-                src={match.away_team.logo_url}
-                alt={match.away_team.name}
-                className="h-8 w-8 object-contain"
-              />
+            {awayLogo && (
+              <img src={awayLogo} alt={awayName} className="h-8 w-8 object-contain" />
             )}
-            <span className={hasAwayWon ? 'text-primary' : ''}>{match.away_team.name}</span>
+            <span className={`${hasAwayWon ? 'text-primary' : ''} ${awayIsPlaceholder ? 'italic text-muted-foreground' : ''}`}>{awayName}</span>
             {hasAwayWon && isFinal && <Crown className="h-4 w-4 text-yellow-500" />}
           </div>
           {isCompleted ? (
