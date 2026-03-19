@@ -340,6 +340,14 @@ export const TournamentManager = ({ eventId }: TournamentManagerProps) => {
       toast({ title: 'Error', description: 'El equipo local y visitante no pueden ser el mismo', variant: 'destructive' });
       return;
     }
+    if (!newMatchDate) {
+      toast({ title: 'Error', description: 'La fecha y hora son obligatorias', variant: 'destructive' });
+      return;
+    }
+    if (!newMatchFieldId) {
+      toast({ title: 'Error', description: 'Debes seleccionar una instalación y campo', variant: 'destructive' });
+      return;
+    }
 
     try {
       setLoading(true);
@@ -351,11 +359,11 @@ export const TournamentManager = ({ eventId }: TournamentManagerProps) => {
         status: 'scheduled',
         match_halves: newMatchHalves,
         match_duration_minutes: newMatchDuration,
+        match_date: newMatchDate,
+        field_id: newMatchFieldId,
       };
       if (newMatchGroup) matchData.group_name = newMatchGroup;
       if (newMatchCategoryId) matchData.category_id = newMatchCategoryId;
-      if (newMatchDate) matchData.match_date = newMatchDate;
-      if (newMatchFieldId) matchData.field_id = newMatchFieldId;
       matchData.match_number = matches.length + 1;
 
       await tournamentService.createMatch(matchData);
