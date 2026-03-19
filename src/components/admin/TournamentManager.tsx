@@ -916,7 +916,7 @@ export const TournamentManager = ({ eventId }: TournamentManagerProps) => {
                     </div>
                   )}
 
-                  <Button onClick={handleCreateMatch} disabled={loading || !!scheduleConflict} className="w-full">
+                  <Button onClick={handleCreateMatch} disabled={loading || !!scheduleConflict || !newMatchHomeTeamId || !newMatchAwayTeamId || !newMatchDate || !newMatchFieldId} className="w-full">
                     Crear Partido
                   </Button>
                 </div>
