@@ -14,7 +14,8 @@ import { teamService } from '@/services/teamService';
 import { Team, Category, EventCategory, Facility, FootballModality } from '@/types/database';
 import { EventTeam, Match, TournamentPhase } from '@/types/tournament';
 import { FieldSurface } from '@/types/database';
-import { Trophy, Users, Calendar, UserCog, Tag, Building2, Plus, Trash2, MapPin, AlertTriangle, Edit2 } from 'lucide-react';
+import { Trophy, Users, Calendar, UserCog, Tag, Building2, Plus, Trash2, MapPin, AlertTriangle, Edit2, Swords } from 'lucide-react';
+import { KnockoutBracketGenerator } from './KnockoutBracketGenerator';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { RefereeManager } from './RefereeManager';
@@ -486,7 +487,7 @@ export const TournamentManager = ({ eventId }: TournamentManagerProps) => {
   return (
     <div className="space-y-6">
       <Tabs defaultValue="config" className="w-full">
-        <TabsList className="grid w-full grid-cols-5">
+        <TabsList className="grid w-full grid-cols-6">
           <TabsTrigger value="config">
             <Tag className="w-4 h-4 mr-2" />
             Configuración
@@ -498,6 +499,10 @@ export const TournamentManager = ({ eventId }: TournamentManagerProps) => {
           <TabsTrigger value="calendario">
             <Calendar className="w-4 h-4 mr-2" />
             Calendario
+          </TabsTrigger>
+          <TabsTrigger value="cruces">
+            <Swords className="w-4 h-4 mr-2" />
+            Cruces
           </TabsTrigger>
           <TabsTrigger value="instalaciones">
             <Building2 className="w-4 h-4 mr-2" />
@@ -1165,6 +1170,19 @@ export const TournamentManager = ({ eventId }: TournamentManagerProps) => {
               </div>
             </DialogContent>
           </Dialog>
+        </TabsContent>
+
+        {/* Cruces */}
+        <TabsContent value="cruces" className="mt-6">
+          <KnockoutBracketGenerator
+            eventId={eventId}
+            eventTeams={eventTeams}
+            matches={matches}
+            teams={teams}
+            eventCategories={eventCategories}
+            eventFacilities={eventFacilities}
+            onMatchesCreated={loadData}
+          />
         </TabsContent>
 
         {/* Mesas */}
