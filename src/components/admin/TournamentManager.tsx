@@ -14,8 +14,9 @@ import { teamService } from '@/services/teamService';
 import { Team, Category, EventCategory, Facility, FootballModality } from '@/types/database';
 import { EventTeam, Match, TournamentPhase } from '@/types/tournament';
 import { FieldSurface } from '@/types/database';
-import { Trophy, Users, Calendar, UserCog, Tag, Building2, Plus, Trash2, MapPin, AlertTriangle, Edit2, Swords } from 'lucide-react';
+import { Trophy, Users, Calendar, UserCog, Tag, Building2, Plus, Trash2, MapPin, AlertTriangle, Edit2, Swords, ClipboardList } from 'lucide-react';
 import { KnockoutBracketGenerator } from './KnockoutBracketGenerator';
+import { TournamentRosterManager } from './TournamentRosterManager';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { RefereeManager } from './RefereeManager';
@@ -71,6 +72,19 @@ export const TournamentManager = ({ eventId }: TournamentManagerProps) => {
   const [newMatchHalves, setNewMatchHalves] = useState(1);
   const [newMatchDuration, setNewMatchDuration] = useState(40);
   const [scheduleConflict, setScheduleConflict] = useState<string | null>(null);
+  
+  // Edit match state
+  const [editMatchDialogOpen, setEditMatchDialogOpen] = useState(false);
+  const [editingMatch, setEditingMatch] = useState<Match | null>(null);
+  const [editMatchHomeTeamId, setEditMatchHomeTeamId] = useState('');
+  const [editMatchAwayTeamId, setEditMatchAwayTeamId] = useState('');
+  const [editMatchDate, setEditMatchDate] = useState('');
+  const [editMatchFieldId, setEditMatchFieldId] = useState('');
+  const [editMatchHalves, setEditMatchHalves] = useState(1);
+  const [editMatchDuration, setEditMatchDuration] = useState(40);
+  const [editMatchPhase, setEditMatchPhase] = useState('group');
+  const [editMatchGroup, setEditMatchGroup] = useState('');
+  const [editScheduleConflict, setEditScheduleConflict] = useState<string | null>(null);
   
   const { toast } = useToast();
 
@@ -282,23 +296,24 @@ export const TournamentManager = ({ eventId }: TournamentManagerProps) => {
   };
 
   // Schedule conflict checking
-  const checkConflict = async (fieldId: string, matchDate: string, duration: number) => {
+  const checkConflict = async (fieldId: string, matchDate: string, duration: number, halves: number) => {
     if (!fieldId || !matchDate) {
       setScheduleConflict(null);
       return;
     }
     try {
+      const totalDuration = halves * duration;
       const { data } = await supabase.rpc('check_match_schedule_conflict', {
         p_event_id: eventId,
         p_field_id: fieldId,
-        p_match_date: new Date(matchDate).toISOString(),
-        p_duration_minutes: duration,
+        p_match_date: matchDate,
+        p_duration_minutes: totalDuration,
       });
       if (data && data.length > 0) {
         const conflicting = data[0];
         const homeTeam = getTeamName(conflicting.home_team_id);
         const awayTeam = getTeamName(conflicting.away_team_id);
-        setScheduleConflict(`⚠️ Conflicto: ${homeTeam} vs ${awayTeam} a las ${new Date(conflicting.scheduled_date).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}`);
+        setScheduleConflict(`⚠️ Conflicto: ${homeTeam} vs ${awayTeam} a las ${formatMatchDate(conflicting.scheduled_date).split(', ')[1] || ''}`);
       } else {
         setScheduleConflict(null);
       }
@@ -309,8 +324,8 @@ export const TournamentManager = ({ eventId }: TournamentManagerProps) => {
 
   // Effect to auto-check conflicts when field/date/duration changes
   useEffect(() => {
-    checkConflict(newMatchFieldId, newMatchDate, newMatchDuration);
-  }, [newMatchFieldId, newMatchDate, newMatchDuration]);
+    checkConflict(newMatchFieldId, newMatchDate, newMatchDuration, newMatchHalves);
+  }, [newMatchFieldId, newMatchDate, newMatchDuration, newMatchHalves]);
 
   const handleUpdateGroup = async (eventTeamId: string, groupName: string) => {
     try {
@@ -401,13 +416,98 @@ export const TournamentManager = ({ eventId }: TournamentManagerProps) => {
     }
   };
 
-  // Get all fields from event facilities
+  // Edit match
+  const handleEditMatch = (match: Match) => {
+    setEditingMatch(match);
+    setEditMatchHomeTeamId(match.home_team_id || '');
+    setEditMatchAwayTeamId(match.away_team_id || '');
+    setEditMatchPhase(match.phase);
+    setEditMatchGroup(match.group_name || '');
+    setEditMatchHalves(match.match_halves || 1);
+    setEditMatchDuration(match.match_duration_minutes || 40);
+    setEditMatchFieldId(match.field_id || '');
+    // Convert stored date to datetime-local format
+    if (match.match_date) {
+      const d = new Date(match.match_date);
+      const pad = (n: number) => String(n).padStart(2, '0');
+      const localStr = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+      setEditMatchDate(localStr);
+    } else {
+      setEditMatchDate('');
+    }
+    setEditScheduleConflict(null);
+    setEditMatchDialogOpen(true);
+  };
+
+  const handleSaveEditMatch = async () => {
+    if (!editingMatch) return;
+    try {
+      setLoading(true);
+      const updates: any = {
+        home_team_id: editMatchHomeTeamId || null,
+        away_team_id: editMatchAwayTeamId || null,
+        phase: editMatchPhase,
+        group_name: editMatchGroup || null,
+        match_halves: editMatchHalves,
+        match_duration_minutes: editMatchDuration,
+        field_id: editMatchFieldId || null,
+        match_date: editMatchDate || null,
+      };
+
+      // Check for schedule conflicts
+      if (editMatchFieldId && editMatchDate) {
+        const totalDuration = editMatchHalves * editMatchDuration;
+        try {
+          const conflicts = await tournamentService.checkScheduleConflict(
+            eventId,
+            editMatchFieldId,
+            editMatchDate,
+            totalDuration,
+            editingMatch.id
+          );
+          if (conflicts.length > 0) {
+            toast({ title: 'Conflicto de horario', description: 'Ya hay un partido en ese campo a esa hora', variant: 'destructive' });
+            setLoading(false);
+            return;
+          }
+        } catch (err) {
+          console.error('Error checking conflict:', err);
+        }
+      }
+
+      await tournamentService.updateMatch(editingMatch.id, updates);
+      await tournamentService.updateTeamStatistics(eventId);
+      toast({ title: 'Partido actualizado' });
+      setEditMatchDialogOpen(false);
+      setEditingMatch(null);
+      await loadData();
+    } catch (error) {
+      console.error('Error actualizando partido:', error);
+      toast({ title: 'Error', description: 'No se pudo actualizar el partido', variant: 'destructive' });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+
   const allFields = eventFacilities.flatMap((ef: any) => 
     (ef.facility?.fields || []).map((f: any) => ({
       ...f,
       facilityName: ef.facility?.name || '',
     }))
   );
+
+  // Format match date properly — stored dates from datetime-local should be displayed as-is
+  const formatMatchDate = (dateStr: string) => {
+    if (!dateStr) return '';
+    // Parse ISO string but display without timezone conversion
+    const d = new Date(dateStr);
+    return d.toLocaleString('es-ES', { 
+      day: '2-digit', month: '2-digit', year: 'numeric',
+      hour: '2-digit', minute: '2-digit',
+      timeZone: 'Europe/Madrid'
+    });
+  };
 
   // Helpers
   const getTeamName = (teamId: string | null) => {
@@ -496,7 +596,7 @@ export const TournamentManager = ({ eventId }: TournamentManagerProps) => {
   return (
     <div className="space-y-6">
       <Tabs defaultValue="config" className="w-full">
-        <TabsList className="grid w-full grid-cols-6">
+        <TabsList className="grid w-full grid-cols-7">
           <TabsTrigger value="config">
             <Tag className="w-4 h-4 mr-2" />
             Configuración
@@ -504,6 +604,10 @@ export const TournamentManager = ({ eventId }: TournamentManagerProps) => {
           <TabsTrigger value="equipos">
             <Users className="w-4 h-4 mr-2" />
             Clubes
+          </TabsTrigger>
+          <TabsTrigger value="plantillas">
+            <ClipboardList className="w-4 h-4 mr-2" />
+            Plantillas
           </TabsTrigger>
           <TabsTrigger value="calendario">
             <Calendar className="w-4 h-4 mr-2" />
@@ -900,28 +1004,29 @@ export const TournamentManager = ({ eventId }: TournamentManagerProps) => {
                     />
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <Label>Formato de partido</Label>
-                      <Select value={String(newMatchHalves)} onValueChange={(v) => setNewMatchHalves(Number(v))}>
-                        <SelectTrigger><SelectValue /></SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="1">1 solo tiempo</SelectItem>
-                          <SelectItem value="2">Partido completo (2 tiempos)</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div>
-                      <Label>Duración total (min)</Label>
-                      <Input
-                        type="number"
-                        min="5"
-                        max="120"
-                        value={newMatchDuration}
-                        onChange={(e) => setNewMatchDuration(parseInt(e.target.value) || 40)}
-                      />
-                    </div>
-                  </div>
+                   <div className="grid grid-cols-2 gap-4">
+                     <div>
+                       <Label>Nº Partes</Label>
+                       <Select value={String(newMatchHalves)} onValueChange={(v) => setNewMatchHalves(Number(v))}>
+                         <SelectTrigger><SelectValue /></SelectTrigger>
+                         <SelectContent>
+                           <SelectItem value="1">1 parte</SelectItem>
+                           <SelectItem value="2">2 partes</SelectItem>
+                         </SelectContent>
+                       </Select>
+                     </div>
+                     <div>
+                       <Label>Duración/parte (min)</Label>
+                       <Input
+                         type="number"
+                         min="5"
+                         max="120"
+                         value={newMatchDuration}
+                         onChange={(e) => setNewMatchDuration(parseInt(e.target.value) || 40)}
+                       />
+                       <p className="text-xs text-muted-foreground mt-1">Total: {newMatchHalves * newMatchDuration} min</p>
+                     </div>
+                   </div>
 
                   {scheduleConflict && (
                     <div className="flex items-center gap-2 p-3 rounded-lg bg-destructive/10 text-destructive text-sm">
@@ -950,61 +1055,70 @@ export const TournamentManager = ({ eventId }: TournamentManagerProps) => {
                         {getPhaseLabel(phase as TournamentPhase)} {group ? `- Grupo ${group}` : ''}
                       </h4>
                       <div className="space-y-2">
-                        {matchList.map(match => (
-                          <Card key={match.id} className="p-4">
-                            <div className="flex items-center justify-between gap-4">
-                              <div className="flex-1">
-                                <div className={`font-semibold ${!match.home_team_id ? 'text-muted-foreground italic' : ''}`}>{getMatchTeamLabel(match, 'home')}</div>
-                              </div>
-                              <div className="flex gap-2 items-center">
-                                <Input
-                                  type="number"
-                                  min="0"
-                                  value={match.home_score ?? ''}
-                                  onChange={(e) => handleUpdateMatchScore(match.id, 'home_score', e.target.value)}
-                                  className="w-14 text-center"
-                                />
-                                <span className="font-bold">-</span>
-                                <Input
-                                  type="number"
-                                  min="0"
-                                  value={match.away_score ?? ''}
-                                  onChange={(e) => handleUpdateMatchScore(match.id, 'away_score', e.target.value)}
-                                  className="w-14 text-center"
-                                />
-                              </div>
-                              <div className="flex-1 text-right">
-                                <div className={`font-semibold ${!match.away_team_id ? 'text-muted-foreground italic' : ''}`}>{getMatchTeamLabel(match, 'away')}</div>
-                              </div>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => handleDeleteMatch(match.id)}
-                              >
-                                <Trash2 className="w-4 h-4 text-destructive" />
-                              </Button>
-                            </div>
-                            {match.match_date && (
-                              <p className="text-xs text-muted-foreground mt-1">
-                                📅 {new Date(match.match_date).toLocaleString('es-ES')}
-                                {match.field_id && (() => {
-                                  const field = allFields.find((f: any) => f.id === match.field_id);
-                                  return field ? ` • 📍 ${field.facilityName} → ${field.name}` : '';
-                                })()}
-                                {' • '}⏱️ {match.match_duration_minutes || 40} min ({match.match_halves === 2 ? '2 tiempos' : '1 tiempo'})
-                              </p>
-                            )}
-                            {!match.match_date && match.field_id && (
-                              <p className="text-xs text-muted-foreground mt-1">
-                                {(() => {
-                                  const field = allFields.find((f: any) => f.id === match.field_id);
-                                  return field ? `📍 ${field.facilityName} → ${field.name}` : '';
-                                })()}
-                                {' • '}⏱️ {match.match_duration_minutes || 40} min ({match.match_halves === 2 ? '2 tiempos' : '1 tiempo'})
-                              </p>
-                            )}
-                          </Card>
-                        ))}
+                         {matchList.map(match => (
+                           <Card key={match.id} className="p-4">
+                             <div className="flex items-center justify-between gap-4">
+                               <div className="flex-1">
+                                 <div className={`font-semibold ${!match.home_team_id ? 'text-muted-foreground italic' : ''}`}>{getMatchTeamLabel(match, 'home')}</div>
+                               </div>
+                               <div className="flex gap-2 items-center">
+                                 <Input
+                                   type="number"
+                                   min="0"
+                                   value={match.home_score ?? ''}
+                                   onChange={(e) => handleUpdateMatchScore(match.id, 'home_score', e.target.value)}
+                                   className="w-14 text-center"
+                                 />
+                                 <span className="font-bold">-</span>
+                                 <Input
+                                   type="number"
+                                   min="0"
+                                   value={match.away_score ?? ''}
+                                   onChange={(e) => handleUpdateMatchScore(match.id, 'away_score', e.target.value)}
+                                   className="w-14 text-center"
+                                 />
+                               </div>
+                               <div className="flex-1 text-right">
+                                 <div className={`font-semibold ${!match.away_team_id ? 'text-muted-foreground italic' : ''}`}>{getMatchTeamLabel(match, 'away')}</div>
+                               </div>
+                               <div className="flex gap-1">
+                                 <Button
+                                   variant="ghost"
+                                   size="icon"
+                                   onClick={() => handleEditMatch(match)}
+                                 >
+                                   <Edit2 className="w-4 h-4" />
+                                 </Button>
+                                 <Button
+                                   variant="ghost"
+                                   size="icon"
+                                   onClick={() => handleDeleteMatch(match.id)}
+                                 >
+                                   <Trash2 className="w-4 h-4 text-destructive" />
+                                 </Button>
+                               </div>
+                             </div>
+                             {match.match_date && (
+                               <p className="text-xs text-muted-foreground mt-1">
+                                 📅 {formatMatchDate(match.match_date)}
+                                 {match.field_id && (() => {
+                                   const field = allFields.find((f: any) => f.id === match.field_id);
+                                   return field ? ` • 📍 ${field.facilityName} → ${field.name}` : '';
+                                 })()}
+                                 {' • '}⏱️ {(match.match_halves || 1) * (match.match_duration_minutes || 40)} min ({match.match_halves === 2 ? '2 partes' : '1 parte'} × {match.match_duration_minutes || 40} min)
+                               </p>
+                             )}
+                             {!match.match_date && match.field_id && (
+                               <p className="text-xs text-muted-foreground mt-1">
+                                 {(() => {
+                                   const field = allFields.find((f: any) => f.id === match.field_id);
+                                   return field ? `📍 ${field.facilityName} → ${field.name}` : '';
+                                 })()}
+                                 {' • '}⏱️ {(match.match_halves || 1) * (match.match_duration_minutes || 40)} min ({match.match_halves === 2 ? '2 partes' : '1 parte'} × {match.match_duration_minutes || 40} min)
+                               </p>
+                             )}
+                           </Card>
+                         ))}
                       </div>
                     </div>
                   );
@@ -1018,6 +1132,102 @@ export const TournamentManager = ({ eventId }: TournamentManagerProps) => {
               </p>
             </Card>
           )}
+
+          {/* Edit Match Dialog */}
+          <Dialog open={editMatchDialogOpen} onOpenChange={setEditMatchDialogOpen}>
+            <DialogContent className="max-w-lg">
+              <DialogHeader>
+                <DialogTitle>Editar Partido</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label>Equipo Local</Label>
+                    <Select value={editMatchHomeTeamId || '__none__'} onValueChange={v => setEditMatchHomeTeamId(v === '__none__' ? '' : v)}>
+                      <SelectTrigger><SelectValue placeholder="Seleccionar" /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="__none__">Por determinar</SelectItem>
+                        {eventTeams.map(et => (
+                          <SelectItem key={et.id} value={et.team_id}>
+                            {getTeamName(et.team_id)}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label>Equipo Visitante</Label>
+                    <Select value={editMatchAwayTeamId || '__none__'} onValueChange={v => setEditMatchAwayTeamId(v === '__none__' ? '' : v)}>
+                      <SelectTrigger><SelectValue placeholder="Seleccionar" /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="__none__">Por determinar</SelectItem>
+                        {eventTeams.map(et => (
+                          <SelectItem key={et.id} value={et.team_id}>
+                            {getTeamName(et.team_id)}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                <div>
+                  <Label>Instalación y Campo</Label>
+                  <Select value={editMatchFieldId || '__none__'} onValueChange={v => setEditMatchFieldId(v === '__none__' ? '' : v)}>
+                    <SelectTrigger><SelectValue placeholder="Seleccionar campo" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="__none__">Sin campo</SelectItem>
+                      {eventFacilities.map((ef: any) =>
+                        ef.facility?.fields?.map((f: any) => (
+                          <SelectItem key={f.id} value={f.id}>
+                            📍 {ef.facility?.name} → {f.name}
+                          </SelectItem>
+                        ))
+                      )}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <Label>Fecha y hora</Label>
+                  <Input
+                    type="datetime-local"
+                    value={editMatchDate}
+                    onChange={e => setEditMatchDate(e.target.value)}
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label>Nº Partes</Label>
+                    <Select value={String(editMatchHalves)} onValueChange={v => setEditMatchHalves(Number(v))}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="1">1 parte</SelectItem>
+                        <SelectItem value="2">2 partes</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label>Duración/parte (min)</Label>
+                    <Input
+                      type="number"
+                      min="5"
+                      max="120"
+                      value={editMatchDuration}
+                      onChange={e => setEditMatchDuration(parseInt(e.target.value) || 40)}
+                    />
+                    <p className="text-xs text-muted-foreground mt-1">Total: {editMatchHalves * editMatchDuration} min</p>
+                  </div>
+                </div>
+
+                <Button onClick={handleSaveEditMatch} disabled={loading} className="w-full">
+                  Guardar cambios
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
+
         </TabsContent>
 
         {/* Instalaciones */}
@@ -1179,6 +1389,16 @@ export const TournamentManager = ({ eventId }: TournamentManagerProps) => {
               </div>
             </DialogContent>
           </Dialog>
+        </TabsContent>
+
+        {/* Plantillas */}
+        <TabsContent value="plantillas" className="mt-6">
+          <TournamentRosterManager
+            eventId={eventId}
+            eventTeams={eventTeams}
+            teams={teams}
+            eventCategories={eventCategories}
+          />
         </TabsContent>
 
         {/* Cruces */}

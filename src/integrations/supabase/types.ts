@@ -848,6 +848,8 @@ export type Database = {
           is_captain: boolean | null
           jersey_number: number | null
           participant_id: string
+          roster_role: string
+          staff_position: string | null
         }
         Insert: {
           created_at?: string | null
@@ -856,6 +858,8 @@ export type Database = {
           is_captain?: boolean | null
           jersey_number?: number | null
           participant_id: string
+          roster_role?: string
+          staff_position?: string | null
         }
         Update: {
           created_at?: string | null
@@ -864,6 +868,8 @@ export type Database = {
           is_captain?: boolean | null
           jersey_number?: number | null
           participant_id?: string
+          roster_role?: string
+          staff_position?: string | null
         }
         Relationships: [
           {
