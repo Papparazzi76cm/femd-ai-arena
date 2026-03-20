@@ -129,12 +129,17 @@ export interface EventCategoryPhase {
   created_at: string;
 }
 
+export type RosterRole = 'player' | 'staff';
+export type StaffPosition = 'primer_entrenador' | 'segundo_entrenador' | 'delegado' | 'auxiliar';
+
 export interface TeamRoster {
   id: string;
   event_team_id: string;
   participant_id: string;
   jersey_number?: number;
   is_captain: boolean;
+  roster_role: RosterRole;
+  staff_position?: StaffPosition;
   created_at: string;
   // Relaciones
   participant?: Participant;
