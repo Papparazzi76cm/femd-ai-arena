@@ -282,23 +282,24 @@ export const TournamentManager = ({ eventId }: TournamentManagerProps) => {
   };
 
   // Schedule conflict checking
-  const checkConflict = async (fieldId: string, matchDate: string, duration: number) => {
+  const checkConflict = async (fieldId: string, matchDate: string, duration: number, halves: number) => {
     if (!fieldId || !matchDate) {
       setScheduleConflict(null);
       return;
     }
     try {
+      const totalDuration = halves * duration;
       const { data } = await supabase.rpc('check_match_schedule_conflict', {
         p_event_id: eventId,
         p_field_id: fieldId,
-        p_match_date: new Date(matchDate).toISOString(),
-        p_duration_minutes: duration,
+        p_match_date: matchDate,
+        p_duration_minutes: totalDuration,
       });
       if (data && data.length > 0) {
         const conflicting = data[0];
         const homeTeam = getTeamName(conflicting.home_team_id);
         const awayTeam = getTeamName(conflicting.away_team_id);
-        setScheduleConflict(`⚠️ Conflicto: ${homeTeam} vs ${awayTeam} a las ${new Date(conflicting.scheduled_date).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}`);
+        setScheduleConflict(`⚠️ Conflicto: ${homeTeam} vs ${awayTeam} a las ${formatMatchDate(conflicting.scheduled_date).split(', ')[1] || ''}`);
       } else {
         setScheduleConflict(null);
       }
