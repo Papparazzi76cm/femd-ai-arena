@@ -913,28 +913,29 @@ export const TournamentManager = ({ eventId }: TournamentManagerProps) => {
                     />
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <Label>Formato de partido</Label>
-                      <Select value={String(newMatchHalves)} onValueChange={(v) => setNewMatchHalves(Number(v))}>
-                        <SelectTrigger><SelectValue /></SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="1">1 solo tiempo</SelectItem>
-                          <SelectItem value="2">Partido completo (2 tiempos)</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div>
-                      <Label>Duración total (min)</Label>
-                      <Input
-                        type="number"
-                        min="5"
-                        max="120"
-                        value={newMatchDuration}
-                        onChange={(e) => setNewMatchDuration(parseInt(e.target.value) || 40)}
-                      />
-                    </div>
-                  </div>
+                   <div className="grid grid-cols-2 gap-4">
+                     <div>
+                       <Label>Nº Partes</Label>
+                       <Select value={String(newMatchHalves)} onValueChange={(v) => setNewMatchHalves(Number(v))}>
+                         <SelectTrigger><SelectValue /></SelectTrigger>
+                         <SelectContent>
+                           <SelectItem value="1">1 parte</SelectItem>
+                           <SelectItem value="2">2 partes</SelectItem>
+                         </SelectContent>
+                       </Select>
+                     </div>
+                     <div>
+                       <Label>Duración/parte (min)</Label>
+                       <Input
+                         type="number"
+                         min="5"
+                         max="120"
+                         value={newMatchDuration}
+                         onChange={(e) => setNewMatchDuration(parseInt(e.target.value) || 40)}
+                       />
+                       <p className="text-xs text-muted-foreground mt-1">Total: {newMatchHalves * newMatchDuration} min</p>
+                     </div>
+                   </div>
 
                   {scheduleConflict && (
                     <div className="flex items-center gap-2 p-3 rounded-lg bg-destructive/10 text-destructive text-sm">
