@@ -964,61 +964,70 @@ export const TournamentManager = ({ eventId }: TournamentManagerProps) => {
                         {getPhaseLabel(phase as TournamentPhase)} {group ? `- Grupo ${group}` : ''}
                       </h4>
                       <div className="space-y-2">
-                        {matchList.map(match => (
-                          <Card key={match.id} className="p-4">
-                            <div className="flex items-center justify-between gap-4">
-                              <div className="flex-1">
-                                <div className={`font-semibold ${!match.home_team_id ? 'text-muted-foreground italic' : ''}`}>{getMatchTeamLabel(match, 'home')}</div>
-                              </div>
-                              <div className="flex gap-2 items-center">
-                                <Input
-                                  type="number"
-                                  min="0"
-                                  value={match.home_score ?? ''}
-                                  onChange={(e) => handleUpdateMatchScore(match.id, 'home_score', e.target.value)}
-                                  className="w-14 text-center"
-                                />
-                                <span className="font-bold">-</span>
-                                <Input
-                                  type="number"
-                                  min="0"
-                                  value={match.away_score ?? ''}
-                                  onChange={(e) => handleUpdateMatchScore(match.id, 'away_score', e.target.value)}
-                                  className="w-14 text-center"
-                                />
-                              </div>
-                              <div className="flex-1 text-right">
-                                <div className={`font-semibold ${!match.away_team_id ? 'text-muted-foreground italic' : ''}`}>{getMatchTeamLabel(match, 'away')}</div>
-                              </div>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => handleDeleteMatch(match.id)}
-                              >
-                                <Trash2 className="w-4 h-4 text-destructive" />
-                              </Button>
-                            </div>
-                            {match.match_date && (
-                              <p className="text-xs text-muted-foreground mt-1">
-                                📅 {new Date(match.match_date).toLocaleString('es-ES')}
-                                {match.field_id && (() => {
-                                  const field = allFields.find((f: any) => f.id === match.field_id);
-                                  return field ? ` • 📍 ${field.facilityName} → ${field.name}` : '';
-                                })()}
-                                {' • '}⏱️ {match.match_duration_minutes || 40} min ({match.match_halves === 2 ? '2 tiempos' : '1 tiempo'})
-                              </p>
-                            )}
-                            {!match.match_date && match.field_id && (
-                              <p className="text-xs text-muted-foreground mt-1">
-                                {(() => {
-                                  const field = allFields.find((f: any) => f.id === match.field_id);
-                                  return field ? `📍 ${field.facilityName} → ${field.name}` : '';
-                                })()}
-                                {' • '}⏱️ {match.match_duration_minutes || 40} min ({match.match_halves === 2 ? '2 tiempos' : '1 tiempo'})
-                              </p>
-                            )}
-                          </Card>
-                        ))}
+                         {matchList.map(match => (
+                           <Card key={match.id} className="p-4">
+                             <div className="flex items-center justify-between gap-4">
+                               <div className="flex-1">
+                                 <div className={`font-semibold ${!match.home_team_id ? 'text-muted-foreground italic' : ''}`}>{getMatchTeamLabel(match, 'home')}</div>
+                               </div>
+                               <div className="flex gap-2 items-center">
+                                 <Input
+                                   type="number"
+                                   min="0"
+                                   value={match.home_score ?? ''}
+                                   onChange={(e) => handleUpdateMatchScore(match.id, 'home_score', e.target.value)}
+                                   className="w-14 text-center"
+                                 />
+                                 <span className="font-bold">-</span>
+                                 <Input
+                                   type="number"
+                                   min="0"
+                                   value={match.away_score ?? ''}
+                                   onChange={(e) => handleUpdateMatchScore(match.id, 'away_score', e.target.value)}
+                                   className="w-14 text-center"
+                                 />
+                               </div>
+                               <div className="flex-1 text-right">
+                                 <div className={`font-semibold ${!match.away_team_id ? 'text-muted-foreground italic' : ''}`}>{getMatchTeamLabel(match, 'away')}</div>
+                               </div>
+                               <div className="flex gap-1">
+                                 <Button
+                                   variant="ghost"
+                                   size="icon"
+                                   onClick={() => handleEditMatch(match)}
+                                 >
+                                   <Edit2 className="w-4 h-4" />
+                                 </Button>
+                                 <Button
+                                   variant="ghost"
+                                   size="icon"
+                                   onClick={() => handleDeleteMatch(match.id)}
+                                 >
+                                   <Trash2 className="w-4 h-4 text-destructive" />
+                                 </Button>
+                               </div>
+                             </div>
+                             {match.match_date && (
+                               <p className="text-xs text-muted-foreground mt-1">
+                                 📅 {formatMatchDate(match.match_date)}
+                                 {match.field_id && (() => {
+                                   const field = allFields.find((f: any) => f.id === match.field_id);
+                                   return field ? ` • 📍 ${field.facilityName} → ${field.name}` : '';
+                                 })()}
+                                 {' • '}⏱️ {(match.match_halves || 1) * (match.match_duration_minutes || 40)} min ({match.match_halves === 2 ? '2 partes' : '1 parte'} × {match.match_duration_minutes || 40} min)
+                               </p>
+                             )}
+                             {!match.match_date && match.field_id && (
+                               <p className="text-xs text-muted-foreground mt-1">
+                                 {(() => {
+                                   const field = allFields.find((f: any) => f.id === match.field_id);
+                                   return field ? `📍 ${field.facilityName} → ${field.name}` : '';
+                                 })()}
+                                 {' • '}⏱️ {(match.match_halves || 1) * (match.match_duration_minutes || 40)} min ({match.match_halves === 2 ? '2 partes' : '1 parte'} × {match.match_duration_minutes || 40} min)
+                               </p>
+                             )}
+                           </Card>
+                         ))}
                       </div>
                     </div>
                   );
