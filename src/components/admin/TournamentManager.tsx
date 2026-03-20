@@ -410,6 +410,18 @@ export const TournamentManager = ({ eventId }: TournamentManagerProps) => {
     }))
   );
 
+  // Format match date properly — stored dates from datetime-local should be displayed as-is
+  const formatMatchDate = (dateStr: string) => {
+    if (!dateStr) return '';
+    // Parse ISO string but display without timezone conversion
+    const d = new Date(dateStr);
+    return d.toLocaleString('es-ES', { 
+      day: '2-digit', month: '2-digit', year: 'numeric',
+      hour: '2-digit', minute: '2-digit',
+      timeZone: 'Europe/Madrid'
+    });
+  };
+
   // Helpers
   const getTeamName = (teamId: string | null) => {
     if (!teamId) return null;
