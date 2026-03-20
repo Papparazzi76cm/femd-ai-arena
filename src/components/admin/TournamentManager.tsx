@@ -310,8 +310,8 @@ export const TournamentManager = ({ eventId }: TournamentManagerProps) => {
 
   // Effect to auto-check conflicts when field/date/duration changes
   useEffect(() => {
-    checkConflict(newMatchFieldId, newMatchDate, newMatchDuration);
-  }, [newMatchFieldId, newMatchDate, newMatchDuration]);
+    checkConflict(newMatchFieldId, newMatchDate, newMatchDuration, newMatchHalves);
+  }, [newMatchFieldId, newMatchDate, newMatchDuration, newMatchHalves]);
 
   const handleUpdateGroup = async (eventTeamId: string, groupName: string) => {
     try {
