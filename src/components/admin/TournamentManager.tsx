@@ -596,7 +596,7 @@ export const TournamentManager = ({ eventId }: TournamentManagerProps) => {
   return (
     <div className="space-y-6">
       <Tabs defaultValue="config" className="w-full">
-        <TabsList className="grid w-full grid-cols-6">
+        <TabsList className="grid w-full grid-cols-7">
           <TabsTrigger value="config">
             <Tag className="w-4 h-4 mr-2" />
             Configuración
@@ -604,6 +604,10 @@ export const TournamentManager = ({ eventId }: TournamentManagerProps) => {
           <TabsTrigger value="equipos">
             <Users className="w-4 h-4 mr-2" />
             Clubes
+          </TabsTrigger>
+          <TabsTrigger value="plantillas">
+            <ClipboardList className="w-4 h-4 mr-2" />
+            Plantillas
           </TabsTrigger>
           <TabsTrigger value="calendario">
             <Calendar className="w-4 h-4 mr-2" />
