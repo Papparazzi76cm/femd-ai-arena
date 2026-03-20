@@ -1127,6 +1127,102 @@ export const TournamentManager = ({ eventId }: TournamentManagerProps) => {
               </p>
             </Card>
           )}
+
+          {/* Edit Match Dialog */}
+          <Dialog open={editMatchDialogOpen} onOpenChange={setEditMatchDialogOpen}>
+            <DialogContent className="max-w-lg">
+              <DialogHeader>
+                <DialogTitle>Editar Partido</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label>Equipo Local</Label>
+                    <Select value={editMatchHomeTeamId || '__none__'} onValueChange={v => setEditMatchHomeTeamId(v === '__none__' ? '' : v)}>
+                      <SelectTrigger><SelectValue placeholder="Seleccionar" /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="__none__">Por determinar</SelectItem>
+                        {eventTeams.map(et => (
+                          <SelectItem key={et.id} value={et.team_id}>
+                            {getTeamName(et.team_id)}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label>Equipo Visitante</Label>
+                    <Select value={editMatchAwayTeamId || '__none__'} onValueChange={v => setEditMatchAwayTeamId(v === '__none__' ? '' : v)}>
+                      <SelectTrigger><SelectValue placeholder="Seleccionar" /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="__none__">Por determinar</SelectItem>
+                        {eventTeams.map(et => (
+                          <SelectItem key={et.id} value={et.team_id}>
+                            {getTeamName(et.team_id)}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                <div>
+                  <Label>Instalación y Campo</Label>
+                  <Select value={editMatchFieldId || '__none__'} onValueChange={v => setEditMatchFieldId(v === '__none__' ? '' : v)}>
+                    <SelectTrigger><SelectValue placeholder="Seleccionar campo" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="__none__">Sin campo</SelectItem>
+                      {eventFacilities.map((ef: any) =>
+                        ef.facility?.fields?.map((f: any) => (
+                          <SelectItem key={f.id} value={f.id}>
+                            📍 {ef.facility?.name} → {f.name}
+                          </SelectItem>
+                        ))
+                      )}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <Label>Fecha y hora</Label>
+                  <Input
+                    type="datetime-local"
+                    value={editMatchDate}
+                    onChange={e => setEditMatchDate(e.target.value)}
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label>Nº Partes</Label>
+                    <Select value={String(editMatchHalves)} onValueChange={v => setEditMatchHalves(Number(v))}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="1">1 parte</SelectItem>
+                        <SelectItem value="2">2 partes</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label>Duración/parte (min)</Label>
+                    <Input
+                      type="number"
+                      min="5"
+                      max="120"
+                      value={editMatchDuration}
+                      onChange={e => setEditMatchDuration(parseInt(e.target.value) || 40)}
+                    />
+                    <p className="text-xs text-muted-foreground mt-1">Total: {editMatchHalves * editMatchDuration} min</p>
+                  </div>
+                </div>
+
+                <Button onClick={handleSaveEditMatch} disabled={loading} className="w-full">
+                  Guardar cambios
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
+
         </TabsContent>
 
         {/* Instalaciones */}
