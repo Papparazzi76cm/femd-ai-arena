@@ -72,6 +72,19 @@ export const TournamentManager = ({ eventId }: TournamentManagerProps) => {
   const [newMatchDuration, setNewMatchDuration] = useState(40);
   const [scheduleConflict, setScheduleConflict] = useState<string | null>(null);
   
+  // Edit match state
+  const [editMatchDialogOpen, setEditMatchDialogOpen] = useState(false);
+  const [editingMatch, setEditingMatch] = useState<Match | null>(null);
+  const [editMatchHomeTeamId, setEditMatchHomeTeamId] = useState('');
+  const [editMatchAwayTeamId, setEditMatchAwayTeamId] = useState('');
+  const [editMatchDate, setEditMatchDate] = useState('');
+  const [editMatchFieldId, setEditMatchFieldId] = useState('');
+  const [editMatchHalves, setEditMatchHalves] = useState(1);
+  const [editMatchDuration, setEditMatchDuration] = useState(40);
+  const [editMatchPhase, setEditMatchPhase] = useState('group');
+  const [editMatchGroup, setEditMatchGroup] = useState('');
+  const [editScheduleConflict, setEditScheduleConflict] = useState<string | null>(null);
+  
   const { toast } = useToast();
 
   useEffect(() => {
