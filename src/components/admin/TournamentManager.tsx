@@ -14,7 +14,7 @@ import { teamService } from '@/services/teamService';
 import { Team, Category, EventCategory, Facility, FootballModality } from '@/types/database';
 import { EventTeam, Match, TournamentPhase } from '@/types/tournament';
 import { FieldSurface } from '@/types/database';
-import { Trophy, Users, Calendar, UserCog, Tag, Building2, Plus, Trash2, MapPin, AlertTriangle, Edit2, Swords } from 'lucide-react';
+import { Trophy, Users, Calendar, UserCog, Tag, Building2, Plus, Trash2, MapPin, AlertTriangle, Edit2, Swords, ClipboardList } from 'lucide-react';
 import { KnockoutBracketGenerator } from './KnockoutBracketGenerator';
 import { TournamentRosterManager } from './TournamentRosterManager';
 import { Label } from '@/components/ui/label';
