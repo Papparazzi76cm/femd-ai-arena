@@ -415,7 +415,80 @@ export const TournamentManager = ({ eventId }: TournamentManagerProps) => {
     }
   };
 
-  // Get all fields from event facilities
+  // Edit match
+  const handleEditMatch = (match: Match) => {
+    setEditingMatch(match);
+    setEditMatchHomeTeamId(match.home_team_id || '');
+    setEditMatchAwayTeamId(match.away_team_id || '');
+    setEditMatchPhase(match.phase);
+    setEditMatchGroup(match.group_name || '');
+    setEditMatchHalves(match.match_halves || 1);
+    setEditMatchDuration(match.match_duration_minutes || 40);
+    setEditMatchFieldId(match.field_id || '');
+    // Convert stored date to datetime-local format
+    if (match.match_date) {
+      const d = new Date(match.match_date);
+      const pad = (n: number) => String(n).padStart(2, '0');
+      const localStr = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+      setEditMatchDate(localStr);
+    } else {
+      setEditMatchDate('');
+    }
+    setEditScheduleConflict(null);
+    setEditMatchDialogOpen(true);
+  };
+
+  const handleSaveEditMatch = async () => {
+    if (!editingMatch) return;
+    try {
+      setLoading(true);
+      const updates: any = {
+        home_team_id: editMatchHomeTeamId || null,
+        away_team_id: editMatchAwayTeamId || null,
+        phase: editMatchPhase,
+        group_name: editMatchGroup || null,
+        match_halves: editMatchHalves,
+        match_duration_minutes: editMatchDuration,
+        field_id: editMatchFieldId || null,
+        match_date: editMatchDate || null,
+      };
+
+      // Check for schedule conflicts
+      if (editMatchFieldId && editMatchDate) {
+        const totalDuration = editMatchHalves * editMatchDuration;
+        try {
+          const conflicts = await tournamentService.checkScheduleConflict(
+            eventId,
+            editMatchFieldId,
+            editMatchDate,
+            totalDuration,
+            editingMatch.id
+          );
+          if (conflicts.length > 0) {
+            toast({ title: 'Conflicto de horario', description: 'Ya hay un partido en ese campo a esa hora', variant: 'destructive' });
+            setLoading(false);
+            return;
+          }
+        } catch (err) {
+          console.error('Error checking conflict:', err);
+        }
+      }
+
+      await tournamentService.updateMatch(editingMatch.id, updates);
+      await tournamentService.updateTeamStatistics(eventId);
+      toast({ title: 'Partido actualizado' });
+      setEditMatchDialogOpen(false);
+      setEditingMatch(null);
+      await loadData();
+    } catch (error) {
+      console.error('Error actualizando partido:', error);
+      toast({ title: 'Error', description: 'No se pudo actualizar el partido', variant: 'destructive' });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+
   const allFields = eventFacilities.flatMap((ef: any) => 
     (ef.facility?.fields || []).map((f: any) => ({
       ...f,
