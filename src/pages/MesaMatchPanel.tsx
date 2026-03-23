@@ -235,6 +235,7 @@ export const MesaMatchPanel = () => {
   };
 
   const handleEndMatch = async () => {
+    if (!confirm('¿Seguro que quieres finalizar el partido?')) return;
     setSaving(true);
     try {
       await callAction('update_match', {
@@ -255,14 +256,92 @@ export const MesaMatchPanel = () => {
     }
   };
 
+  const handleResumeMatch = async () => {
+    setSaving(true);
+    try {
+      await callAction('update_match', {
+        updates: {
+          status: 'in_progress',
+        },
+      });
+      toast({ title: '▶️ Partido reanudado' });
+      loadData();
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleRestartMatch = async () => {
+    if (!confirm('¿Seguro que quieres reiniciar el partido desde cero?')) return;
+    setSaving(true);
+    try {
+      await callAction('update_match', {
+        updates: {
+          status: 'in_progress',
+          home_score: 0,
+          away_score: 0,
+          home_yellow_cards: 0,
+          home_red_cards: 0,
+          away_yellow_cards: 0,
+          away_red_cards: 0,
+          started_at: new Date().toISOString(),
+        },
+      });
+      toast({ title: '🔄 Partido reiniciado' });
+      loadData();
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleSaveFinishedEdit = async () => {
+    setSaving(true);
+    try {
+      await callAction('update_match', {
+        updates: {
+          home_score: homeScore,
+          away_score: awayScore,
+          home_yellow_cards: homeYellow,
+          home_red_cards: homeRed,
+          away_yellow_cards: awayYellow,
+          away_red_cards: awayRed,
+        },
+      });
+      toast({ title: 'Resultado actualizado' });
+      setEditFinishedOpen(false);
+      loadData();
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const getPhaseLabel = (phase: string) => {
     const labels: Record<string, string> = {
       'group': 'Fase de Grupos',
-      'round_of_16': 'Octavos de Final',
+      'round_of_16': 'Dieciseisavos de Final',
+      'round_of_8': 'Octavos de Final',
       'quarter_final': 'Cuartos de Final',
       'semi_final': 'Semifinales',
       'final': 'Final',
       'third_place': 'Tercer Puesto',
+      'gold_round_of_16': 'Fase Oro - Dieciseisavos',
+      'gold_round_of_8': 'Fase Oro - 1/8 de Final',
+      'gold_quarter_final': 'Fase Oro - 1/4 de Final',
+      'gold_semi_final': 'Fase Oro - Semifinales',
+      'gold_third_place': 'Fase Oro - 3er Puesto',
+      'gold_final': 'Fase Oro - Final',
+      'silver_round_of_16': 'Fase Plata - Dieciseisavos',
+      'silver_round_of_8': 'Fase Plata - 1/8 de Final',
+      'silver_quarter_final': 'Fase Plata - 1/4 de Final',
+      'silver_semi_final': 'Fase Plata - Semifinales',
+      'silver_third_place': 'Fase Plata - 3er Puesto',
+      'silver_final': 'Fase Plata - Final',
+      'bronze_round_of_16': 'Fase Bronce - Dieciseisavos',
+      'bronze_round_of_8': 'Fase Bronce - 1/8 de Final',
+      'bronze_quarter_final': 'Fase Bronce - 1/4 de Final',
+      'bronze_semi_final': 'Fase Bronce - Semifinales',
+      'bronze_third_place': 'Fase Bronce - 3er Puesto',
+      'bronze_final': 'Fase Bronce - Final',
     };
     return labels[phase] || phase;
   };
