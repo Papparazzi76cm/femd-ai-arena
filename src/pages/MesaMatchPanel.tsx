@@ -733,9 +733,79 @@ export const MesaMatchPanel = () => {
                   Goleadores
                 </Button>
               )}
+              <Button variant="outline" size="sm" onClick={() => { loadMvpData(); setMvpOpen(true); }}>
+                <Star className="w-4 h-4 mr-1" />
+                MVP
+              </Button>
             </div>
           </Card>
         )}
+
+        {/* MVP Dialog */}
+        <Dialog open={mvpOpen} onOpenChange={setMvpOpen}>
+          <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Star className="w-5 h-5 text-yellow-500" />
+                MVP del Partido
+              </DialogTitle>
+            </DialogHeader>
+            {mvpLoading ? (
+              <div className="flex justify-center py-8"><Loader2 className="w-8 h-8 animate-spin" /></div>
+            ) : (
+              <div className="space-y-4">
+                {currentMvp?.player && (
+                  <div className="bg-yellow-50 dark:bg-yellow-950/20 border border-yellow-200 rounded-lg p-3 text-center">
+                    <p className="text-sm text-muted-foreground">MVP actual</p>
+                    <p className="font-bold">{currentMvp.player.name}</p>
+                    {currentMvp.photo_url && (
+                      <img src={currentMvp.photo_url} alt="MVP" className="w-24 h-24 mx-auto mt-2 rounded-lg object-cover" />
+                    )}
+                  </div>
+                )}
+                <div>
+                  <Label className="text-sm font-medium">Seleccionar jugador MVP</Label>
+                  <ScrollArea className="h-48 border rounded-lg p-2 mt-1">
+                    <div className="space-y-1">
+                      {mvpPlayers.map((player: any) => (
+                        <Button
+                          key={player.id}
+                          variant={selectedMvp === player.id ? 'default' : 'ghost'}
+                          size="sm"
+                          className="w-full justify-start"
+                          onClick={() => setSelectedMvp(player.id)}
+                        >
+                          {player.number && <Badge variant="secondary" className="mr-2 text-xs">#{player.number}</Badge>}
+                          <span className="truncate">{player.name}</span>
+                          <span className="ml-auto text-xs text-muted-foreground">{player._teamName}</span>
+                        </Button>
+                      ))}
+                    </div>
+                  </ScrollArea>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium">Foto del MVP (opcional)</Label>
+                  <div className="mt-1">
+                    <Input
+                      type="file"
+                      accept="image/*"
+                      capture="environment"
+                      onChange={e => setMvpPhotoFile(e.target.files?.[0] || null)}
+                      className="text-sm"
+                    />
+                    {mvpPhotoFile && (
+                      <p className="text-xs text-muted-foreground mt-1">📷 {mvpPhotoFile.name}</p>
+                    )}
+                  </div>
+                </div>
+                <Button onClick={handleSaveMvp} disabled={!selectedMvp || mvpLoading} className="w-full">
+                  <Star className="w-4 h-4 mr-2" />
+                  {mvpLoading ? 'Guardando...' : 'Guardar MVP'}
+                </Button>
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
 
         {/* Edit finished match dialog */}
         <Dialog open={editFinishedOpen} onOpenChange={setEditFinishedOpen}>
