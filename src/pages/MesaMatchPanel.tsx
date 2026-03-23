@@ -58,6 +58,8 @@ export const MesaMatchPanel = () => {
   const [data, setData] = useState<AssignmentData | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [editFinishedOpen, setEditFinishedOpen] = useState(false);
+  const [goalScorersOpen, setGoalScorersOpen] = useState(false);
 
   // Match control state
   const [homeScore, setHomeScore] = useState(0);
