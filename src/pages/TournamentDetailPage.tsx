@@ -716,7 +716,7 @@ export function TournamentDetailPage() {
                               </div>
                               <div className="space-y-2 pl-4">
                                 {matchesByGroup[groupName].map((match) => (
-                                  <ResultRow key={match.id} match={match} />
+                                  <ResultRow key={match.id} match={match} onClick={() => setSelectedMatchDetail(match)} />
                                 ))}
                               </div>
                             </div>
