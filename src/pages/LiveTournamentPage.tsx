@@ -43,6 +43,11 @@ interface TopScorer {
   goals: number;
 }
 
+// Store goals indexed by match for display
+type MatchGoalMap = Map<string, MatchGoal[]>;
+// Store player names for quick lookup
+type PlayerNameMap = Map<string, { name: string; number: number | null }>;
+
 export const LiveTournamentPage = () => {
   const [loading, setLoading] = useState(true);
   const [activeEvent, setActiveEvent] = useState<any>(null);
