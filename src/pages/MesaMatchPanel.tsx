@@ -513,7 +513,7 @@ export const MesaMatchPanel = () => {
           <div className="space-y-2 text-sm">
             {event && <p className="font-semibold text-primary">{event.title}</p>}
             {category && <Badge variant="secondary">{category.name}</Badge>}
-            <p className="text-muted-foreground">{getPhaseLabel(match.phase)}{match.group_name ? ` - Grupo ${match.group_name}` : ''}</p>
+            <p className="text-muted-foreground">{getPhaseLabel(match.phase)}{match.group_name && match.phase === 'group' ? ` - Grupo ${match.group_name}` : match.group_name && match.phase !== 'group' ? ` (${match.group_name})` : ''}</p>
             {facility && <p className="text-muted-foreground flex items-center gap-1"><Building2 className="w-3 h-3" />{facility.name}{field ? ` · ${field.name}` : ''}</p>}
             {match.match_date && (
               <p className="text-muted-foreground flex items-center gap-1">
