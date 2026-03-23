@@ -120,6 +120,7 @@ export function TournamentDetailPage() {
   const [selectedPhase, setSelectedPhase] = useState<string>("all");
   const [selectedBracketGroup, setSelectedBracketGroup] = useState<string>("all");
   const [selectedJornada, setSelectedJornada] = useState<string>("all");
+  const [selectedMatchDetail, setSelectedMatchDetail] = useState<Match | null>(null);
 
   useEffect(() => {
     if (!id) return;
