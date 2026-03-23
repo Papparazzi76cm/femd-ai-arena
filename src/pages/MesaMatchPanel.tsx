@@ -604,6 +604,14 @@ export const MesaMatchPanel = () => {
           </Card>
         )}
 
+        {/* Goal scorers button - during live match */}
+        {isLive && homeTeam && awayTeam && (
+          <Button variant="outline" className="w-full" onClick={() => setGoalScorersOpen(true)}>
+            <Goal className="w-4 h-4 mr-2" />
+            Registrar Goleadores
+          </Button>
+        )}
+
         {/* Actions */}
         {!isFinished && isAccepted && (
           <div className="flex gap-3 flex-wrap">
@@ -629,13 +637,98 @@ export const MesaMatchPanel = () => {
         )}
 
         {isFinished && (
-          <Card className="p-6 text-center bg-emerald-50 dark:bg-emerald-950/20 border-emerald-200">
-            <CheckCircle className="w-10 h-10 text-emerald-600 mx-auto mb-2" />
-            <p className="font-semibold text-emerald-700 dark:text-emerald-400">Partido finalizado</p>
-            <p className="text-sm text-muted-foreground mt-1">
-              {homeTeam?.name} {match.home_score} - {match.away_score} {awayTeam?.name}
-            </p>
+          <Card className="p-6 bg-emerald-50 dark:bg-emerald-950/20 border-emerald-200 space-y-4">
+            <div className="text-center">
+              <CheckCircle className="w-10 h-10 text-emerald-600 mx-auto mb-2" />
+              <p className="font-semibold text-emerald-700 dark:text-emerald-400">Partido finalizado</p>
+              <p className="text-sm text-muted-foreground mt-1">
+                {homeTeam?.name} {match.home_score} - {match.away_score} {awayTeam?.name}
+              </p>
+            </div>
+            <div className="flex gap-2 justify-center flex-wrap">
+              <Button variant="outline" size="sm" onClick={handleResumeMatch} disabled={saving}>
+                <Play className="w-4 h-4 mr-1" />
+                Reanudar
+              </Button>
+              <Button variant="outline" size="sm" onClick={handleRestartMatch} disabled={saving}>
+                <RotateCcw className="w-4 h-4 mr-1" />
+                Reiniciar
+              </Button>
+              <Button variant="outline" size="sm" onClick={() => setEditFinishedOpen(true)}>
+                <Edit2 className="w-4 h-4 mr-1" />
+                Editar resultado
+              </Button>
+              {homeTeam && awayTeam && (
+                <Button variant="outline" size="sm" onClick={() => setGoalScorersOpen(true)}>
+                  <Goal className="w-4 h-4 mr-1" />
+                  Goleadores
+                </Button>
+              )}
+            </div>
           </Card>
+        )}
+
+        {/* Edit finished match dialog */}
+        <Dialog open={editFinishedOpen} onOpenChange={setEditFinishedOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Editar Resultado</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="text-center">
+                  <Label className="text-sm font-bold">{homeTeam?.name}</Label>
+                  <div className="space-y-2 mt-2">
+                    <div>
+                      <Label className="text-xs">Goles</Label>
+                      <Input type="number" min="0" value={homeScore} onChange={e => setHomeScore(Number(e.target.value))} className="text-center" />
+                    </div>
+                    <div>
+                      <Label className="text-xs">🟨</Label>
+                      <Input type="number" min="0" value={homeYellow} onChange={e => setHomeYellow(Number(e.target.value))} className="text-center" />
+                    </div>
+                    <div>
+                      <Label className="text-xs">🟥</Label>
+                      <Input type="number" min="0" value={homeRed} onChange={e => setHomeRed(Number(e.target.value))} className="text-center" />
+                    </div>
+                  </div>
+                </div>
+                <div className="text-center">
+                  <Label className="text-sm font-bold">{awayTeam?.name}</Label>
+                  <div className="space-y-2 mt-2">
+                    <div>
+                      <Label className="text-xs">Goles</Label>
+                      <Input type="number" min="0" value={awayScore} onChange={e => setAwayScore(Number(e.target.value))} className="text-center" />
+                    </div>
+                    <div>
+                      <Label className="text-xs">🟨</Label>
+                      <Input type="number" min="0" value={awayYellow} onChange={e => setAwayYellow(Number(e.target.value))} className="text-center" />
+                    </div>
+                    <div>
+                      <Label className="text-xs">🟥</Label>
+                      <Input type="number" min="0" value={awayRed} onChange={e => setAwayRed(Number(e.target.value))} className="text-center" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <Button onClick={handleSaveFinishedEdit} disabled={saving} className="w-full">
+                {saving ? 'Guardando...' : 'Guardar cambios'}
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Goal scorers dialog */}
+        {homeTeam && awayTeam && (
+          <GoalScorersDialog
+            open={goalScorersOpen}
+            onOpenChange={setGoalScorersOpen}
+            matchId={match.id}
+            homeTeamId={homeTeam.id}
+            awayTeamId={awayTeam.id}
+            homeTeamName={homeTeam.name}
+            awayTeamName={awayTeam.name}
+          />
         )}
       </div>
     </div>
