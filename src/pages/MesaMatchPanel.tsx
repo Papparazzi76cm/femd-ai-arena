@@ -322,6 +322,68 @@ export const MesaMatchPanel = () => {
     }
   };
 
+  const loadMvpData = async () => {
+    if (!data?.match?.id) return;
+    setMvpLoading(true);
+    try {
+      // Load all players from both teams
+      const homeId = data.homeTeam?.id;
+      const awayId = data.awayTeam?.id;
+      const [homeData, awayData, mvpData] = await Promise.all([
+        homeId ? supabase.from('participants').select('*').eq('team_id', homeId).order('number') : { data: [] },
+        awayId ? supabase.from('participants').select('*').eq('team_id', awayId).order('number') : { data: [] },
+        supabase.from('match_mvps').select('*, player:participants(*)').eq('match_id', data.match.id).maybeSingle(),
+      ]);
+      setMvpPlayers([
+        ...(homeData.data || []).map((p: any) => ({ ...p, _teamName: data.homeTeam?.name })),
+        ...(awayData.data || []).map((p: any) => ({ ...p, _teamName: data.awayTeam?.name })),
+      ]);
+      if (mvpData.data) {
+        setCurrentMvp(mvpData.data);
+        setSelectedMvp(mvpData.data.player_id);
+      }
+    } catch (err) {
+      console.error('Error loading MVP data:', err);
+    } finally {
+      setMvpLoading(false);
+    }
+  };
+
+  const handleSaveMvp = async () => {
+    if (!selectedMvp || !data?.match?.id) return;
+    setMvpLoading(true);
+    try {
+      let photoUrl = currentMvp?.photo_url || null;
+      
+      // Upload photo if selected
+      if (mvpPhotoFile) {
+        const ext = mvpPhotoFile.name.split('.').pop();
+        const fileName = `mvp/${data.match.id}_${Date.now()}.${ext}`;
+        const { error: uploadError } = await supabase.storage
+          .from('imagenes-torneos')
+          .upload(fileName, mvpPhotoFile, { upsert: true });
+        if (!uploadError) {
+          const { data: urlData } = supabase.storage.from('imagenes-torneos').getPublicUrl(fileName);
+          photoUrl = urlData.publicUrl;
+        }
+      }
+
+      if (currentMvp) {
+        await supabase.from('match_mvps').update({ player_id: selectedMvp, photo_url: photoUrl }).eq('id', currentMvp.id);
+      } else {
+        await supabase.from('match_mvps').insert({ match_id: data.match.id, player_id: selectedMvp, photo_url: photoUrl });
+      }
+      toast({ title: '⭐ MVP guardado' });
+      setMvpOpen(false);
+      loadMvpData();
+    } catch (err) {
+      console.error('Error saving MVP:', err);
+      toast({ title: 'Error', description: 'No se pudo guardar el MVP', variant: 'destructive' });
+    } finally {
+      setMvpLoading(false);
+    }
+  };
+
   const getPhaseLabel = (phase: string) => {
     const labels: Record<string, string> = {
       'group': 'Fase de Grupos',
