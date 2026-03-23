@@ -654,21 +654,39 @@ export function TournamentDetailPage() {
                           const filteredMatches = matches
                             .filter(match => {
                               const isGroupPhase = match.phase === "group" || match.phase === "Fase de Grupos" || match.phase?.toLowerCase().includes("grupo") || match.phase?.startsWith("Jornada");
-                              const phaseMatch = selectedPhase === "all" || 
-                                match.phase === selectedPhase || 
-                                (selectedPhase === "Fase de Grupos" && isGroupPhase);
+                              const isGold = match.phase?.startsWith("gold_");
+                              const isSilver = match.phase?.startsWith("silver_");
+                              const isBronze = match.phase?.startsWith("bronze_");
+                              
+                              let phaseMatch = selectedPhase === "all";
+                              if (!phaseMatch) {
+                                if (selectedPhase === "Fase de Grupos") phaseMatch = isGroupPhase;
+                                else if (selectedPhase === "Fase Oro") phaseMatch = isGold;
+                                else if (selectedPhase === "Fase Plata") phaseMatch = isSilver;
+                                else if (selectedPhase === "Fase Bronce") phaseMatch = isBronze;
+                                else phaseMatch = match.phase === selectedPhase;
+                              }
                               
                               // Group filter
                               const groupMatch = selectedBracketGroup === "all" || 
                                 (isGroupPhase ? match.group_name === selectedBracketGroup : true);
                               
-                              // Jornada filter
+                              // Jornada/Round filter
                               let jornadaMatch = true;
                               if (selectedJornada !== "all") {
                                 if (isGroupPhase) {
                                   jornadaMatch = match.phase === `Jornada ${selectedJornada}`;
                                 } else {
-                                  jornadaMatch = match.group_name === selectedJornada;
+                                  // Map round filter to DB phase
+                                  const roundMap: Record<string, string[]> = {
+                                    '1/16 de final': ['round_of_16', 'gold_round_of_16', 'silver_round_of_16', 'bronze_round_of_16'],
+                                    '1/8 de final': ['round_of_8', 'gold_round_of_8', 'silver_round_of_8', 'bronze_round_of_8'],
+                                    '1/4 de final': ['quarter_final', 'gold_quarter_final', 'silver_quarter_final', 'bronze_quarter_final'],
+                                    'Semifinal': ['semi_final', 'gold_semi_final', 'silver_semi_final', 'bronze_semi_final'],
+                                    'Final': ['final', 'gold_final', 'silver_final', 'bronze_final', 'third_place', 'gold_third_place', 'silver_third_place', 'bronze_third_place'],
+                                  };
+                                  const matchingPhases = roundMap[selectedJornada] || [];
+                                  jornadaMatch = matchingPhases.includes(match.phase);
                                 }
                               }
                               
