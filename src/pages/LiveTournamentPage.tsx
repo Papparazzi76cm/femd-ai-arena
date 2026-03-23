@@ -497,6 +497,32 @@ export const LiveTournamentPage = () => {
                       <p className="font-semibold text-sm">{getTeamName(match.away_team_id)}</p>
                     </div>
                   </div>
+
+                  {/* Goal scorers */}
+                  {matchGoals.get(match.id) && matchGoals.get(match.id)!.length > 0 && (
+                    <div className="mt-3 grid grid-cols-2 gap-2 border-t pt-3">
+                      <div className="space-y-1">
+                        {matchGoals.get(match.id)!.filter(g => g.team_id === match.home_team_id).sort((a, b) => (a.minute || 0) - (b.minute || 0)).map(g => {
+                          const p = g.player_id ? playerNames.get(g.player_id) : null;
+                          return (
+                            <p key={g.id} className="text-xs text-muted-foreground">
+                              ⚽ {p ? `${p.number ? `#${p.number} ` : ''}${p.name}` : 'Gol'}{g.minute ? ` (${g.minute}')` : ''}
+                            </p>
+                          );
+                        })}
+                      </div>
+                      <div className="space-y-1 text-right">
+                        {matchGoals.get(match.id)!.filter(g => g.team_id === match.away_team_id).sort((a, b) => (a.minute || 0) - (b.minute || 0)).map(g => {
+                          const p = g.player_id ? playerNames.get(g.player_id) : null;
+                          return (
+                            <p key={g.id} className="text-xs text-muted-foreground">
+                              {p ? `${p.number ? `#${p.number} ` : ''}${p.name}` : 'Gol'}{g.minute ? ` (${g.minute}')` : ''} ⚽
+                            </p>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
                 </Card>
               ))}
             </div>
