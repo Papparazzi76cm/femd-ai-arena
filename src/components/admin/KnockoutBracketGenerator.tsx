@@ -50,14 +50,11 @@ const ROUND_TYPES = [
   { value: 'final', label: 'Final', prefix: 'F', defaultCount: 1 },
 ];
 
-// Map round_of_8 to the DB enum value round_of_16 equivalent
 function getDbPhase(tier: string, round: string): string {
-  // round_of_8 doesn't exist in the enum, map to round_of_16
-  const roundKey = round === 'round_of_8' ? 'round_of_16' : round;
-  if (tier === 'gold') return `gold_${roundKey}`;
-  if (tier === 'silver') return `silver_${roundKey}`;
-  if (tier === 'bronze') return `bronze_${roundKey}`;
-  return roundKey;
+  if (tier === 'gold') return `gold_${round}`;
+  if (tier === 'silver') return `silver_${round}`;
+  if (tier === 'bronze') return `bronze_${round}`;
+  return round;
 }
 
 // Get subsequent rounds from current one
@@ -77,22 +74,26 @@ function getRoundLabel(round: string): string {
 
 // Phase display labels for existing matches
 const PHASE_OPTIONS: Record<string, string> = {
-  'round_of_16': 'Octavos',
+  'round_of_16': 'Dieciseisavos',
+  'round_of_8': 'Octavos',
   'quarter_final': 'Cuartos',
   'semi_final': 'Semifinales',
   'third_place': 'Tercer Puesto',
   'final': 'Final',
-  'gold_round_of_16': 'Oro - Octavos',
+  'gold_round_of_16': 'Oro - Dieciseisavos',
+  'gold_round_of_8': 'Oro - Octavos',
   'gold_quarter_final': 'Oro - Cuartos',
   'gold_semi_final': 'Oro - Semifinales',
   'gold_third_place': 'Oro - 3er Puesto',
   'gold_final': 'Oro - Final',
-  'silver_round_of_16': 'Plata - Octavos',
+  'silver_round_of_16': 'Plata - Dieciseisavos',
+  'silver_round_of_8': 'Plata - Octavos',
   'silver_quarter_final': 'Plata - Cuartos',
   'silver_semi_final': 'Plata - Semifinales',
   'silver_third_place': 'Plata - 3er Puesto',
   'silver_final': 'Plata - Final',
-  'bronze_round_of_16': 'Bronce - Octavos',
+  'bronze_round_of_16': 'Bronce - Dieciseisavos',
+  'bronze_round_of_8': 'Bronce - Octavos',
   'bronze_quarter_final': 'Bronce - Cuartos',
   'bronze_semi_final': 'Bronce - Semifinales',
   'bronze_third_place': 'Bronce - 3er Puesto',
@@ -205,9 +206,9 @@ export const KnockoutBracketGenerator = ({
     }
 
     // Also include pairings being created (for subsequent rounds referencing this batch)
-    // Plus existing knockout matches
+    // Plus existing knockout matches — use group_name (bracket name like O1, C1) if available
     knockoutMatches.forEach(m => {
-      const matchLabel = m.match_number ? `P${m.match_number}` : m.id.slice(0, 4);
+      const matchLabel = m.group_name || (m.match_number ? `P${m.match_number}` : m.id.slice(0, 4));
       const phaseLabel = PHASE_OPTIONS[m.phase] || m.phase;
       options.push({ value: `winner:${matchLabel}`, label: `Ganador ${matchLabel} (${phaseLabel})` });
       options.push({ value: `loser:${matchLabel}`, label: `Perdedor ${matchLabel} (${phaseLabel})` });
@@ -344,6 +345,7 @@ export const KnockoutBracketGenerator = ({
           home_placeholder: homePlaceholder,
           away_placeholder: awayPlaceholder,
           phase: pairing.phase,
+          group_name: pairing.name, // Store bracket name (O1, C1, S1, F1) for reference
           status: 'scheduled',
           match_halves: pairing.matchHalves,
           match_duration_minutes: pairing.matchDuration,
@@ -476,6 +478,7 @@ export const KnockoutBracketGenerator = ({
           home_placeholder: homePlaceholder,
           away_placeholder: awayPlaceholder,
           phase: pairing.phase,
+          group_name: pairing.name, // Store bracket name for reference
           status: 'scheduled',
           match_halves: pairing.matchHalves,
           match_duration_minutes: pairing.matchDuration,

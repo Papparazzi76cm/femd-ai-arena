@@ -43,6 +43,11 @@ interface TopScorer {
   goals: number;
 }
 
+// Store goals indexed by match for display
+type MatchGoalMap = Map<string, MatchGoal[]>;
+// Store player names for quick lookup
+type PlayerNameMap = Map<string, { name: string; number: number | null }>;
+
 export const LiveTournamentPage = () => {
   const [loading, setLoading] = useState(true);
   const [activeEvent, setActiveEvent] = useState<any>(null);
@@ -54,7 +59,8 @@ export const LiveTournamentPage = () => {
   const [liveTeamIds, setLiveTeamIds] = useState<Set<string>>(new Set());
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
   const [topScorers, setTopScorers] = useState<TopScorer[]>([]);
-
+  const [matchGoals, setMatchGoals] = useState<MatchGoalMap>(new Map());
+  const [playerNames, setPlayerNames] = useState<PlayerNameMap>(new Map());
   const { requestPermission, notifyMatchStarted, notifyMatchEnded, notifyGoal } = useMatchNotifications();
   const { playGoalSound } = useGoalSound();
 
@@ -273,15 +279,26 @@ export const LiveTournamentPage = () => {
           .in('match_id', matchIds);
 
         if (goalsData && goalsData.length > 0) {
+          const typedGoals = goalsData as MatchGoal[];
+          
+          // Build match goals map
+          const goalsMap: MatchGoalMap = new Map();
+          typedGoals.forEach(goal => {
+            const existing = goalsMap.get(goal.match_id) || [];
+            existing.push(goal);
+            goalsMap.set(goal.match_id, existing);
+          });
+          setMatchGoals(goalsMap);
+
           // Count goals per player
           const goalCounts = new Map<string, number>();
-          (goalsData as MatchGoal[]).forEach(goal => {
+          typedGoals.forEach(goal => {
             if (goal.player_id) {
               goalCounts.set(goal.player_id, (goalCounts.get(goal.player_id) || 0) + 1);
             }
           });
 
-          // Get unique player IDs
+          // Get unique player IDs (from goals)
           const playerIds = Array.from(goalCounts.keys());
           
           if (playerIds.length > 0) {
@@ -291,7 +308,14 @@ export const LiveTournamentPage = () => {
               .in('id', playerIds);
 
             if (playersData) {
-              const scorers: TopScorer[] = (playersData as Participant[]).map(player => ({
+              const typedPlayers = playersData as Participant[];
+              
+              // Build player name map
+              const namesMap: PlayerNameMap = new Map();
+              typedPlayers.forEach(p => namesMap.set(p.id, { name: p.name, number: p.number }));
+              setPlayerNames(namesMap);
+
+              const scorers: TopScorer[] = typedPlayers.map(player => ({
                 player,
                 team: loadedTeams.find(t => t.id === player.team_id) || null,
                 goals: goalCounts.get(player.id) || 0,
@@ -304,6 +328,7 @@ export const LiveTournamentPage = () => {
           }
         } else {
           setTopScorers([]);
+          setMatchGoals(new Map());
         }
       }
     } catch (error) {
@@ -472,6 +497,32 @@ export const LiveTournamentPage = () => {
                       <p className="font-semibold text-sm">{getTeamName(match.away_team_id)}</p>
                     </div>
                   </div>
+
+                  {/* Goal scorers */}
+                  {matchGoals.get(match.id) && matchGoals.get(match.id)!.length > 0 && (
+                    <div className="mt-3 grid grid-cols-2 gap-2 border-t pt-3">
+                      <div className="space-y-1">
+                        {matchGoals.get(match.id)!.filter(g => g.team_id === match.home_team_id).sort((a, b) => (a.minute || 0) - (b.minute || 0)).map(g => {
+                          const p = g.player_id ? playerNames.get(g.player_id) : null;
+                          return (
+                            <p key={g.id} className="text-xs text-muted-foreground">
+                              ⚽ {p ? `${p.number ? `#${p.number} ` : ''}${p.name}` : 'Gol'}{g.minute ? ` (${g.minute}')` : ''}
+                            </p>
+                          );
+                        })}
+                      </div>
+                      <div className="space-y-1 text-right">
+                        {matchGoals.get(match.id)!.filter(g => g.team_id === match.away_team_id).sort((a, b) => (a.minute || 0) - (b.minute || 0)).map(g => {
+                          const p = g.player_id ? playerNames.get(g.player_id) : null;
+                          return (
+                            <p key={g.id} className="text-xs text-muted-foreground">
+                              {p ? `${p.number ? `#${p.number} ` : ''}${p.name}` : 'Gol'}{g.minute ? ` (${g.minute}')` : ''} ⚽
+                            </p>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
                 </Card>
               ))}
             </div>

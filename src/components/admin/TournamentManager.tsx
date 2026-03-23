@@ -533,23 +533,30 @@ export const TournamentManager = ({ eventId }: TournamentManagerProps) => {
   const getPhaseLabel = (phase: TournamentPhase) => {
     const labels: Record<string, string> = {
       'group': 'Fase de Grupos',
-      'round_of_16': 'Octavos',
-      'quarter_final': 'Cuartos',
+      'round_of_16': 'Dieciseisavos de Final',
+      'round_of_8': 'Octavos de Final',
+      'quarter_final': 'Cuartos de Final',
       'semi_final': 'Semifinales',
       'third_place': 'Tercer Puesto',
       'final': 'Final',
-      'gold_round_of_16': 'Oro - Octavos',
-      'gold_quarter_final': 'Oro - Cuartos',
-      'gold_semi_final': 'Oro - Semifinales',
-      'gold_final': 'Oro - Final',
-      'silver_round_of_16': 'Plata - Octavos',
-      'silver_quarter_final': 'Plata - Cuartos',
-      'silver_semi_final': 'Plata - Semifinales',
-      'silver_final': 'Plata - Final',
-      'bronze_round_of_16': 'Bronce - Octavos',
-      'bronze_quarter_final': 'Bronce - Cuartos',
-      'bronze_semi_final': 'Bronce - Semifinales',
-      'bronze_final': 'Bronce - Final',
+      'gold_round_of_16': 'Fase Oro - Dieciseisavos',
+      'gold_round_of_8': 'Fase Oro - 1/8 de Final',
+      'gold_quarter_final': 'Fase Oro - 1/4 de Final',
+      'gold_semi_final': 'Fase Oro - Semifinales',
+      'gold_third_place': 'Fase Oro - 3er Puesto',
+      'gold_final': 'Fase Oro - Final',
+      'silver_round_of_16': 'Fase Plata - Dieciseisavos',
+      'silver_round_of_8': 'Fase Plata - 1/8 de Final',
+      'silver_quarter_final': 'Fase Plata - 1/4 de Final',
+      'silver_semi_final': 'Fase Plata - Semifinales',
+      'silver_third_place': 'Fase Plata - 3er Puesto',
+      'silver_final': 'Fase Plata - Final',
+      'bronze_round_of_16': 'Fase Bronce - Dieciseisavos',
+      'bronze_round_of_8': 'Fase Bronce - 1/8 de Final',
+      'bronze_quarter_final': 'Fase Bronce - 1/4 de Final',
+      'bronze_semi_final': 'Fase Bronce - Semifinales',
+      'bronze_third_place': 'Fase Bronce - 3er Puesto',
+      'bronze_final': 'Fase Bronce - Final',
     };
     return labels[phase] || phase;
   };
@@ -583,7 +590,11 @@ export const TournamentManager = ({ eventId }: TournamentManagerProps) => {
   });
 
   const groupedMatches = matches.reduce((acc, match) => {
-    const key = match.phase + (match.group_name ? `_${match.group_name}` : '');
+    // For group phase, split by group name; for knockout, group by phase only
+    const isGroupPhase = match.phase === 'group' || match.phase?.startsWith('Jornada');
+    const key = isGroupPhase 
+      ? match.phase + (match.group_name ? `|||${match.group_name}` : '')
+      : match.phase;
     if (!acc[key]) acc[key] = [];
     acc[key].push(match);
     return acc;
@@ -916,22 +927,26 @@ export const TournamentManager = ({ eventId }: TournamentManagerProps) => {
                         <SelectContent>
                           {Object.entries({
                             'group': 'Fase de Grupos',
-                            'round_of_16': 'Octavos',
+                            'round_of_16': 'Dieciseisavos',
+                            'round_of_8': 'Octavos',
                             'quarter_final': 'Cuartos',
                             'semi_final': 'Semifinales',
                             'third_place': 'Tercer Puesto',
                             'final': 'Final',
-                            'gold_round_of_16': 'Oro - Octavos',
+                            'gold_round_of_16': 'Oro - Dieciseisavos',
+                            'gold_round_of_8': 'Oro - Octavos',
                             'gold_quarter_final': 'Oro - Cuartos',
                             'gold_semi_final': 'Oro - Semifinales',
                             'gold_third_place': 'Oro - 3er Puesto',
                             'gold_final': 'Oro - Final',
-                            'silver_round_of_16': 'Plata - Octavos',
+                            'silver_round_of_16': 'Plata - Dieciseisavos',
+                            'silver_round_of_8': 'Plata - Octavos',
                             'silver_quarter_final': 'Plata - Cuartos',
                             'silver_semi_final': 'Plata - Semifinales',
                             'silver_third_place': 'Plata - 3er Puesto',
                             'silver_final': 'Plata - Final',
-                            'bronze_round_of_16': 'Bronce - Octavos',
+                            'bronze_round_of_16': 'Bronce - Dieciseisavos',
+                            'bronze_round_of_8': 'Bronce - Octavos',
                             'bronze_quarter_final': 'Bronce - Cuartos',
                             'bronze_semi_final': 'Bronce - Semifinales',
                             'bronze_third_place': 'Bronce - 3er Puesto',
@@ -1048,7 +1063,9 @@ export const TournamentManager = ({ eventId }: TournamentManagerProps) => {
               <h3 className="text-xl font-bold mb-4">Calendario de Partidos</h3>
               <div className="space-y-6">
                 {Object.entries(groupedMatches).map(([key, matchList]) => {
-                  const [phase, group] = key.split('_');
+                  const parts = key.split('|||');
+                  const phase = parts[0];
+                  const group = parts[1] || null;
                   return (
                     <div key={key}>
                       <h4 className="font-bold text-lg mb-3">

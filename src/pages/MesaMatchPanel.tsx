@@ -5,11 +5,13 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { GoalScorersDialog } from '@/components/referee/GoalScorersDialog';
 import { 
   Loader2, CheckCircle, XCircle, Calendar, MapPin, Trophy, 
-  Play, Square, Save, Goal, Clock, Building2, Phone
+  Play, Square, Save, Goal, Clock, Building2, Phone, Edit2, RotateCcw
 } from 'lucide-react';
 
 interface AssignmentData {
@@ -56,6 +58,8 @@ export const MesaMatchPanel = () => {
   const [data, setData] = useState<AssignmentData | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [editFinishedOpen, setEditFinishedOpen] = useState(false);
+  const [goalScorersOpen, setGoalScorersOpen] = useState(false);
 
   // Match control state
   const [homeScore, setHomeScore] = useState(0);
@@ -231,6 +235,7 @@ export const MesaMatchPanel = () => {
   };
 
   const handleEndMatch = async () => {
+    if (!confirm('¿Seguro que quieres finalizar el partido?')) return;
     setSaving(true);
     try {
       await callAction('update_match', {
@@ -251,14 +256,92 @@ export const MesaMatchPanel = () => {
     }
   };
 
+  const handleResumeMatch = async () => {
+    setSaving(true);
+    try {
+      await callAction('update_match', {
+        updates: {
+          status: 'in_progress',
+        },
+      });
+      toast({ title: '▶️ Partido reanudado' });
+      loadData();
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleRestartMatch = async () => {
+    if (!confirm('¿Seguro que quieres reiniciar el partido desde cero?')) return;
+    setSaving(true);
+    try {
+      await callAction('update_match', {
+        updates: {
+          status: 'in_progress',
+          home_score: 0,
+          away_score: 0,
+          home_yellow_cards: 0,
+          home_red_cards: 0,
+          away_yellow_cards: 0,
+          away_red_cards: 0,
+          started_at: new Date().toISOString(),
+        },
+      });
+      toast({ title: '🔄 Partido reiniciado' });
+      loadData();
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleSaveFinishedEdit = async () => {
+    setSaving(true);
+    try {
+      await callAction('update_match', {
+        updates: {
+          home_score: homeScore,
+          away_score: awayScore,
+          home_yellow_cards: homeYellow,
+          home_red_cards: homeRed,
+          away_yellow_cards: awayYellow,
+          away_red_cards: awayRed,
+        },
+      });
+      toast({ title: 'Resultado actualizado' });
+      setEditFinishedOpen(false);
+      loadData();
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const getPhaseLabel = (phase: string) => {
     const labels: Record<string, string> = {
       'group': 'Fase de Grupos',
-      'round_of_16': 'Octavos de Final',
+      'round_of_16': 'Dieciseisavos de Final',
+      'round_of_8': 'Octavos de Final',
       'quarter_final': 'Cuartos de Final',
       'semi_final': 'Semifinales',
       'final': 'Final',
       'third_place': 'Tercer Puesto',
+      'gold_round_of_16': 'Fase Oro - Dieciseisavos',
+      'gold_round_of_8': 'Fase Oro - 1/8 de Final',
+      'gold_quarter_final': 'Fase Oro - 1/4 de Final',
+      'gold_semi_final': 'Fase Oro - Semifinales',
+      'gold_third_place': 'Fase Oro - 3er Puesto',
+      'gold_final': 'Fase Oro - Final',
+      'silver_round_of_16': 'Fase Plata - Dieciseisavos',
+      'silver_round_of_8': 'Fase Plata - 1/8 de Final',
+      'silver_quarter_final': 'Fase Plata - 1/4 de Final',
+      'silver_semi_final': 'Fase Plata - Semifinales',
+      'silver_third_place': 'Fase Plata - 3er Puesto',
+      'silver_final': 'Fase Plata - Final',
+      'bronze_round_of_16': 'Fase Bronce - Dieciseisavos',
+      'bronze_round_of_8': 'Fase Bronce - 1/8 de Final',
+      'bronze_quarter_final': 'Fase Bronce - 1/4 de Final',
+      'bronze_semi_final': 'Fase Bronce - Semifinales',
+      'bronze_third_place': 'Fase Bronce - 3er Puesto',
+      'bronze_final': 'Fase Bronce - Final',
     };
     return labels[phase] || phase;
   };
@@ -430,7 +513,7 @@ export const MesaMatchPanel = () => {
           <div className="space-y-2 text-sm">
             {event && <p className="font-semibold text-primary">{event.title}</p>}
             {category && <Badge variant="secondary">{category.name}</Badge>}
-            <p className="text-muted-foreground">{getPhaseLabel(match.phase)}{match.group_name ? ` - Grupo ${match.group_name}` : ''}</p>
+            <p className="text-muted-foreground">{getPhaseLabel(match.phase)}{match.group_name && match.phase === 'group' ? ` - Grupo ${match.group_name}` : match.group_name && match.phase !== 'group' ? ` (${match.group_name})` : ''}</p>
             {facility && <p className="text-muted-foreground flex items-center gap-1"><Building2 className="w-3 h-3" />{facility.name}{field ? ` · ${field.name}` : ''}</p>}
             {match.match_date && (
               <p className="text-muted-foreground flex items-center gap-1">
@@ -521,6 +604,14 @@ export const MesaMatchPanel = () => {
           </Card>
         )}
 
+        {/* Goal scorers button - during live match */}
+        {isLive && homeTeam && awayTeam && (
+          <Button variant="outline" className="w-full" onClick={() => setGoalScorersOpen(true)}>
+            <Goal className="w-4 h-4 mr-2" />
+            Registrar Goleadores
+          </Button>
+        )}
+
         {/* Actions */}
         {!isFinished && isAccepted && (
           <div className="flex gap-3 flex-wrap">
@@ -546,13 +637,98 @@ export const MesaMatchPanel = () => {
         )}
 
         {isFinished && (
-          <Card className="p-6 text-center bg-emerald-50 dark:bg-emerald-950/20 border-emerald-200">
-            <CheckCircle className="w-10 h-10 text-emerald-600 mx-auto mb-2" />
-            <p className="font-semibold text-emerald-700 dark:text-emerald-400">Partido finalizado</p>
-            <p className="text-sm text-muted-foreground mt-1">
-              {homeTeam?.name} {match.home_score} - {match.away_score} {awayTeam?.name}
-            </p>
+          <Card className="p-6 bg-emerald-50 dark:bg-emerald-950/20 border-emerald-200 space-y-4">
+            <div className="text-center">
+              <CheckCircle className="w-10 h-10 text-emerald-600 mx-auto mb-2" />
+              <p className="font-semibold text-emerald-700 dark:text-emerald-400">Partido finalizado</p>
+              <p className="text-sm text-muted-foreground mt-1">
+                {homeTeam?.name} {match.home_score} - {match.away_score} {awayTeam?.name}
+              </p>
+            </div>
+            <div className="flex gap-2 justify-center flex-wrap">
+              <Button variant="outline" size="sm" onClick={handleResumeMatch} disabled={saving}>
+                <Play className="w-4 h-4 mr-1" />
+                Reanudar
+              </Button>
+              <Button variant="outline" size="sm" onClick={handleRestartMatch} disabled={saving}>
+                <RotateCcw className="w-4 h-4 mr-1" />
+                Reiniciar
+              </Button>
+              <Button variant="outline" size="sm" onClick={() => setEditFinishedOpen(true)}>
+                <Edit2 className="w-4 h-4 mr-1" />
+                Editar resultado
+              </Button>
+              {homeTeam && awayTeam && (
+                <Button variant="outline" size="sm" onClick={() => setGoalScorersOpen(true)}>
+                  <Goal className="w-4 h-4 mr-1" />
+                  Goleadores
+                </Button>
+              )}
+            </div>
           </Card>
+        )}
+
+        {/* Edit finished match dialog */}
+        <Dialog open={editFinishedOpen} onOpenChange={setEditFinishedOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Editar Resultado</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="text-center">
+                  <Label className="text-sm font-bold">{homeTeam?.name}</Label>
+                  <div className="space-y-2 mt-2">
+                    <div>
+                      <Label className="text-xs">Goles</Label>
+                      <Input type="number" min="0" value={homeScore} onChange={e => setHomeScore(Number(e.target.value))} className="text-center" />
+                    </div>
+                    <div>
+                      <Label className="text-xs">🟨</Label>
+                      <Input type="number" min="0" value={homeYellow} onChange={e => setHomeYellow(Number(e.target.value))} className="text-center" />
+                    </div>
+                    <div>
+                      <Label className="text-xs">🟥</Label>
+                      <Input type="number" min="0" value={homeRed} onChange={e => setHomeRed(Number(e.target.value))} className="text-center" />
+                    </div>
+                  </div>
+                </div>
+                <div className="text-center">
+                  <Label className="text-sm font-bold">{awayTeam?.name}</Label>
+                  <div className="space-y-2 mt-2">
+                    <div>
+                      <Label className="text-xs">Goles</Label>
+                      <Input type="number" min="0" value={awayScore} onChange={e => setAwayScore(Number(e.target.value))} className="text-center" />
+                    </div>
+                    <div>
+                      <Label className="text-xs">🟨</Label>
+                      <Input type="number" min="0" value={awayYellow} onChange={e => setAwayYellow(Number(e.target.value))} className="text-center" />
+                    </div>
+                    <div>
+                      <Label className="text-xs">🟥</Label>
+                      <Input type="number" min="0" value={awayRed} onChange={e => setAwayRed(Number(e.target.value))} className="text-center" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <Button onClick={handleSaveFinishedEdit} disabled={saving} className="w-full">
+                {saving ? 'Guardando...' : 'Guardar cambios'}
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Goal scorers dialog */}
+        {homeTeam && awayTeam && (
+          <GoalScorersDialog
+            open={goalScorersOpen}
+            onOpenChange={setGoalScorersOpen}
+            matchId={match.id}
+            homeTeamId={homeTeam.id}
+            awayTeamId={awayTeam.id}
+            homeTeamName={homeTeam.name}
+            awayTeamName={awayTeam.name}
+          />
         )}
       </div>
     </div>
