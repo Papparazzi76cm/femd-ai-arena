@@ -279,15 +279,26 @@ export const LiveTournamentPage = () => {
           .in('match_id', matchIds);
 
         if (goalsData && goalsData.length > 0) {
+          const typedGoals = goalsData as MatchGoal[];
+          
+          // Build match goals map
+          const goalsMap: MatchGoalMap = new Map();
+          typedGoals.forEach(goal => {
+            const existing = goalsMap.get(goal.match_id) || [];
+            existing.push(goal);
+            goalsMap.set(goal.match_id, existing);
+          });
+          setMatchGoals(goalsMap);
+
           // Count goals per player
           const goalCounts = new Map<string, number>();
-          (goalsData as MatchGoal[]).forEach(goal => {
+          typedGoals.forEach(goal => {
             if (goal.player_id) {
               goalCounts.set(goal.player_id, (goalCounts.get(goal.player_id) || 0) + 1);
             }
           });
 
-          // Get unique player IDs
+          // Get unique player IDs (from goals)
           const playerIds = Array.from(goalCounts.keys());
           
           if (playerIds.length > 0) {
@@ -297,7 +308,14 @@ export const LiveTournamentPage = () => {
               .in('id', playerIds);
 
             if (playersData) {
-              const scorers: TopScorer[] = (playersData as Participant[]).map(player => ({
+              const typedPlayers = playersData as Participant[];
+              
+              // Build player name map
+              const namesMap: PlayerNameMap = new Map();
+              typedPlayers.forEach(p => namesMap.set(p.id, { name: p.name, number: p.number }));
+              setPlayerNames(namesMap);
+
+              const scorers: TopScorer[] = typedPlayers.map(player => ({
                 player,
                 team: loadedTeams.find(t => t.id === player.team_id) || null,
                 goals: goalCounts.get(player.id) || 0,
@@ -310,6 +328,7 @@ export const LiveTournamentPage = () => {
           }
         } else {
           setTopScorers([]);
+          setMatchGoals(new Map());
         }
       }
     } catch (error) {
