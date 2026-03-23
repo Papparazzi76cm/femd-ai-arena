@@ -497,6 +497,45 @@ export type Database = {
           },
         ]
       }
+      match_mvps: {
+        Row: {
+          created_at: string
+          id: string
+          match_id: string
+          photo_url: string | null
+          player_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          match_id: string
+          photo_url?: string | null
+          player_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          match_id?: string
+          photo_url?: string | null
+          player_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "match_mvps_match_id_fkey"
+            columns: ["match_id"]
+            isOneToOne: true
+            referencedRelation: "matches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "match_mvps_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "participants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       matches: {
         Row: {
           away_placeholder: string | null
