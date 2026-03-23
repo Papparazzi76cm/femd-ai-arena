@@ -478,6 +478,7 @@ export const KnockoutBracketGenerator = ({
           home_placeholder: homePlaceholder,
           away_placeholder: awayPlaceholder,
           phase: pairing.phase,
+          group_name: pairing.name, // Store bracket name for reference
           status: 'scheduled',
           match_halves: pairing.matchHalves,
           match_duration_minutes: pairing.matchDuration,
