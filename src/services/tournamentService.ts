@@ -372,35 +372,160 @@ export const tournamentService = {
     return data || [];
   },
 
-  // Obtener partidos con datos completos
-  async getMatchesWithDetails(eventId: string): Promise<any[]> {
-    const { data, error } = await supabase
-      .from('matches')
-      .select(`
-        *,
-        home_team:event_teams!matches_home_team_id_fkey(
-          *,
-          team:teams(*)
-        ),
-        away_team:event_teams!matches_away_team_id_fkey(
-          *,
-          team:teams(*)
-        ),
-        field:fields(
-          *,
-          facility:facilities(*)
-        ),
-        category:event_categories(
-          *,
-          category:categories(*)
-        )
-      `)
-      .eq('event_id', eventId)
-      .order('match_date', { ascending: true })
-      .order('phase')
-      .order('match_number');
+  // Resolve knockout placeholders to actual team IDs
+  async resolveKnockoutPlaceholders(eventId: string): Promise<number> {
+    // Get all event teams with club data sorted by standings
+    const { data: eventTeams } = await supabase
+      .from('event_teams')
+      .select('*, team:teams(*)')
+      .eq('event_id', eventId);
 
-    if (error) throw error;
-    return data || [];
+    if (!eventTeams || eventTeams.length === 0) return 0;
+
+    // Get all matches
+    const { data: allMatches } = await supabase
+      .from('matches')
+      .select('*')
+      .eq('event_id', eventId);
+
+    if (!allMatches) return 0;
+
+    // Build group standings
+    const groupMatches = allMatches.filter((m: any) =>
+      (m.phase === 'group' || m.phase === 'Fase de Grupos' || m.phase?.startsWith('Jornada') || m.phase?.toLowerCase().includes('grupo')) &&
+      m.status === 'finished' && m.home_score != null && m.away_score != null
+    );
+
+    // Calculate standings per group
+    const groups: Record<string, any[]> = {};
+    eventTeams.forEach((et: any) => {
+      const g = et.group_name || 'Sin grupo';
+      if (!groups[g]) groups[g] = [];
+      groups[g].push({
+        ...et,
+        _points: 0, _gf: 0, _gc: 0, _gd: 0, _w: 0, _d: 0, _l: 0, _mp: 0, _yc: 0, _rc: 0,
+      });
+    });
+
+    groupMatches.forEach((m: any) => {
+      Object.values(groups).forEach((teamsList: any[]) => {
+        const home = teamsList.find(t => t.team_id === m.home_team_id);
+        const away = teamsList.find(t => t.team_id === m.away_team_id);
+        if (!home || !away) return;
+        home._mp++; away._mp++;
+        home._gf += m.home_score; home._gc += m.away_score;
+        away._gf += m.away_score; away._gc += m.home_score;
+        home._yc += m.home_yellow_cards || 0; home._rc += m.home_red_cards || 0;
+        away._yc += m.away_yellow_cards || 0; away._rc += m.away_red_cards || 0;
+        if (m.home_score > m.away_score) { home._w++; home._points += 3; away._l++; }
+        else if (m.home_score < m.away_score) { away._w++; away._points += 3; home._l++; }
+        else { home._d++; away._d++; home._points++; away._points++; }
+        home._gd = home._gf - home._gc;
+        away._gd = away._gf - away._gc;
+      });
+    });
+
+    // Sort each group
+    Object.keys(groups).forEach(g => {
+      groups[g].sort((a: any, b: any) => {
+        if (b._points !== a._points) return b._points - a._points;
+        if (b._gd !== a._gd) return b._gd - a._gd;
+        if (b._gf !== a._gf) return b._gf - a._gf;
+        if (a._rc !== b._rc) return a._rc - b._rc;
+        return a._yc - b._yc;
+      });
+    });
+
+    // Build "best Nth" rankings across groups
+    const sortedGroupNames = Object.keys(groups).filter(g => g !== 'Sin grupo').sort();
+    const bestByPosition: Record<number, any[]> = {};
+    sortedGroupNames.forEach(g => {
+      groups[g].forEach((t: any, idx: number) => {
+        const pos = idx + 1;
+        if (!bestByPosition[pos]) bestByPosition[pos] = [];
+        bestByPosition[pos].push(t);
+      });
+    });
+    // Sort each position ranking
+    Object.keys(bestByPosition).forEach(pos => {
+      bestByPosition[Number(pos)].sort((a: any, b: any) => {
+        if (b._points !== a._points) return b._points - a._points;
+        if (b._gd !== a._gd) return b._gd - a._gd;
+        return b._gf - a._gf;
+      });
+    });
+
+    // Resolve function: placeholder text → event_team_id
+    const resolveTeamId = (placeholder: string | null): string | null => {
+      if (!placeholder) return null;
+
+      // "1º Grupo A" format
+      const groupMatch = placeholder.match(/^(\d+)º Grupo (.+)$/);
+      if (groupMatch) {
+        const pos = parseInt(groupMatch[1]);
+        const groupName = groupMatch[2];
+        const groupTeams = groups[groupName];
+        if (groupTeams && groupTeams[pos - 1]) return groupTeams[pos - 1].id;
+      }
+
+      // "1er Mejor 2º" or "2º Mejor 1º" format
+      const bestMatch = placeholder.match(/^(?:1er|(\d+)º) Mejor (\d+)º$/);
+      if (bestMatch) {
+        const rank = bestMatch[1] ? parseInt(bestMatch[1]) : 1;
+        const pos = parseInt(bestMatch[2]);
+        const ranked = bestByPosition[pos];
+        if (ranked && ranked[rank - 1]) return ranked[rank - 1].id;
+      }
+
+      // "Ganador O1" format — find finished match with that bracket name
+      const winnerMatch = placeholder.match(/^Ganador (.+)$/);
+      if (winnerMatch) {
+        const bracketName = winnerMatch[1];
+        const finishedMatch = allMatches.find((m: any) => m.group_name === bracketName && m.status === 'finished' && m.home_score != null);
+        if (finishedMatch) {
+          return finishedMatch.home_score > finishedMatch.away_score
+            ? finishedMatch.home_team_id
+            : finishedMatch.away_team_id;
+        }
+      }
+
+      // "Perdedor O1" format
+      const loserMatch = placeholder.match(/^Perdedor (.+)$/);
+      if (loserMatch) {
+        const bracketName = loserMatch[1];
+        const finishedMatch = allMatches.find((m: any) => m.group_name === bracketName && m.status === 'finished' && m.home_score != null);
+        if (finishedMatch) {
+          return finishedMatch.home_score > finishedMatch.away_score
+            ? finishedMatch.away_team_id
+            : finishedMatch.home_team_id;
+        }
+      }
+
+      return null;
+    };
+
+    // Find knockout matches with unresolved placeholders
+    const knockoutMatches = allMatches.filter((m: any) =>
+      m.phase !== 'group' && !m.phase?.startsWith('Jornada') &&
+      ((m.home_placeholder && !m.home_team_id) || (m.away_placeholder && !m.away_team_id))
+    );
+
+    let resolved = 0;
+    for (const m of knockoutMatches) {
+      const updates: any = {};
+      if (m.home_placeholder && !m.home_team_id) {
+        const teamId = resolveTeamId(m.home_placeholder);
+        if (teamId) { updates.home_team_id = teamId; resolved++; }
+      }
+      if (m.away_placeholder && !m.away_team_id) {
+        const teamId = resolveTeamId(m.away_placeholder);
+        if (teamId) { updates.away_team_id = teamId; resolved++; }
+      }
+      if (Object.keys(updates).length > 0) {
+        await supabase.from('matches').update(updates).eq('id', m.id);
+      }
+    }
+
+    return resolved;
   },
 };
