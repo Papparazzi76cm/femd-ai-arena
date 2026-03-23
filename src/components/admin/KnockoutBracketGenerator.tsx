@@ -206,9 +206,9 @@ export const KnockoutBracketGenerator = ({
     }
 
     // Also include pairings being created (for subsequent rounds referencing this batch)
-    // Plus existing knockout matches
+    // Plus existing knockout matches — use group_name (bracket name like O1, C1) if available
     knockoutMatches.forEach(m => {
-      const matchLabel = m.match_number ? `P${m.match_number}` : m.id.slice(0, 4);
+      const matchLabel = m.group_name || (m.match_number ? `P${m.match_number}` : m.id.slice(0, 4));
       const phaseLabel = PHASE_OPTIONS[m.phase] || m.phase;
       options.push({ value: `winner:${matchLabel}`, label: `Ganador ${matchLabel} (${phaseLabel})` });
       options.push({ value: `loser:${matchLabel}`, label: `Perdedor ${matchLabel} (${phaseLabel})` });
