@@ -59,7 +59,8 @@ export const LiveTournamentPage = () => {
   const [liveTeamIds, setLiveTeamIds] = useState<Set<string>>(new Set());
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
   const [topScorers, setTopScorers] = useState<TopScorer[]>([]);
-
+  const [matchGoals, setMatchGoals] = useState<MatchGoalMap>(new Map());
+  const [playerNames, setPlayerNames] = useState<PlayerNameMap>(new Map());
   const { requestPermission, notifyMatchStarted, notifyMatchEnded, notifyGoal } = useMatchNotifications();
   const { playGoalSound } = useGoalSound();
 
