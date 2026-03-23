@@ -610,21 +610,11 @@ export function TournamentDetailPage() {
                                   <SelectItem value="2">Jornada 2</SelectItem>
                                   <SelectItem value="3">Jornada 3</SelectItem>
                                 </>
-                              ) : selectedPhase === "Fase Oro" ? (
+                              ) : (selectedPhase === "Fase Oro" || selectedPhase === "Fase Plata" || selectedPhase === "Fase Bronce") ? (
                                 <>
-                                  <SelectItem value="1/8 de final">1/8 de final</SelectItem>
-                                  <SelectItem value="1/4 de final">1/4 de final</SelectItem>
-                                  <SelectItem value="Semifinal">Semifinal</SelectItem>
-                                  <SelectItem value="Final">Final</SelectItem>
-                                </>
-                              ) : selectedPhase === "Fase Plata" ? (
-                                <>
-                                  <SelectItem value="1/4 de final">1/4 de final</SelectItem>
-                                  <SelectItem value="Semifinal">Semifinal</SelectItem>
-                                  <SelectItem value="Final">Final</SelectItem>
-                                </>
-                              ) : selectedPhase === "Fase Bronce" ? (
-                                <>
+                                  <SelectItem value="1/16 de final">1/16 de Final</SelectItem>
+                                  <SelectItem value="1/8 de final">1/8 de Final</SelectItem>
+                                  <SelectItem value="1/4 de final">1/4 de Final</SelectItem>
                                   <SelectItem value="Semifinal">Semifinal</SelectItem>
                                   <SelectItem value="Final">Final</SelectItem>
                                 </>
