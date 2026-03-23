@@ -6,7 +6,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Calendar, MapPin, Trophy, ArrowLeft, Medal, Target, AlertTriangle, Users, ChevronDown, Crown } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Calendar, MapPin, Trophy, ArrowLeft, Medal, Target, AlertTriangle, Users, ChevronDown, Crown, Star, Goal } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
@@ -119,6 +120,7 @@ export function TournamentDetailPage() {
   const [selectedPhase, setSelectedPhase] = useState<string>("all");
   const [selectedBracketGroup, setSelectedBracketGroup] = useState<string>("all");
   const [selectedJornada, setSelectedJornada] = useState<string>("all");
+  const [selectedMatchDetail, setSelectedMatchDetail] = useState<Match | null>(null);
 
   useEffect(() => {
     if (!id) return;
@@ -608,21 +610,11 @@ export function TournamentDetailPage() {
                                   <SelectItem value="2">Jornada 2</SelectItem>
                                   <SelectItem value="3">Jornada 3</SelectItem>
                                 </>
-                              ) : selectedPhase === "Fase Oro" ? (
+                              ) : (selectedPhase === "Fase Oro" || selectedPhase === "Fase Plata" || selectedPhase === "Fase Bronce") ? (
                                 <>
-                                  <SelectItem value="1/8 de final">1/8 de final</SelectItem>
-                                  <SelectItem value="1/4 de final">1/4 de final</SelectItem>
-                                  <SelectItem value="Semifinal">Semifinal</SelectItem>
-                                  <SelectItem value="Final">Final</SelectItem>
-                                </>
-                              ) : selectedPhase === "Fase Plata" ? (
-                                <>
-                                  <SelectItem value="1/4 de final">1/4 de final</SelectItem>
-                                  <SelectItem value="Semifinal">Semifinal</SelectItem>
-                                  <SelectItem value="Final">Final</SelectItem>
-                                </>
-                              ) : selectedPhase === "Fase Bronce" ? (
-                                <>
+                                  <SelectItem value="1/16 de final">1/16 de Final</SelectItem>
+                                  <SelectItem value="1/8 de final">1/8 de Final</SelectItem>
+                                  <SelectItem value="1/4 de final">1/4 de Final</SelectItem>
                                   <SelectItem value="Semifinal">Semifinal</SelectItem>
                                   <SelectItem value="Final">Final</SelectItem>
                                 </>
@@ -652,21 +644,39 @@ export function TournamentDetailPage() {
                           const filteredMatches = matches
                             .filter(match => {
                               const isGroupPhase = match.phase === "group" || match.phase === "Fase de Grupos" || match.phase?.toLowerCase().includes("grupo") || match.phase?.startsWith("Jornada");
-                              const phaseMatch = selectedPhase === "all" || 
-                                match.phase === selectedPhase || 
-                                (selectedPhase === "Fase de Grupos" && isGroupPhase);
+                              const isGold = match.phase?.startsWith("gold_");
+                              const isSilver = match.phase?.startsWith("silver_");
+                              const isBronze = match.phase?.startsWith("bronze_");
+                              
+                              let phaseMatch = selectedPhase === "all";
+                              if (!phaseMatch) {
+                                if (selectedPhase === "Fase de Grupos") phaseMatch = isGroupPhase;
+                                else if (selectedPhase === "Fase Oro") phaseMatch = isGold;
+                                else if (selectedPhase === "Fase Plata") phaseMatch = isSilver;
+                                else if (selectedPhase === "Fase Bronce") phaseMatch = isBronze;
+                                else phaseMatch = match.phase === selectedPhase;
+                              }
                               
                               // Group filter
                               const groupMatch = selectedBracketGroup === "all" || 
                                 (isGroupPhase ? match.group_name === selectedBracketGroup : true);
                               
-                              // Jornada filter
+                              // Jornada/Round filter
                               let jornadaMatch = true;
                               if (selectedJornada !== "all") {
                                 if (isGroupPhase) {
                                   jornadaMatch = match.phase === `Jornada ${selectedJornada}`;
                                 } else {
-                                  jornadaMatch = match.group_name === selectedJornada;
+                                  // Map round filter to DB phase
+                                  const roundMap: Record<string, string[]> = {
+                                    '1/16 de final': ['round_of_16', 'gold_round_of_16', 'silver_round_of_16', 'bronze_round_of_16'],
+                                    '1/8 de final': ['round_of_8', 'gold_round_of_8', 'silver_round_of_8', 'bronze_round_of_8'],
+                                    '1/4 de final': ['quarter_final', 'gold_quarter_final', 'silver_quarter_final', 'bronze_quarter_final'],
+                                    'Semifinal': ['semi_final', 'gold_semi_final', 'silver_semi_final', 'bronze_semi_final'],
+                                    'Final': ['final', 'gold_final', 'silver_final', 'bronze_final', 'third_place', 'gold_third_place', 'silver_third_place', 'bronze_third_place'],
+                                  };
+                                  const matchingPhases = roundMap[selectedJornada] || [];
+                                  jornadaMatch = matchingPhases.includes(match.phase);
                                 }
                               }
                               
@@ -714,7 +724,7 @@ export function TournamentDetailPage() {
                               </div>
                               <div className="space-y-2 pl-4">
                                 {matchesByGroup[groupName].map((match) => (
-                                  <ResultRow key={match.id} match={match} />
+                                  <ResultRow key={match.id} match={match} onClick={() => setSelectedMatchDetail(match)} />
                                 ))}
                               </div>
                             </div>
@@ -982,6 +992,12 @@ export function TournamentDetailPage() {
         <div className="mt-12">
           <TournamentGalleryDisplay eventId={id!} />
         </div>
+
+        {/* Match Detail Dialog */}
+        <MatchDetailDialog 
+          match={selectedMatchDetail} 
+          onClose={() => setSelectedMatchDetail(null)} 
+        />
       </div>
     </div>
   );
@@ -1007,7 +1023,7 @@ function isPlaceholder(match: Match, side: 'home' | 'away'): boolean {
 }
 
 // Result Row Component - New horizontal design
-function ResultRow({ match }: { match: Match }) {
+function ResultRow({ match, onClick }: { match: Match; onClick?: () => void }) {
   const isCompleted = isCompletedStatus(match.status);
   const hasHomeWon = isCompleted && match.home_score !== null && match.away_score !== null && match.home_score > match.away_score;
   const hasAwayWon = isCompleted && match.home_score !== null && match.away_score !== null && match.away_score > match.home_score;
@@ -1018,8 +1034,13 @@ function ResultRow({ match }: { match: Match }) {
   const homeIsPlaceholder = isPlaceholder(match, 'home');
   const awayIsPlaceholder = isPlaceholder(match, 'away');
 
+  const phaseLabel = getPhaseDisplayLabel(match.phase);
+
   return (
-    <div className="flex items-center justify-between py-3 border-b last:border-b-0 hover:bg-accent/30 transition-colors px-2 rounded">
+    <div 
+      className={`flex items-center justify-between py-3 border-b last:border-b-0 hover:bg-accent/30 transition-colors px-2 rounded ${onClick ? 'cursor-pointer' : ''}`}
+      onClick={onClick}
+    >
       {/* Home Team */}
       <div className={`flex items-center gap-3 flex-1 justify-start ${hasHomeWon ? 'font-bold' : ''}`}>
         {homeLogo && (
@@ -1040,12 +1061,12 @@ function ResultRow({ match }: { match: Match }) {
           <span className="text-xl font-bold text-muted-foreground">- vs -</span>
         )}
         <div className="flex items-center gap-2 mt-1">
-          {match.phase && (
-            <span className="text-xs text-primary font-medium">{match.phase}</span>
+          {phaseLabel && (
+            <span className="text-xs text-primary font-medium">{phaseLabel}</span>
           )}
           {match.match_date && (
             <span className="text-xs text-muted-foreground">
-              {format(new Date(match.match_date), "dd.MM.yyyy", { locale: es })}
+              {format(new Date(match.match_date), "dd.MM.yyyy HH:mm", { locale: es })}
             </span>
           )}
         </div>
@@ -1059,6 +1080,172 @@ function ResultRow({ match }: { match: Match }) {
         )}
       </div>
     </div>
+  );
+}
+
+// Phase display label helper
+function getPhaseDisplayLabel(phase: string): string {
+  const labels: Record<string, string> = {
+    'group': 'Fase de Grupos',
+    'gold_round_of_16': 'Oro - 1/16',
+    'gold_round_of_8': 'Oro - 1/8',
+    'gold_quarter_final': 'Oro - 1/4',
+    'gold_semi_final': 'Oro - Semifinal',
+    'gold_third_place': 'Oro - 3er Puesto',
+    'gold_final': 'Oro - Final',
+    'silver_round_of_16': 'Plata - 1/16',
+    'silver_round_of_8': 'Plata - 1/8',
+    'silver_quarter_final': 'Plata - 1/4',
+    'silver_semi_final': 'Plata - Semifinal',
+    'silver_third_place': 'Plata - 3er Puesto',
+    'silver_final': 'Plata - Final',
+    'bronze_round_of_16': 'Bronce - 1/16',
+    'bronze_round_of_8': 'Bronce - 1/8',
+    'bronze_quarter_final': 'Bronce - 1/4',
+    'bronze_semi_final': 'Bronce - Semifinal',
+    'bronze_third_place': 'Bronce - 3er Puesto',
+    'bronze_final': 'Bronce - Final',
+    'round_of_16': '1/16',
+    'round_of_8': '1/8',
+    'quarter_final': '1/4',
+    'semi_final': 'Semifinal',
+    'third_place': '3er Puesto',
+    'final': 'Final',
+  };
+  if (phase?.startsWith('Jornada')) return phase;
+  return labels[phase] || phase;
+}
+
+// Match Detail Dialog
+function MatchDetailDialog({ match, onClose }: { match: Match | null; onClose: () => void }) {
+  const [goals, setGoals] = useState<any[]>([]);
+  const [mvp, setMvp] = useState<any>(null);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (!match?.id) { setGoals([]); setMvp(null); return; }
+    setLoading(true);
+    Promise.all([
+      supabase.from('match_goals').select('*, player:participants(name, number)').eq('match_id', match.id).order('minute'),
+      supabase.from('match_mvps').select('*, player:participants(name, number, photo_url)').eq('match_id', match.id).maybeSingle(),
+    ]).then(([goalsRes, mvpRes]) => {
+      setGoals(goalsRes.data || []);
+      setMvp(mvpRes.data || null);
+    }).finally(() => setLoading(false));
+  }, [match?.id]);
+
+  if (!match) return null;
+
+  const isCompleted = isCompletedStatus(match.status);
+  const homeName = getMatchSideName(match, 'home');
+  const awayName = getMatchSideName(match, 'away');
+  const homeLogo = getMatchSideLogo(match, 'home');
+  const awayLogo = getMatchSideLogo(match, 'away');
+  const homeGoals = goals.filter(g => g.team_id === match.home_team?.id);
+  const awayGoals = goals.filter(g => g.team_id === match.away_team?.id);
+  const phaseLabel = getPhaseDisplayLabel(match.phase);
+
+  return (
+    <Dialog open={!!match} onOpenChange={() => onClose()}>
+      <DialogContent className="max-w-lg">
+        <DialogHeader>
+          <DialogTitle className="text-center">
+            <span className="text-sm text-muted-foreground">{phaseLabel}</span>
+            {match.group_name && match.phase === 'group' && <span className="text-sm text-muted-foreground"> · Grupo {match.group_name}</span>}
+          </DialogTitle>
+        </DialogHeader>
+
+        {loading ? (
+          <div className="flex justify-center py-8"><span className="text-muted-foreground">Cargando...</span></div>
+        ) : (
+          <div className="space-y-4">
+            {/* Score header */}
+            <div className="grid grid-cols-3 items-center text-center">
+              <div className="flex flex-col items-center">
+                {homeLogo && <img src={homeLogo} alt={homeName} className="h-12 w-12 object-contain mb-1" />}
+                <span className="font-bold text-sm">{homeName}</span>
+              </div>
+              <div>
+                {isCompleted ? (
+                  <span className="text-3xl font-bold">{match.home_score} - {match.away_score}</span>
+                ) : (
+                  <span className="text-xl text-muted-foreground">vs</span>
+                )}
+                {match.match_date && (
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {format(new Date(match.match_date), "d MMM yyyy, HH:mm", { locale: es })}
+                  </p>
+                )}
+              </div>
+              <div className="flex flex-col items-center">
+                {awayLogo && <img src={awayLogo} alt={awayName} className="h-12 w-12 object-contain mb-1" />}
+                <span className="font-bold text-sm">{awayName}</span>
+              </div>
+            </div>
+
+            {/* Goal scorers */}
+            {goals.length > 0 && (
+              <div className="border rounded-lg p-3">
+                <h4 className="font-semibold text-sm mb-2 flex items-center gap-1"><Goal className="w-4 h-4" /> Goleadores</h4>
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="space-y-1">
+                    {homeGoals.map((g: any) => (
+                      <div key={g.id} className="text-sm">
+                        ⚽ {g.player?.name || 'Desconocido'}
+                        {g.minute != null && <span className="text-muted-foreground ml-1">({g.minute}')</span>}
+                      </div>
+                    ))}
+                    {homeGoals.length === 0 && <p className="text-xs text-muted-foreground">-</p>}
+                  </div>
+                  <div className="space-y-1">
+                    {awayGoals.map((g: any) => (
+                      <div key={g.id} className="text-sm">
+                        ⚽ {g.player?.name || 'Desconocido'}
+                        {g.minute != null && <span className="text-muted-foreground ml-1">({g.minute}')</span>}
+                      </div>
+                    ))}
+                    {awayGoals.length === 0 && <p className="text-xs text-muted-foreground">-</p>}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Cards */}
+            {isCompleted && (match.home_yellow_cards > 0 || match.home_red_cards > 0 || match.away_yellow_cards > 0 || match.away_red_cards > 0) && (
+              <div className="border rounded-lg p-3">
+                <h4 className="font-semibold text-sm mb-2">Tarjetas</h4>
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div className="flex gap-3">
+                    <span>🟨 {match.home_yellow_cards}</span>
+                    <span>🟥 {match.home_red_cards}</span>
+                  </div>
+                  <div className="flex gap-3">
+                    <span>🟨 {match.away_yellow_cards}</span>
+                    <span>🟥 {match.away_red_cards}</span>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* MVP */}
+            {mvp && (
+              <div className="border rounded-lg p-3 bg-yellow-50 dark:bg-yellow-950/20 border-yellow-200">
+                <h4 className="font-semibold text-sm mb-2 flex items-center gap-1"><Star className="w-4 h-4 text-yellow-500" /> MVP del Partido</h4>
+                <div className="flex items-center gap-3">
+                  {mvp.photo_url && (
+                    <img src={mvp.photo_url} alt="MVP" className="w-16 h-16 rounded-lg object-cover" />
+                  )}
+                  <div>
+                    <p className="font-bold">{mvp.player?.name}</p>
+                    {mvp.player?.number && <p className="text-sm text-muted-foreground">Dorsal #{mvp.player.number}</p>}
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+      </DialogContent>
+    </Dialog>
   );
 }
 

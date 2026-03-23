@@ -5,13 +5,14 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { GoalScorersDialog } from '@/components/referee/GoalScorersDialog';
 import { 
   Loader2, CheckCircle, XCircle, Calendar, MapPin, Trophy, 
-  Play, Square, Save, Goal, Clock, Building2, Phone, Edit2, RotateCcw
+  Play, Square, Save, Goal, Clock, Building2, Phone, Edit2, RotateCcw, Star, Upload, Camera
 } from 'lucide-react';
 
 interface AssignmentData {
@@ -60,6 +61,12 @@ export const MesaMatchPanel = () => {
   const [saving, setSaving] = useState(false);
   const [editFinishedOpen, setEditFinishedOpen] = useState(false);
   const [goalScorersOpen, setGoalScorersOpen] = useState(false);
+  const [mvpOpen, setMvpOpen] = useState(false);
+  const [mvpPlayers, setMvpPlayers] = useState<any[]>([]);
+  const [selectedMvp, setSelectedMvp] = useState<string>('');
+  const [currentMvp, setCurrentMvp] = useState<any>(null);
+  const [mvpPhotoFile, setMvpPhotoFile] = useState<File | null>(null);
+  const [mvpLoading, setMvpLoading] = useState(false);
 
   // Match control state
   const [homeScore, setHomeScore] = useState(0);
@@ -312,6 +319,68 @@ export const MesaMatchPanel = () => {
       loadData();
     } finally {
       setSaving(false);
+    }
+  };
+
+  const loadMvpData = async () => {
+    if (!data?.match?.id) return;
+    setMvpLoading(true);
+    try {
+      // Load all players from both teams
+      const homeId = data.homeTeam?.id;
+      const awayId = data.awayTeam?.id;
+      const [homeData, awayData, mvpData] = await Promise.all([
+        homeId ? supabase.from('participants').select('*').eq('team_id', homeId).order('number') : { data: [] },
+        awayId ? supabase.from('participants').select('*').eq('team_id', awayId).order('number') : { data: [] },
+        supabase.from('match_mvps').select('*, player:participants(*)').eq('match_id', data.match.id).maybeSingle(),
+      ]);
+      setMvpPlayers([
+        ...(homeData.data || []).map((p: any) => ({ ...p, _teamName: data.homeTeam?.name })),
+        ...(awayData.data || []).map((p: any) => ({ ...p, _teamName: data.awayTeam?.name })),
+      ]);
+      if (mvpData.data) {
+        setCurrentMvp(mvpData.data);
+        setSelectedMvp(mvpData.data.player_id);
+      }
+    } catch (err) {
+      console.error('Error loading MVP data:', err);
+    } finally {
+      setMvpLoading(false);
+    }
+  };
+
+  const handleSaveMvp = async () => {
+    if (!selectedMvp || !data?.match?.id) return;
+    setMvpLoading(true);
+    try {
+      let photoUrl = currentMvp?.photo_url || null;
+      
+      // Upload photo if selected
+      if (mvpPhotoFile) {
+        const ext = mvpPhotoFile.name.split('.').pop();
+        const fileName = `mvp/${data.match.id}_${Date.now()}.${ext}`;
+        const { error: uploadError } = await supabase.storage
+          .from('imagenes-torneos')
+          .upload(fileName, mvpPhotoFile, { upsert: true });
+        if (!uploadError) {
+          const { data: urlData } = supabase.storage.from('imagenes-torneos').getPublicUrl(fileName);
+          photoUrl = urlData.publicUrl;
+        }
+      }
+
+      if (currentMvp) {
+        await supabase.from('match_mvps').update({ player_id: selectedMvp, photo_url: photoUrl }).eq('id', currentMvp.id);
+      } else {
+        await supabase.from('match_mvps').insert({ match_id: data.match.id, player_id: selectedMvp, photo_url: photoUrl });
+      }
+      toast({ title: '⭐ MVP guardado' });
+      setMvpOpen(false);
+      loadMvpData();
+    } catch (err) {
+      console.error('Error saving MVP:', err);
+      toast({ title: 'Error', description: 'No se pudo guardar el MVP', variant: 'destructive' });
+    } finally {
+      setMvpLoading(false);
     }
   };
 
@@ -664,9 +733,79 @@ export const MesaMatchPanel = () => {
                   Goleadores
                 </Button>
               )}
+              <Button variant="outline" size="sm" onClick={() => { loadMvpData(); setMvpOpen(true); }}>
+                <Star className="w-4 h-4 mr-1" />
+                MVP
+              </Button>
             </div>
           </Card>
         )}
+
+        {/* MVP Dialog */}
+        <Dialog open={mvpOpen} onOpenChange={setMvpOpen}>
+          <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Star className="w-5 h-5 text-yellow-500" />
+                MVP del Partido
+              </DialogTitle>
+            </DialogHeader>
+            {mvpLoading ? (
+              <div className="flex justify-center py-8"><Loader2 className="w-8 h-8 animate-spin" /></div>
+            ) : (
+              <div className="space-y-4">
+                {currentMvp?.player && (
+                  <div className="bg-yellow-50 dark:bg-yellow-950/20 border border-yellow-200 rounded-lg p-3 text-center">
+                    <p className="text-sm text-muted-foreground">MVP actual</p>
+                    <p className="font-bold">{currentMvp.player.name}</p>
+                    {currentMvp.photo_url && (
+                      <img src={currentMvp.photo_url} alt="MVP" className="w-24 h-24 mx-auto mt-2 rounded-lg object-cover" />
+                    )}
+                  </div>
+                )}
+                <div>
+                  <Label className="text-sm font-medium">Seleccionar jugador MVP</Label>
+                  <ScrollArea className="h-48 border rounded-lg p-2 mt-1">
+                    <div className="space-y-1">
+                      {mvpPlayers.map((player: any) => (
+                        <Button
+                          key={player.id}
+                          variant={selectedMvp === player.id ? 'default' : 'ghost'}
+                          size="sm"
+                          className="w-full justify-start"
+                          onClick={() => setSelectedMvp(player.id)}
+                        >
+                          {player.number && <Badge variant="secondary" className="mr-2 text-xs">#{player.number}</Badge>}
+                          <span className="truncate">{player.name}</span>
+                          <span className="ml-auto text-xs text-muted-foreground">{player._teamName}</span>
+                        </Button>
+                      ))}
+                    </div>
+                  </ScrollArea>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium">Foto del MVP (opcional)</Label>
+                  <div className="mt-1">
+                    <Input
+                      type="file"
+                      accept="image/*"
+                      capture="environment"
+                      onChange={e => setMvpPhotoFile(e.target.files?.[0] || null)}
+                      className="text-sm"
+                    />
+                    {mvpPhotoFile && (
+                      <p className="text-xs text-muted-foreground mt-1">📷 {mvpPhotoFile.name}</p>
+                    )}
+                  </div>
+                </div>
+                <Button onClick={handleSaveMvp} disabled={!selectedMvp || mvpLoading} className="w-full">
+                  <Star className="w-4 h-4 mr-2" />
+                  {mvpLoading ? 'Guardando...' : 'Guardar MVP'}
+                </Button>
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
 
         {/* Edit finished match dialog */}
         <Dialog open={editFinishedOpen} onOpenChange={setEditFinishedOpen}>

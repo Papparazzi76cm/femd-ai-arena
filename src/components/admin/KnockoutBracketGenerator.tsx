@@ -140,6 +140,9 @@ export const KnockoutBracketGenerator = ({
   // Step 2: After first round created, subsequent rounds
   const [pendingRounds, setPendingRounds] = useState<{ round: string; count: number }[]>([]);
   const [currentPendingRoundIdx, setCurrentPendingRoundIdx] = useState(-1);
+  
+  // Track all bracket names created in this wizard session (persists across round generations)
+  const [sessionCreatedBrackets, setSessionCreatedBrackets] = useState<{ name: string; tier: string; round: string; phase: string }[]>([]);
 
   // Filter teams by category
   const filteredTeams = useMemo(() => {
@@ -205,8 +208,7 @@ export const KnockoutBracketGenerator = ({
       }
     }
 
-    // Also include pairings being created (for subsequent rounds referencing this batch)
-    // Plus existing knockout matches — use group_name (bracket name like O1, C1) if available
+    // Include existing knockout matches from DB
     knockoutMatches.forEach(m => {
       const matchLabel = m.group_name || (m.match_number ? `P${m.match_number}` : m.id.slice(0, 4));
       const phaseLabel = PHASE_OPTIONS[m.phase] || m.phase;
@@ -214,8 +216,21 @@ export const KnockoutBracketGenerator = ({
       options.push({ value: `loser:${matchLabel}`, label: `Perdedor ${matchLabel} (${phaseLabel})` });
     });
 
+    // Include brackets created in this wizard session (not yet in matches prop)
+    sessionCreatedBrackets.forEach(b => {
+      // Skip if already in knockoutMatches (avoid duplicates after refresh)
+      const alreadyInDb = knockoutMatches.some(m => m.group_name === b.name && m.phase === b.phase);
+      if (!alreadyInDb) {
+        const tierLabel = b.tier === 'gold' ? 'Oro' : b.tier === 'silver' ? 'Plata' : b.tier === 'bronze' ? 'Bronce' : '';
+        const roundLabel = getRoundLabel(b.round);
+        const fullLabel = tierLabel ? `${tierLabel} - ${roundLabel}` : roundLabel;
+        options.push({ value: `winner:${b.name}`, label: `Ganador ${b.name} (${fullLabel})` });
+        options.push({ value: `loser:${b.name}`, label: `Perdedor ${b.name} (${fullLabel})` });
+      }
+    });
+
     return options;
-  }, [sortedGroupNames, groupedStandings, teams, knockoutMatches]);
+  }, [sortedGroupNames, groupedStandings, teams, knockoutMatches, sessionCreatedBrackets]);
 
   // Dynamic options that include current batch pairings (for subsequent round references)
   const allPositionOptions = useMemo(() => {
@@ -360,6 +375,12 @@ export const KnockoutBracketGenerator = ({
         created++;
       }
 
+      // Track created bracket names in session state
+      setSessionCreatedBrackets(prev => [
+        ...prev,
+        ...createdNames.map(name => ({ name, tier: selectedTier, round: selectedRound, phase: getDbPhase(selectedTier, selectedRound) }))
+      ]);
+
       toast({ title: '¡Cruces generados!', description: `Se crearon ${created} partidos: ${createdNames.join(', ')}` });
 
       // Now prompt for subsequent rounds
@@ -493,6 +514,12 @@ export const KnockoutBracketGenerator = ({
         created++;
       }
 
+      // Track created bracket names in session state  
+      setSessionCreatedBrackets(prev => [
+        ...prev,
+        ...createdNames.map(name => ({ name, tier: selectedTier, round: selectedRound, phase: getDbPhase(selectedTier, selectedRound) }))
+      ]);
+
       toast({ title: '¡Ronda generada!', description: `Se crearon ${created} partidos: ${createdNames.join(', ')}` });
 
       // Check if more rounds pending
@@ -522,6 +549,7 @@ export const KnockoutBracketGenerator = ({
     setMatchCount(0);
     setPendingRounds([]);
     setCurrentPendingRoundIdx(-1);
+    setSessionCreatedBrackets([]);
   };
 
   // Update pending round count

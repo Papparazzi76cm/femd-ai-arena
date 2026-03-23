@@ -1419,7 +1419,28 @@ export const TournamentManager = ({ eventId }: TournamentManagerProps) => {
         </TabsContent>
 
         {/* Cruces */}
-        <TabsContent value="cruces" className="mt-6">
+        <TabsContent value="cruces" className="mt-6 space-y-4">
+          <div className="flex justify-end">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={async () => {
+                try {
+                  const resolved = await tournamentService.resolveKnockoutPlaceholders(eventId);
+                  if (resolved > 0) {
+                    toast({ title: '✅ Placeholders resueltos', description: `Se asignaron ${resolved} equipo(s) a sus cruces correspondientes.` });
+                    loadData();
+                  } else {
+                    toast({ title: 'Sin cambios', description: 'No hay placeholders pendientes de resolver o faltan resultados.' });
+                  }
+                } catch (err) {
+                  toast({ title: 'Error', description: 'No se pudieron resolver los placeholders', variant: 'destructive' });
+                }
+              }}
+            >
+              🔄 Resolver equipos en cruces
+            </Button>
+          </div>
           <KnockoutBracketGenerator
             eventId={eventId}
             eventTeams={eventTeams}
