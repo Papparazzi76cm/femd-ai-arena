@@ -50,14 +50,11 @@ const ROUND_TYPES = [
   { value: 'final', label: 'Final', prefix: 'F', defaultCount: 1 },
 ];
 
-// Map round_of_8 to the DB enum value round_of_16 equivalent
 function getDbPhase(tier: string, round: string): string {
-  // round_of_8 doesn't exist in the enum, map to round_of_16
-  const roundKey = round === 'round_of_8' ? 'round_of_16' : round;
-  if (tier === 'gold') return `gold_${roundKey}`;
-  if (tier === 'silver') return `silver_${roundKey}`;
-  if (tier === 'bronze') return `bronze_${roundKey}`;
-  return roundKey;
+  if (tier === 'gold') return `gold_${round}`;
+  if (tier === 'silver') return `silver_${round}`;
+  if (tier === 'bronze') return `bronze_${round}`;
+  return round;
 }
 
 // Get subsequent rounds from current one
