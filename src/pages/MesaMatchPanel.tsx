@@ -5,13 +5,14 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { GoalScorersDialog } from '@/components/referee/GoalScorersDialog';
 import { 
   Loader2, CheckCircle, XCircle, Calendar, MapPin, Trophy, 
-  Play, Square, Save, Goal, Clock, Building2, Phone, Edit2, RotateCcw
+  Play, Square, Save, Goal, Clock, Building2, Phone, Edit2, RotateCcw, Star, Upload, Camera
 } from 'lucide-react';
 
 interface AssignmentData {
