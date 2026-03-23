@@ -549,6 +549,7 @@ export const KnockoutBracketGenerator = ({
     setMatchCount(0);
     setPendingRounds([]);
     setCurrentPendingRoundIdx(-1);
+    setSessionCreatedBrackets([]);
   };
 
   // Update pending round count
