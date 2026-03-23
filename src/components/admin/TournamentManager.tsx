@@ -1059,7 +1059,9 @@ export const TournamentManager = ({ eventId }: TournamentManagerProps) => {
               <h3 className="text-xl font-bold mb-4">Calendario de Partidos</h3>
               <div className="space-y-6">
                 {Object.entries(groupedMatches).map(([key, matchList]) => {
-                  const [phase, group] = key.split('_');
+                  const parts = key.split('|||');
+                  const phase = parts[0];
+                  const group = parts[1] || null;
                   return (
                     <div key={key}>
                       <h4 className="font-bold text-lg mb-3">
