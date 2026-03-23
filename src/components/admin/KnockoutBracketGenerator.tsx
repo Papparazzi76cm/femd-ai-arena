@@ -140,6 +140,9 @@ export const KnockoutBracketGenerator = ({
   // Step 2: After first round created, subsequent rounds
   const [pendingRounds, setPendingRounds] = useState<{ round: string; count: number }[]>([]);
   const [currentPendingRoundIdx, setCurrentPendingRoundIdx] = useState(-1);
+  
+  // Track all bracket names created in this wizard session (persists across round generations)
+  const [sessionCreatedBrackets, setSessionCreatedBrackets] = useState<{ name: string; tier: string; round: string; phase: string }[]>([]);
 
   // Filter teams by category
   const filteredTeams = useMemo(() => {
