@@ -208,8 +208,7 @@ export const KnockoutBracketGenerator = ({
       }
     }
 
-    // Also include pairings being created (for subsequent rounds referencing this batch)
-    // Plus existing knockout matches — use group_name (bracket name like O1, C1) if available
+    // Include existing knockout matches from DB
     knockoutMatches.forEach(m => {
       const matchLabel = m.group_name || (m.match_number ? `P${m.match_number}` : m.id.slice(0, 4));
       const phaseLabel = PHASE_OPTIONS[m.phase] || m.phase;
@@ -217,8 +216,21 @@ export const KnockoutBracketGenerator = ({
       options.push({ value: `loser:${matchLabel}`, label: `Perdedor ${matchLabel} (${phaseLabel})` });
     });
 
+    // Include brackets created in this wizard session (not yet in matches prop)
+    sessionCreatedBrackets.forEach(b => {
+      // Skip if already in knockoutMatches (avoid duplicates after refresh)
+      const alreadyInDb = knockoutMatches.some(m => m.group_name === b.name && m.phase === b.phase);
+      if (!alreadyInDb) {
+        const tierLabel = b.tier === 'gold' ? 'Oro' : b.tier === 'silver' ? 'Plata' : b.tier === 'bronze' ? 'Bronce' : '';
+        const roundLabel = getRoundLabel(b.round);
+        const fullLabel = tierLabel ? `${tierLabel} - ${roundLabel}` : roundLabel;
+        options.push({ value: `winner:${b.name}`, label: `Ganador ${b.name} (${fullLabel})` });
+        options.push({ value: `loser:${b.name}`, label: `Perdedor ${b.name} (${fullLabel})` });
+      }
+    });
+
     return options;
-  }, [sortedGroupNames, groupedStandings, teams, knockoutMatches]);
+  }, [sortedGroupNames, groupedStandings, teams, knockoutMatches, sessionCreatedBrackets]);
 
   // Dynamic options that include current batch pairings (for subsequent round references)
   const allPositionOptions = useMemo(() => {
