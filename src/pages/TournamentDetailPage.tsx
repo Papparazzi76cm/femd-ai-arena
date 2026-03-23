@@ -984,6 +984,12 @@ export function TournamentDetailPage() {
         <div className="mt-12">
           <TournamentGalleryDisplay eventId={id!} />
         </div>
+
+        {/* Match Detail Dialog */}
+        <MatchDetailDialog 
+          match={selectedMatchDetail} 
+          onClose={() => setSelectedMatchDetail(null)} 
+        />
       </div>
     </div>
   );
