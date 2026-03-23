@@ -590,7 +590,11 @@ export const TournamentManager = ({ eventId }: TournamentManagerProps) => {
   });
 
   const groupedMatches = matches.reduce((acc, match) => {
-    const key = match.phase + (match.group_name ? `_${match.group_name}` : '');
+    // For group phase, split by group name; for knockout, group by phase only
+    const isGroupPhase = match.phase === 'group' || match.phase?.startsWith('Jornada');
+    const key = isGroupPhase 
+      ? match.phase + (match.group_name ? `|||${match.group_name}` : '')
+      : match.phase;
     if (!acc[key]) acc[key] = [];
     acc[key].push(match);
     return acc;
