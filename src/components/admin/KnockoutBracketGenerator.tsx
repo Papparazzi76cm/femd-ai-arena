@@ -375,6 +375,12 @@ export const KnockoutBracketGenerator = ({
         created++;
       }
 
+      // Track created bracket names in session state
+      setSessionCreatedBrackets(prev => [
+        ...prev,
+        ...createdNames.map(name => ({ name, tier: selectedTier, round: selectedRound, phase: getDbPhase(selectedTier, selectedRound) }))
+      ]);
+
       toast({ title: '¡Cruces generados!', description: `Se crearon ${created} partidos: ${createdNames.join(', ')}` });
 
       // Now prompt for subsequent rounds
