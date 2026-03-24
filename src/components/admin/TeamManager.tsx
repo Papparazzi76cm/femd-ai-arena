@@ -269,7 +269,7 @@ export const TeamManager = () => {
   };
 
   const resetForm = () => {
-    setFormData({ name: '', logo_url: '', description: '', founded_year: '', colors: '', is_filial: false, parent_team_id: '' });
+    setFormData({ name: '', logo_url: '', description: '', founded_year: '', colors: '', is_filial: false, parent_team_id: '', country: '', province: '', city: '' });
     setEditingId(null);
     setShowForm(false);
     setShowParticipants(false);
