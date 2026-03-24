@@ -29,7 +29,10 @@ export const TeamManager = () => {
     founded_year: '',
     colors: '',
     is_filial: false,
-    parent_team_id: ''
+    parent_team_id: '',
+    country: '',
+    province: '',
+    city: ''
   });
   const [participantFormData, setParticipantFormData] = useState({
     name: '',
