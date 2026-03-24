@@ -102,6 +102,56 @@ const PHASE_LABELS: Record<string, string> = {
   'group': 'Fase de Grupos'
 };
 
+// Numeric priority for sorting phases in the correct tournament order
+const getPhaseOrderIndex = (phase: string): number => {
+  if (isGroupStagePhase(phase)) return 0;
+  // Gold phases
+  if (phase === 'gold_round_of_16') return 10;
+  if (phase === 'gold_round_of_8') return 11;
+  if (phase === 'gold_quarter_final') return 12;
+  if (phase === 'gold_semi_final') return 13;
+  if (phase === 'gold_third_place') return 14;
+  if (phase === 'gold_final') return 15;
+  // Silver phases
+  if (phase === 'silver_round_of_16') return 20;
+  if (phase === 'silver_round_of_8') return 21;
+  if (phase === 'silver_quarter_final') return 22;
+  if (phase === 'silver_semi_final') return 23;
+  if (phase === 'silver_third_place') return 24;
+  if (phase === 'silver_final') return 25;
+  // Bronze phases
+  if (phase === 'bronze_round_of_16') return 30;
+  if (phase === 'bronze_round_of_8') return 31;
+  if (phase === 'bronze_quarter_final') return 32;
+  if (phase === 'bronze_semi_final') return 33;
+  if (phase === 'bronze_third_place') return 34;
+  if (phase === 'bronze_final') return 35;
+  // Generic (no tier prefix)
+  if (phase === 'round_of_16') return 10;
+  if (phase === 'round_of_8') return 11;
+  if (phase === 'quarter_final') return 12;
+  if (phase === 'semi_final') return 13;
+  if (phase === 'third_place') return 14;
+  if (phase === 'final') return 15;
+  return 99;
+};
+
+const getPhaseDisplayLabel = (phase: string): string => {
+  if (isGroupStagePhase(phase)) return 'Fase de Grupos';
+  const tierPrefix = phase.startsWith('gold_') ? 'Fase Oro' : phase.startsWith('silver_') ? 'Fase Plata' : phase.startsWith('bronze_') ? 'Fase Bronce' : '';
+  const base = phase.replace(/^(gold_|silver_|bronze_)/, '');
+  const roundLabels: Record<string, string> = {
+    'round_of_16': '1/16 de Final',
+    'round_of_8': '1/8 de Final',
+    'quarter_final': '1/4 de Final',
+    'semi_final': 'Semifinales',
+    'third_place': '3er y 4º puesto',
+    'final': 'Final',
+  };
+  const roundLabel = roundLabels[base] || base;
+  return tierPrefix ? `${tierPrefix} - ${roundLabel}` : roundLabel;
+};
+
 const isCompletedStatus = (status: string | null | undefined) =>
   status === 'finished' || status === 'completed';
 
@@ -554,16 +604,27 @@ export function TournamentDetailPage() {
                       <div className="space-y-4">
                         <div className="space-y-2">
                           <label className="text-sm font-medium text-muted-foreground">FASE</label>
-                          <Select value={selectedPhase} onValueChange={setSelectedPhase}>
+                          <Select value={selectedPhase} onValueChange={(v) => { setSelectedPhase(v); setSelectedJornada("all"); }}>
                             <SelectTrigger className="w-full bg-background">
                               <SelectValue placeholder="Seleccionar fase" />
                             </SelectTrigger>
                             <SelectContent className="bg-background z-50">
                               <SelectItem value="all">Todas las fases</SelectItem>
-                              <SelectItem value="Fase de Grupos">Fase de Grupos</SelectItem>
-                              <SelectItem value="Fase Oro">Fase Oro</SelectItem>
-                              <SelectItem value="Fase Plata">Fase Plata</SelectItem>
-                              <SelectItem value="Fase Bronce">Fase Bronce</SelectItem>
+                              {(() => {
+                                const existingPhases = new Set(matches.map(m => m.phase));
+                                const hasGroups = matches.some(m => isGroupStagePhase(m.phase));
+                                const hasGold = matches.some(m => m.phase?.startsWith('gold_'));
+                                const hasSilver = matches.some(m => m.phase?.startsWith('silver_'));
+                                const hasBronze = matches.some(m => m.phase?.startsWith('bronze_'));
+                                return (
+                                  <>
+                                    {hasGroups && <SelectItem value="Fase de Grupos">Fase de Grupos</SelectItem>}
+                                    {hasGold && <SelectItem value="Fase Oro">Fase Oro</SelectItem>}
+                                    {hasSilver && <SelectItem value="Fase Plata">Fase Plata</SelectItem>}
+                                    {hasBronze && <SelectItem value="Fase Bronce">Fase Bronce</SelectItem>}
+                                  </>
+                                );
+                              })()}
                             </SelectContent>
                           </Select>
                         </div>
@@ -611,13 +672,23 @@ export function TournamentDetailPage() {
                                   <SelectItem value="3">Jornada 3</SelectItem>
                                 </>
                               ) : (selectedPhase === "Fase Oro" || selectedPhase === "Fase Plata" || selectedPhase === "Fase Bronce") ? (
-                                <>
-                                  <SelectItem value="1/16 de final">1/16 de Final</SelectItem>
-                                  <SelectItem value="1/8 de final">1/8 de Final</SelectItem>
-                                  <SelectItem value="1/4 de final">1/4 de Final</SelectItem>
-                                  <SelectItem value="Semifinal">Semifinal</SelectItem>
-                                  <SelectItem value="Final">Final</SelectItem>
-                                </>
+                                // Only show rounds that actually exist in this tournament for the selected phase
+                                (() => {
+                                  const prefix = selectedPhase === "Fase Oro" ? "gold_" : selectedPhase === "Fase Plata" ? "silver_" : "bronze_";
+                                  const roundMap: { key: string; label: string; phases: string[] }[] = [
+                                    { key: '1/16 de final', label: '1/16 de Final', phases: [`${prefix}round_of_16`, 'round_of_16'] },
+                                    { key: '1/8 de final', label: '1/8 de Final', phases: [`${prefix}round_of_8`, 'round_of_8'] },
+                                    { key: '1/4 de final', label: '1/4 de Final', phases: [`${prefix}quarter_final`, 'quarter_final'] },
+                                    { key: 'Semifinal', label: 'Semifinales', phases: [`${prefix}semi_final`, 'semi_final'] },
+                                    { key: 'Final', label: 'Final', phases: [`${prefix}final`, `${prefix}third_place`, 'final', 'third_place'] },
+                                  ];
+                                  const existingPhases = new Set(matches.map(m => m.phase));
+                                  return roundMap
+                                    .filter(r => r.phases.some(p => existingPhases.has(p)))
+                                    .map(r => (
+                                      <SelectItem key={r.key} value={r.key}>{r.label}</SelectItem>
+                                    ));
+                                })()
                               ) : null}
                             </SelectContent>
                           </Select>
@@ -683,12 +754,17 @@ export function TournamentDetailPage() {
                               return phaseMatch && groupMatch && jornadaMatch;
                             })
                             .sort((a, b) => {
-                              // Sort by group first, then by phase/jornada
+                              // Sort by phase order first (groups → gold knockout → silver → bronze)
+                              const phaseOrderA = getPhaseOrderIndex(a.phase);
+                              const phaseOrderB = getPhaseOrderIndex(b.phase);
+                              if (phaseOrderA !== phaseOrderB) return phaseOrderA - phaseOrderB;
+                              // Within same phase, sort by group_name
                               if (a.group_name && b.group_name && a.group_name !== b.group_name) {
                                 return a.group_name.localeCompare(b.group_name);
                               }
-                              if (a.phase && b.phase && a.phase !== b.phase) {
-                                return a.phase.localeCompare(b.phase);
+                              // Then by match date
+                              if (a.match_date && b.match_date && a.match_date !== b.match_date) {
+                                return new Date(a.match_date).getTime() - new Date(b.match_date).getTime();
                               }
                               return (a.match_number || 0) - (b.match_number || 0);
                             });
@@ -701,29 +777,49 @@ export function TournamentDetailPage() {
                             );
                           }
 
-                          // Group matches by group_name for display
-                          const matchesByGroup = filteredMatches.reduce((acc, match) => {
-                            const groupName = match.group_name || "Sin grupo";
-                            if (!acc[groupName]) {
-                              acc[groupName] = [];
+                          // Group matches by phase+group for display
+                          const matchesBySectionKey: { key: string; label: string; matches: Match[] }[] = [];
+                          const sectionMap = new Map<string, Match[]>();
+
+                          filteredMatches.forEach(match => {
+                            let sectionKey: string;
+                            if (isGroupStagePhase(match.phase)) {
+                              sectionKey = `group_${match.group_name || 'General'}`;
+                            } else {
+                              sectionKey = `phase_${match.phase}_${match.group_name || 'none'}`;
                             }
-                            acc[groupName].push(match);
-                            return acc;
-                          }, {} as Record<string, Match[]>);
+                            if (!sectionMap.has(sectionKey)) sectionMap.set(sectionKey, []);
+                            sectionMap.get(sectionKey)!.push(match);
+                          });
 
-                          // Sort groups alphabetically
-                          const sortedGroups = Object.keys(matchesByGroup).sort();
+                          // Build sorted section list
+                          const sectionEntries = Array.from(sectionMap.entries()).map(([key, sectionMatches]) => {
+                            const firstMatch = sectionMatches[0];
+                            let label: string;
+                            if (key.startsWith('group_')) {
+                              label = `Grupo ${key.replace('group_', '')}`;
+                            } else {
+                              const phaseLabel = getPhaseDisplayLabel(firstMatch.phase);
+                              label = firstMatch.group_name ? `${phaseLabel} - ${firstMatch.group_name}` : phaseLabel;
+                            }
+                            return { key, label, matches: sectionMatches, orderIndex: getPhaseOrderIndex(firstMatch.phase), groupName: firstMatch.group_name || '' };
+                          });
 
-                          return sortedGroups.map((groupName) => (
-                            <div key={groupName} className="space-y-3">
+                          sectionEntries.sort((a, b) => {
+                            if (a.orderIndex !== b.orderIndex) return a.orderIndex - b.orderIndex;
+                            return a.groupName.localeCompare(b.groupName);
+                          });
+
+                          return sectionEntries.map(({ key, label, matches: sectionMatches }) => (
+                            <div key={key} className="space-y-3">
                               <div className="flex items-center gap-2 border-l-4 border-primary pl-3 py-1 bg-muted/30 rounded-r">
-                                <h4 className="font-bold text-base">{groupName}</h4>
+                                <h4 className="font-bold text-base">{label}</h4>
                                 <Badge variant="secondary" className="text-xs">
-                                  {matchesByGroup[groupName].length} partidos
+                                  {sectionMatches.length} partidos
                                 </Badge>
                               </div>
                               <div className="space-y-2 pl-4">
-                                {matchesByGroup[groupName].map((match) => (
+                                {sectionMatches.map((match) => (
                                   <ResultRow key={match.id} match={match} onClick={() => setSelectedMatchDetail(match)} />
                                 ))}
                               </div>
@@ -1083,38 +1179,7 @@ function ResultRow({ match, onClick }: { match: Match; onClick?: () => void }) {
   );
 }
 
-// Phase display label helper
-function getPhaseDisplayLabel(phase: string): string {
-  const labels: Record<string, string> = {
-    'group': 'Fase de Grupos',
-    'gold_round_of_16': 'Oro - 1/16',
-    'gold_round_of_8': 'Oro - 1/8',
-    'gold_quarter_final': 'Oro - 1/4',
-    'gold_semi_final': 'Oro - Semifinal',
-    'gold_third_place': 'Oro - 3er Puesto',
-    'gold_final': 'Oro - Final',
-    'silver_round_of_16': 'Plata - 1/16',
-    'silver_round_of_8': 'Plata - 1/8',
-    'silver_quarter_final': 'Plata - 1/4',
-    'silver_semi_final': 'Plata - Semifinal',
-    'silver_third_place': 'Plata - 3er Puesto',
-    'silver_final': 'Plata - Final',
-    'bronze_round_of_16': 'Bronce - 1/16',
-    'bronze_round_of_8': 'Bronce - 1/8',
-    'bronze_quarter_final': 'Bronce - 1/4',
-    'bronze_semi_final': 'Bronce - Semifinal',
-    'bronze_third_place': 'Bronce - 3er Puesto',
-    'bronze_final': 'Bronce - Final',
-    'round_of_16': '1/16',
-    'round_of_8': '1/8',
-    'quarter_final': '1/4',
-    'semi_final': 'Semifinal',
-    'third_place': '3er Puesto',
-    'final': 'Final',
-  };
-  if (phase?.startsWith('Jornada')) return phase;
-  return labels[phase] || phase;
-}
+// Phase display label helper (using the one defined at module level)
 
 // Match Detail Dialog
 function MatchDetailDialog({ match, onClose }: { match: Match | null; onClose: () => void }) {
