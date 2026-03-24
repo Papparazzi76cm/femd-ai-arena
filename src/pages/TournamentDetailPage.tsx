@@ -754,12 +754,17 @@ export function TournamentDetailPage() {
                               return phaseMatch && groupMatch && jornadaMatch;
                             })
                             .sort((a, b) => {
-                              // Sort by group first, then by phase/jornada
+                              // Sort by phase order first (groups → gold knockout → silver → bronze)
+                              const phaseOrderA = getPhaseOrderIndex(a.phase);
+                              const phaseOrderB = getPhaseOrderIndex(b.phase);
+                              if (phaseOrderA !== phaseOrderB) return phaseOrderA - phaseOrderB;
+                              // Within same phase, sort by group_name
                               if (a.group_name && b.group_name && a.group_name !== b.group_name) {
                                 return a.group_name.localeCompare(b.group_name);
                               }
-                              if (a.phase && b.phase && a.phase !== b.phase) {
-                                return a.phase.localeCompare(b.phase);
+                              // Then by match date
+                              if (a.match_date && b.match_date && a.match_date !== b.match_date) {
+                                return new Date(a.match_date).getTime() - new Date(b.match_date).getTime();
                               }
                               return (a.match_number || 0) - (b.match_number || 0);
                             });
@@ -772,20 +777,40 @@ export function TournamentDetailPage() {
                             );
                           }
 
-                          // Group matches by group_name for display
-                          const matchesByGroup = filteredMatches.reduce((acc, match) => {
-                            const groupName = match.group_name || "Sin grupo";
-                            if (!acc[groupName]) {
-                              acc[groupName] = [];
+                          // Group matches by phase+group for display
+                          const matchesBySectionKey: { key: string; label: string; matches: Match[] }[] = [];
+                          const sectionMap = new Map<string, Match[]>();
+
+                          filteredMatches.forEach(match => {
+                            let sectionKey: string;
+                            if (isGroupStagePhase(match.phase)) {
+                              sectionKey = `group_${match.group_name || 'General'}`;
+                            } else {
+                              sectionKey = `phase_${match.phase}_${match.group_name || 'none'}`;
                             }
-                            acc[groupName].push(match);
-                            return acc;
-                          }, {} as Record<string, Match[]>);
+                            if (!sectionMap.has(sectionKey)) sectionMap.set(sectionKey, []);
+                            sectionMap.get(sectionKey)!.push(match);
+                          });
 
-                          // Sort groups alphabetically
-                          const sortedGroups = Object.keys(matchesByGroup).sort();
+                          // Build sorted section list
+                          const sectionEntries = Array.from(sectionMap.entries()).map(([key, sectionMatches]) => {
+                            const firstMatch = sectionMatches[0];
+                            let label: string;
+                            if (key.startsWith('group_')) {
+                              label = `Grupo ${key.replace('group_', '')}`;
+                            } else {
+                              const phaseLabel = getPhaseDisplayLabel(firstMatch.phase);
+                              label = firstMatch.group_name ? `${phaseLabel} - ${firstMatch.group_name}` : phaseLabel;
+                            }
+                            return { key, label, matches: sectionMatches, orderIndex: getPhaseOrderIndex(firstMatch.phase), groupName: firstMatch.group_name || '' };
+                          });
 
-                          return sortedGroups.map((groupName) => (
+                          sectionEntries.sort((a, b) => {
+                            if (a.orderIndex !== b.orderIndex) return a.orderIndex - b.orderIndex;
+                            return a.groupName.localeCompare(b.groupName);
+                          });
+
+                          return sectionEntries.map(({ key, label, matches: sectionMatches }) => (
                             <div key={groupName} className="space-y-3">
                               <div className="flex items-center gap-2 border-l-4 border-primary pl-3 py-1 bg-muted/30 rounded-r">
                                 <h4 className="font-bold text-base">{groupName}</h4>
