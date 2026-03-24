@@ -4,12 +4,15 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Match } from '@/types/tournament';
-import { Calendar, MapPin, Save, Play, Square, Check, Goal } from 'lucide-react';
+import { Calendar, MapPin, Save, Play, Square, Check, Goal, RotateCcw, Star, Upload } from 'lucide-react';
 import { MatchTimer } from './MatchTimer';
 import { useGoalSound } from '@/hooks/useGoalSound';
 import { useMatchNotifications } from '@/hooks/useMatchNotifications';
 import { GoalScorersDialog } from './GoalScorersDialog';
+import { supabase } from '@/integrations/supabase/client';
 
 interface MatchCardProps {
   match: Match;
@@ -32,6 +35,12 @@ export const MatchCard = ({
 }: MatchCardProps) => {
   const [isEditing, setIsEditing] = useState(false);
   const [showGoalScorers, setShowGoalScorers] = useState(false);
+  const [mvpOpen, setMvpOpen] = useState(false);
+  const [mvpPlayers, setMvpPlayers] = useState<any[]>([]);
+  const [selectedMvp, setSelectedMvp] = useState<string>('');
+  const [currentMvp, setCurrentMvp] = useState<any>(null);
+  const [mvpPhotoFile, setMvpPhotoFile] = useState<File | null>(null);
+  const [mvpLoading, setMvpLoading] = useState(false);
   const [homeScore, setHomeScore] = useState(match.home_score ?? 0);
   const [awayScore, setAwayScore] = useState(match.away_score ?? 0);
   const [homeYellow, setHomeYellow] = useState(match.home_yellow_cards ?? 0);
@@ -45,6 +54,7 @@ export const MatchCard = ({
   
   const prevScoreRef = useRef({ home: match.home_score ?? 0, away: match.away_score ?? 0 });
   const isLive = match.status === 'in_progress';
+  const isFinished = match.status === 'finished';
 
   // Sync local state when match data changes
   useEffect(() => {
@@ -126,13 +136,42 @@ export const MatchCard = ({
     }
   };
 
+  const handleResumeMatch = async () => {
+    setSaving(true);
+    try {
+      await onUpdate(match.id, {
+        status: 'in_progress',
+      });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleRestartMatch = async () => {
+    if (!confirm('¿Seguro que quieres reiniciar el partido desde cero?')) return;
+    setSaving(true);
+    try {
+      await onUpdate(match.id, {
+        status: 'in_progress',
+        home_score: 0,
+        away_score: 0,
+        home_yellow_cards: 0,
+        home_red_cards: 0,
+        away_yellow_cards: 0,
+        away_red_cards: 0,
+        started_at: new Date().toISOString(),
+      });
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const handleScoreChange = (team: 'home' | 'away', newScore: number) => {
     const prevHome = prevScoreRef.current.home;
     const prevAway = prevScoreRef.current.away;
     
     if (team === 'home') {
       setHomeScore(newScore);
-      // Check if it's a goal (score increased)
       if (newScore > prevHome && isLive) {
         playGoalSound();
         notifyGoal(homeTeamName, newScore, awayScore);
@@ -160,8 +199,25 @@ export const MatchCard = ({
         away_red_cards: awayRed,
         status: 'in_progress',
       });
-      // Update prev scores after save
       prevScoreRef.current = { home: homeScore, away: awayScore };
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleSaveFinishedEdit = async () => {
+    setSaving(true);
+    try {
+      await onUpdate(match.id, {
+        home_score: homeScore,
+        away_score: awayScore,
+        home_yellow_cards: homeYellow,
+        home_red_cards: homeRed,
+        away_yellow_cards: awayYellow,
+        away_red_cards: awayRed,
+        status: 'finished',
+      });
+      setIsEditing(false);
     } finally {
       setSaving(false);
     }
@@ -175,6 +231,60 @@ export const MatchCard = ({
     setAwayYellow(match.away_yellow_cards ?? 0);
     setAwayRed(match.away_red_cards ?? 0);
     setIsEditing(false);
+  };
+
+  // MVP functions
+  const loadMvpData = async () => {
+    setMvpLoading(true);
+    try {
+      const [homeData, awayData, mvpData] = await Promise.all([
+        homeTeamId ? supabase.from('participants').select('*').eq('team_id', homeTeamId).order('number') : { data: [] },
+        awayTeamId ? supabase.from('participants').select('*').eq('team_id', awayTeamId).order('number') : { data: [] },
+        supabase.from('match_mvps').select('*, player:participants(*)').eq('match_id', match.id).maybeSingle(),
+      ]);
+      setMvpPlayers([
+        ...(homeData.data || []).map((p: any) => ({ ...p, _teamName: homeTeamName })),
+        ...(awayData.data || []).map((p: any) => ({ ...p, _teamName: awayTeamName })),
+      ]);
+      if (mvpData.data) {
+        setCurrentMvp(mvpData.data);
+        setSelectedMvp(mvpData.data.player_id);
+      } else {
+        setCurrentMvp(null);
+        setSelectedMvp('');
+      }
+    } finally {
+      setMvpLoading(false);
+    }
+  };
+
+  const handleSaveMvp = async () => {
+    if (!selectedMvp) return;
+    setMvpLoading(true);
+    try {
+      let photoUrl = currentMvp?.photo_url || null;
+      if (mvpPhotoFile) {
+        const ext = mvpPhotoFile.name.split('.').pop();
+        const fileName = `mvp/${match.id}_${Date.now()}.${ext}`;
+        const { error: uploadError } = await supabase.storage
+          .from('imagenes-torneos')
+          .upload(fileName, mvpPhotoFile, { upsert: true });
+        if (!uploadError) {
+          const { data: urlData } = supabase.storage.from('imagenes-torneos').getPublicUrl(fileName);
+          photoUrl = urlData.publicUrl;
+        }
+      }
+
+      if (currentMvp) {
+        await supabase.from('match_mvps').update({ player_id: selectedMvp, photo_url: photoUrl }).eq('id', currentMvp.id);
+      } else {
+        await supabase.from('match_mvps').insert({ match_id: match.id, player_id: selectedMvp, photo_url: photoUrl });
+      }
+      setMvpOpen(false);
+      setMvpPhotoFile(null);
+    } finally {
+      setMvpLoading(false);
+    }
   };
 
   const canEdit = !readOnly;
@@ -281,25 +391,11 @@ export const MatchCard = ({
                 <div className="grid grid-cols-2 gap-3">
                   <div>
                     <Label htmlFor="home-yellow" className="text-xs">🟨 Amarillas</Label>
-                    <Input
-                      id="home-yellow"
-                      type="number"
-                      min="0"
-                      value={homeYellow}
-                      onChange={(e) => setHomeYellow(Number(e.target.value))}
-                      className="mt-1"
-                    />
+                    <Input id="home-yellow" type="number" min="0" value={homeYellow} onChange={(e) => setHomeYellow(Number(e.target.value))} className="mt-1" />
                   </div>
                   <div>
                     <Label htmlFor="home-red" className="text-xs">🟥 Rojas</Label>
-                    <Input
-                      id="home-red"
-                      type="number"
-                      min="0"
-                      value={homeRed}
-                      onChange={(e) => setHomeRed(Number(e.target.value))}
-                      className="mt-1"
-                    />
+                    <Input id="home-red" type="number" min="0" value={homeRed} onChange={(e) => setHomeRed(Number(e.target.value))} className="mt-1" />
                   </div>
                 </div>
               </div>
@@ -308,25 +404,11 @@ export const MatchCard = ({
                 <div className="grid grid-cols-2 gap-3">
                   <div>
                     <Label htmlFor="away-yellow" className="text-xs">🟨 Amarillas</Label>
-                    <Input
-                      id="away-yellow"
-                      type="number"
-                      min="0"
-                      value={awayYellow}
-                      onChange={(e) => setAwayYellow(Number(e.target.value))}
-                      className="mt-1"
-                    />
+                    <Input id="away-yellow" type="number" min="0" value={awayYellow} onChange={(e) => setAwayYellow(Number(e.target.value))} className="mt-1" />
                   </div>
                   <div>
                     <Label htmlFor="away-red" className="text-xs">🟥 Rojas</Label>
-                    <Input
-                      id="away-red"
-                      type="number"
-                      min="0"
-                      value={awayRed}
-                      onChange={(e) => setAwayRed(Number(e.target.value))}
-                      className="mt-1"
-                    />
+                    <Input id="away-red" type="number" min="0" value={awayRed} onChange={(e) => setAwayRed(Number(e.target.value))} className="mt-1" />
                   </div>
                 </div>
               </div>
@@ -391,18 +473,44 @@ export const MatchCard = ({
               </>
             )}
 
-            {match.status === 'finished' && !readOnly && !isEditing && (
-              <Button variant="outline" size="sm" onClick={() => setIsEditing(true)}>
-                Editar Resultado
-              </Button>
+            {isFinished && !isEditing && (
+              <>
+                <Button variant="outline" size="sm" onClick={handleResumeMatch} disabled={saving}>
+                  <Play className="w-4 h-4 mr-1" />
+                  Reanudar
+                </Button>
+                <Button variant="outline" size="sm" onClick={handleRestartMatch} disabled={saving}>
+                  <RotateCcw className="w-4 h-4 mr-1" />
+                  Reiniciar
+                </Button>
+                <Button variant="outline" size="sm" onClick={() => setIsEditing(true)}>
+                  Editar Resultado
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => setShowGoalScorers(true)}
+                >
+                  <Goal className="w-4 h-4 mr-1" />
+                  Goleadores
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => { loadMvpData(); setMvpOpen(true); }}
+                >
+                  <Star className="w-4 h-4 mr-1" />
+                  MVP
+                </Button>
+              </>
             )}
 
-            {match.status === 'finished' && isEditing && (
+            {isFinished && isEditing && (
               <>
                 <Button variant="outline" onClick={handleCancel} disabled={saving}>
                   Cancelar
                 </Button>
-                <Button onClick={handleEndMatch} disabled={saving}>
+                <Button onClick={handleSaveFinishedEdit} disabled={saving}>
                   <Save className="w-4 h-4 mr-2" />
                   {saving ? 'Guardando...' : 'Guardar'}
                 </Button>
@@ -422,6 +530,68 @@ export const MatchCard = ({
         homeTeamName={homeTeamName}
         awayTeamName={awayTeamName}
       />
+
+      {/* MVP Dialog */}
+      <Dialog open={mvpOpen} onOpenChange={setMvpOpen}>
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Star className="w-5 h-5 text-yellow-500" />
+              MVP del Partido
+            </DialogTitle>
+          </DialogHeader>
+          {mvpLoading ? (
+            <div className="flex justify-center py-8"><span className="text-muted-foreground">Cargando...</span></div>
+          ) : (
+            <div className="space-y-4">
+              {currentMvp?.player && (
+                <div className="bg-yellow-50 dark:bg-yellow-950/20 border border-yellow-200 rounded-lg p-3 text-center">
+                  <p className="text-sm text-muted-foreground">MVP actual</p>
+                  <p className="font-bold">{currentMvp.player.name}</p>
+                  {currentMvp.photo_url && (
+                    <img src={currentMvp.photo_url} alt="MVP" className="w-24 h-24 mx-auto mt-2 rounded-lg object-cover" />
+                  )}
+                </div>
+              )}
+              <div>
+                <Label className="text-sm font-medium">Seleccionar jugador MVP</Label>
+                <ScrollArea className="h-48 border rounded-lg p-2 mt-1">
+                  <div className="space-y-1">
+                    {mvpPlayers.map((player: any) => (
+                      <Button
+                        key={player.id}
+                        variant={selectedMvp === player.id ? 'default' : 'ghost'}
+                        size="sm"
+                        className="w-full justify-start"
+                        onClick={() => setSelectedMvp(player.id)}
+                      >
+                        {player.number && <Badge variant="secondary" className="mr-2 text-xs">#{player.number}</Badge>}
+                        <span className="truncate">{player.name}</span>
+                        <span className="ml-auto text-xs text-muted-foreground">{player._teamName}</span>
+                      </Button>
+                    ))}
+                  </div>
+                </ScrollArea>
+              </div>
+              <div>
+                <Label className="text-sm font-medium">Foto del MVP (opcional)</Label>
+                <div className="mt-1">
+                  <Input
+                    type="file"
+                    accept="image/*"
+                    onChange={e => setMvpPhotoFile(e.target.files?.[0] || null)}
+                    className="text-sm"
+                  />
+                </div>
+              </div>
+              <Button onClick={handleSaveMvp} disabled={!selectedMvp || mvpLoading} className="w-full">
+                <Star className="w-4 h-4 mr-2" />
+                {mvpLoading ? 'Guardando...' : 'Guardar MVP'}
+              </Button>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 };
