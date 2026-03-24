@@ -104,7 +104,10 @@ export const TeamManager = () => {
       founded_year: team.founded_year?.toString() || '',
       colors: team.colors || '',
       is_filial: !!team.parent_team_id,
-      parent_team_id: team.parent_team_id || ''
+      parent_team_id: team.parent_team_id || '',
+      country: team.country || '',
+      province: team.province || '',
+      city: team.city || '',
     });
     setEditingId(team.id);
     setShowForm(true);
