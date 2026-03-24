@@ -391,7 +391,8 @@ export function TournamentDetailPage() {
       return acc;
     }, {} as Record<string, CalculatedTeamStats[]>);
 
-    // Sort each group by standings criteria with head-to-head
+    // Sort each group by FIFA-style within-group criteria:
+    // 1. Points, 2. Head-to-head, 3. Goal difference, 4. Goals for
     Object.keys(grouped).forEach(groupName => {
       grouped[groupName].sort((a, b) => {
         // 1. Points
@@ -403,12 +404,7 @@ export function TournamentDetailPage() {
         if (b.goal_difference !== a.goal_difference) return b.goal_difference - a.goal_difference;
         // 4. Goals for
         if (b.goals_for !== a.goals_for) return b.goals_for - a.goals_for;
-        // 5. Goals against (fewer is better)
-        if (a.goals_against !== b.goals_against) return a.goals_against - b.goals_against;
-        // 6. Red cards (fewer is better)
-        if (a.red_cards !== b.red_cards) return a.red_cards - b.red_cards;
-        // 7. Yellow cards (fewer is better)
-        return a.yellow_cards - b.yellow_cards;
+        return 0;
       });
     });
 
