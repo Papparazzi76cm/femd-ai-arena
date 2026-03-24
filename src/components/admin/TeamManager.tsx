@@ -382,6 +382,37 @@ export const TeamManager = () => {
                 </div>
               </div>
 
+              {/* Location fields */}
+              <div className="grid grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-sm font-medium mb-1">País</label>
+                  <Input
+                    value={formData.country}
+                    onChange={(e) => setFormData({ ...formData, country: e.target.value })}
+                    placeholder="España"
+                    maxLength={50}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">Provincia</label>
+                  <Input
+                    value={formData.province}
+                    onChange={(e) => setFormData({ ...formData, province: e.target.value })}
+                    placeholder="Valladolid"
+                    maxLength={50}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">Localidad</label>
+                  <Input
+                    value={formData.city}
+                    onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+                    placeholder="Viana de Cega"
+                    maxLength={100}
+                  />
+                </div>
+              </div>
+
               {/* Filial toggle */}
               <div className="space-y-3">
                 <div className="flex items-center gap-2">
