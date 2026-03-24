@@ -425,18 +425,48 @@ export const tournamentService = {
       });
     });
 
-    // Sort each group
+    // Sort each group with head-to-head tiebreaker (FIFA-style within-group criteria)
+    // 1. Points, 2. Head-to-head, 3. Goal difference, 4. Goals for
     Object.keys(groups).forEach(g => {
-      groups[g].sort((a: any, b: any) => {
+      const teamsList = groups[g];
+      // First pass: sort by points, GD, GF
+      teamsList.sort((a: any, b: any) => {
         if (b._points !== a._points) return b._points - a._points;
         if (b._gd !== a._gd) return b._gd - a._gd;
         if (b._gf !== a._gf) return b._gf - a._gf;
-        if (a._rc !== b._rc) return a._rc - b._rc;
-        return a._yc - b._yc;
+        return 0;
       });
+
+      // Second pass: resolve ties with head-to-head
+      for (let i = 0; i < teamsList.length - 1; i++) {
+        if (teamsList[i]._points === teamsList[i + 1]._points) {
+          // Check head-to-head between these two teams
+          const h2hMatches = groupMatches.filter((m: any) =>
+            (m.home_team_id === teamsList[i].team_id && m.away_team_id === teamsList[i + 1].team_id) ||
+            (m.home_team_id === teamsList[i + 1].team_id && m.away_team_id === teamsList[i].team_id)
+          );
+          if (h2hMatches.length > 0) {
+            let team1Pts = 0, team2Pts = 0;
+            h2hMatches.forEach((m: any) => {
+              if (m.home_team_id === teamsList[i].team_id) {
+                if (m.home_score > m.away_score) team1Pts += 3;
+                else if (m.home_score < m.away_score) team2Pts += 3;
+                else { team1Pts++; team2Pts++; }
+              } else {
+                if (m.home_score > m.away_score) team2Pts += 3;
+                else if (m.home_score < m.away_score) team1Pts += 3;
+                else { team1Pts++; team2Pts++; }
+              }
+            });
+            if (team2Pts > team1Pts) {
+              [teamsList[i], teamsList[i + 1]] = [teamsList[i + 1], teamsList[i]];
+            }
+          }
+        }
+      }
     });
 
-    // Build "best Nth" rankings across groups
+    // Build "best Nth" rankings across groups using AVERAGE criteria
     const sortedGroupNames = Object.keys(groups).filter(g => g !== 'Sin grupo').sort();
     const bestByPosition: Record<number, any[]> = {};
     sortedGroupNames.forEach(g => {
@@ -446,12 +476,23 @@ export const tournamentService = {
         bestByPosition[pos].push(t);
       });
     });
-    // Sort each position ranking
+    // Sort each position ranking by:
+    // 1. Average points per match (higher is better)
+    // 2. Average goals scored per match (higher is better)
+    // 3. Average goals conceded per match (lower is better)
     Object.keys(bestByPosition).forEach(pos => {
       bestByPosition[Number(pos)].sort((a: any, b: any) => {
-        if (b._points !== a._points) return b._points - a._points;
-        if (b._gd !== a._gd) return b._gd - a._gd;
-        return b._gf - a._gf;
+        const avgPtsA = a._mp > 0 ? a._points / a._mp : 0;
+        const avgPtsB = b._mp > 0 ? b._points / b._mp : 0;
+        if (Math.abs(avgPtsB - avgPtsA) > 0.0001) return avgPtsB - avgPtsA;
+
+        const avgGfA = a._mp > 0 ? a._gf / a._mp : 0;
+        const avgGfB = b._mp > 0 ? b._gf / b._mp : 0;
+        if (Math.abs(avgGfB - avgGfA) > 0.0001) return avgGfB - avgGfA;
+
+        const avgGcA = a._mp > 0 ? a._gc / a._mp : 0;
+        const avgGcB = b._mp > 0 ? b._gc / b._mp : 0;
+        return avgGcA - avgGcB; // lower conceded is better
       });
     });
 
