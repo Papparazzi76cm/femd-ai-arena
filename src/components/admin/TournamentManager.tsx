@@ -16,6 +16,7 @@ import { EventTeam, Match, TournamentPhase } from '@/types/tournament';
 import { FieldSurface } from '@/types/database';
 import { Trophy, Users, Calendar, UserCog, Tag, Building2, Plus, Trash2, MapPin, AlertTriangle, Edit2, Swords, ClipboardList } from 'lucide-react';
 import { KnockoutBracketGenerator } from './KnockoutBracketGenerator';
+import { PhaseCompletionPanel } from './PhaseCompletionPanel';
 import { TournamentRosterManager } from './TournamentRosterManager';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
