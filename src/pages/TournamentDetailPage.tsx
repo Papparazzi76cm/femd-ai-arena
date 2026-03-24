@@ -811,15 +811,15 @@ export function TournamentDetailPage() {
                           });
 
                           return sectionEntries.map(({ key, label, matches: sectionMatches }) => (
-                            <div key={groupName} className="space-y-3">
+                            <div key={key} className="space-y-3">
                               <div className="flex items-center gap-2 border-l-4 border-primary pl-3 py-1 bg-muted/30 rounded-r">
-                                <h4 className="font-bold text-base">{groupName}</h4>
+                                <h4 className="font-bold text-base">{label}</h4>
                                 <Badge variant="secondary" className="text-xs">
-                                  {matchesByGroup[groupName].length} partidos
+                                  {sectionMatches.length} partidos
                                 </Badge>
                               </div>
                               <div className="space-y-2 pl-4">
-                                {matchesByGroup[groupName].map((match) => (
+                                {sectionMatches.map((match) => (
                                   <ResultRow key={match.id} match={match} onClick={() => setSelectedMatchDetail(match)} />
                                 ))}
                               </div>
