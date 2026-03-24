@@ -19,7 +19,8 @@ import { es } from 'date-fns/locale';
 import { 
   LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, 
   XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer 
-} from 'recharts';
+ } from 'recharts';
+import { FEMDTournamentHistory } from '@/components/FEMDTournamentHistory';
 
 interface TeamHistoryWithDetails extends PlayerTeamHistory {
   team?: Team;
@@ -34,6 +35,7 @@ export const PlayerDetailPage = () => {
   const [history, setHistory] = useState<TeamHistoryWithDetails[]>([]);
   const [matches, setMatches] = useState<any[]>([]);
   const [goals, setGoals] = useState<any[]>([]);
+  const [playerEvents, setPlayerEvents] = useState<{ id: string; title: string; date: string }[]>([]);
   const [loading, setLoading] = useState(true);
 
   // Accumulated stats from history
@@ -116,6 +118,30 @@ export const PlayerDetailPage = () => {
         .eq('player_id', id)
         .order('created_at', { ascending: false });
       setGoals(goalsData || []);
+
+      // Fetch FEMD tournament participation via team_rosters → event_teams → events
+      const { data: rosterData } = await supabase
+        .from('team_rosters')
+        .select('event_team_id')
+        .eq('participant_id', id);
+
+      if (rosterData && rosterData.length > 0) {
+        const etIds = [...new Set(rosterData.map(r => r.event_team_id))];
+        const { data: etData } = await supabase
+          .from('event_teams')
+          .select('event_id')
+          .in('id', etIds);
+
+        if (etData && etData.length > 0) {
+          const eventIds = [...new Set(etData.map(e => e.event_id))];
+          const { data: eventsData } = await supabase
+            .from('events')
+            .select('id, title, date')
+            .in('id', eventIds)
+            .order('date', { ascending: false });
+          setPlayerEvents(eventsData || []);
+        }
+      }
 
     } catch (error) {
       console.error('Error loading player:', error);
@@ -413,6 +439,12 @@ export const PlayerDetailPage = () => {
                   </div>
                 </CardContent>
               </Card>
+              {/* FEMD Tournament History */}
+              <FEMDTournamentHistory
+                events={playerEvents}
+                title="Participación en Torneos FEMD"
+                description={`Historial de participación de ${player.name} en competiciones FEMD`}
+              />
             </div>
           </TabsContent>
 
