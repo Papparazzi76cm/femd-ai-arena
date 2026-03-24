@@ -438,6 +438,12 @@ export const PlayerDetailPage = () => {
                   </div>
                 </CardContent>
               </Card>
+              {/* FEMD Tournament History */}
+              <FEMDTournamentHistory
+                events={playerEvents}
+                title="Participación en Torneos FEMD"
+                description={`Historial de participación de ${player.name} en competiciones FEMD`}
+              />
             </div>
           </TabsContent>
 
