@@ -661,13 +661,23 @@ export function TournamentDetailPage() {
                                   <SelectItem value="3">Jornada 3</SelectItem>
                                 </>
                               ) : (selectedPhase === "Fase Oro" || selectedPhase === "Fase Plata" || selectedPhase === "Fase Bronce") ? (
-                                <>
-                                  <SelectItem value="1/16 de final">1/16 de Final</SelectItem>
-                                  <SelectItem value="1/8 de final">1/8 de Final</SelectItem>
-                                  <SelectItem value="1/4 de final">1/4 de Final</SelectItem>
-                                  <SelectItem value="Semifinal">Semifinal</SelectItem>
-                                  <SelectItem value="Final">Final</SelectItem>
-                                </>
+                                // Only show rounds that actually exist in this tournament for the selected phase
+                                (() => {
+                                  const prefix = selectedPhase === "Fase Oro" ? "gold_" : selectedPhase === "Fase Plata" ? "silver_" : "bronze_";
+                                  const roundMap: { key: string; label: string; phases: string[] }[] = [
+                                    { key: '1/16 de final', label: '1/16 de Final', phases: [`${prefix}round_of_16`, 'round_of_16'] },
+                                    { key: '1/8 de final', label: '1/8 de Final', phases: [`${prefix}round_of_8`, 'round_of_8'] },
+                                    { key: '1/4 de final', label: '1/4 de Final', phases: [`${prefix}quarter_final`, 'quarter_final'] },
+                                    { key: 'Semifinal', label: 'Semifinales', phases: [`${prefix}semi_final`, 'semi_final'] },
+                                    { key: 'Final', label: 'Final', phases: [`${prefix}final`, `${prefix}third_place`, 'final', 'third_place'] },
+                                  ];
+                                  const existingPhases = new Set(matches.map(m => m.phase));
+                                  return roundMap
+                                    .filter(r => r.phases.some(p => existingPhases.has(p)))
+                                    .map(r => (
+                                      <SelectItem key={r.key} value={r.key}>{r.label}</SelectItem>
+                                    ));
+                                })()
                               ) : null}
                             </SelectContent>
                           </Select>
