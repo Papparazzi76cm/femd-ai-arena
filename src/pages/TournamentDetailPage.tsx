@@ -1133,38 +1133,7 @@ function ResultRow({ match, onClick }: { match: Match; onClick?: () => void }) {
   );
 }
 
-// Phase display label helper
-function getPhaseDisplayLabel(phase: string): string {
-  const labels: Record<string, string> = {
-    'group': 'Fase de Grupos',
-    'gold_round_of_16': 'Oro - 1/16',
-    'gold_round_of_8': 'Oro - 1/8',
-    'gold_quarter_final': 'Oro - 1/4',
-    'gold_semi_final': 'Oro - Semifinal',
-    'gold_third_place': 'Oro - 3er Puesto',
-    'gold_final': 'Oro - Final',
-    'silver_round_of_16': 'Plata - 1/16',
-    'silver_round_of_8': 'Plata - 1/8',
-    'silver_quarter_final': 'Plata - 1/4',
-    'silver_semi_final': 'Plata - Semifinal',
-    'silver_third_place': 'Plata - 3er Puesto',
-    'silver_final': 'Plata - Final',
-    'bronze_round_of_16': 'Bronce - 1/16',
-    'bronze_round_of_8': 'Bronce - 1/8',
-    'bronze_quarter_final': 'Bronce - 1/4',
-    'bronze_semi_final': 'Bronce - Semifinal',
-    'bronze_third_place': 'Bronce - 3er Puesto',
-    'bronze_final': 'Bronce - Final',
-    'round_of_16': '1/16',
-    'round_of_8': '1/8',
-    'quarter_final': '1/4',
-    'semi_final': 'Semifinal',
-    'third_place': '3er Puesto',
-    'final': 'Final',
-  };
-  if (phase?.startsWith('Jornada')) return phase;
-  return labels[phase] || phase;
-}
+// Phase display label helper (using the one defined at module level)
 
 // Match Detail Dialog
 function MatchDetailDialog({ match, onClose }: { match: Match | null; onClose: () => void }) {
