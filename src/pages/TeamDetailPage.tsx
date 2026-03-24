@@ -250,6 +250,28 @@ export const TeamDetailPage = () => {
             </div>
           </CardHeader>
         </Card>
+        {/* FEMD Tournament History */}
+        {(() => {
+          // Collect all events this team participated in (from rosters and direct event_teams)
+          const allEvents = new Map<string, { id: string; title: string; date: string }>();
+          tournamentRosters.forEach(r => {
+            allEvents.set(r.eventId, { id: r.eventId, title: r.eventTitle, date: r.eventDate });
+          });
+          // Also add events from event_teams that may not have rosters
+          events.forEach(e => {
+            allEvents.set(e.id, { id: e.id, title: e.title, date: e.date });
+          });
+          const eventList = Array.from(allEvents.values());
+          return eventList.length > 0 ? (
+            <div className="mb-8">
+              <FEMDTournamentHistory
+                events={eventList}
+                title="Participación en Torneos FEMD"
+                description={`Historial de ${team.name} en competiciones FEMD`}
+              />
+            </div>
+          ) : null;
+        })()}
 
         {/* Tabs */}
         <Tabs defaultValue={childTeams.length > 0 ? "equipos" : "estadisticas"} className="w-full">
