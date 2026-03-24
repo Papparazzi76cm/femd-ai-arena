@@ -29,7 +29,10 @@ export const TeamManager = () => {
     founded_year: '',
     colors: '',
     is_filial: false,
-    parent_team_id: ''
+    parent_team_id: '',
+    country: '',
+    province: '',
+    city: ''
   });
   const [participantFormData, setParticipantFormData] = useState({
     name: '',
@@ -68,7 +71,10 @@ export const TeamManager = () => {
         description: formData.description.trim() || undefined,
         founded_year: formData.founded_year ? parseInt(formData.founded_year) : undefined,
         colors: formData.colors.trim() || undefined,
-        parent_team_id: formData.is_filial && formData.parent_team_id ? formData.parent_team_id : null
+        parent_team_id: formData.is_filial && formData.parent_team_id ? formData.parent_team_id : null,
+        country: formData.country.trim() || null,
+        province: formData.province.trim() || null,
+        city: formData.city.trim() || null,
       };
 
       if (editingId) {
@@ -98,7 +104,10 @@ export const TeamManager = () => {
       founded_year: team.founded_year?.toString() || '',
       colors: team.colors || '',
       is_filial: !!team.parent_team_id,
-      parent_team_id: team.parent_team_id || ''
+      parent_team_id: team.parent_team_id || '',
+      country: team.country || '',
+      province: team.province || '',
+      city: team.city || '',
     });
     setEditingId(team.id);
     setShowForm(true);
@@ -260,7 +269,7 @@ export const TeamManager = () => {
   };
 
   const resetForm = () => {
-    setFormData({ name: '', logo_url: '', description: '', founded_year: '', colors: '', is_filial: false, parent_team_id: '' });
+    setFormData({ name: '', logo_url: '', description: '', founded_year: '', colors: '', is_filial: false, parent_team_id: '', country: '', province: '', city: '' });
     setEditingId(null);
     setShowForm(false);
     setShowParticipants(false);
@@ -369,6 +378,37 @@ export const TeamManager = () => {
                     onChange={(e) => setFormData({ ...formData, colors: e.target.value })}
                     placeholder="Rojo y Blanco"
                     maxLength={50}
+                  />
+                </div>
+              </div>
+
+              {/* Location fields */}
+              <div className="grid grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-sm font-medium mb-1">País</label>
+                  <Input
+                    value={formData.country}
+                    onChange={(e) => setFormData({ ...formData, country: e.target.value })}
+                    placeholder="España"
+                    maxLength={50}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">Provincia</label>
+                  <Input
+                    value={formData.province}
+                    onChange={(e) => setFormData({ ...formData, province: e.target.value })}
+                    placeholder="Valladolid"
+                    maxLength={50}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">Localidad</label>
+                  <Input
+                    value={formData.city}
+                    onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+                    placeholder="Viana de Cega"
+                    maxLength={100}
                   />
                 </div>
               </div>

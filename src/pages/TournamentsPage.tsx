@@ -79,8 +79,11 @@ function getTournamentBrand(eventTitle: string): TournamentBrand | null {
 
 // Función para extraer la temporada/año del título
 function extractSeason(eventTitle: string): string {
-  const seasonMatch = eventTitle.match(/(\d{4}\/\d{4}|\d{4})/);
-  return seasonMatch ? seasonMatch[1] : "";
+  // If title has "2024/2025" format, extract just the second year (when it was played)
+  const dualMatch = eventTitle.match(/(\d{4})\/(\d{4})/);
+  if (dualMatch) return dualMatch[2];
+  const singleMatch = eventTitle.match(/(\d{4})/);
+  return singleMatch ? singleMatch[1] : "";
 }
 
 // Agrupar eventos por temporada
