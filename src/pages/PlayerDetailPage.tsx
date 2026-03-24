@@ -34,6 +34,7 @@ export const PlayerDetailPage = () => {
   const [history, setHistory] = useState<TeamHistoryWithDetails[]>([]);
   const [matches, setMatches] = useState<any[]>([]);
   const [goals, setGoals] = useState<any[]>([]);
+  const [playerEvents, setPlayerEvents] = useState<{ id: string; title: string; date: string }[]>([]);
   const [loading, setLoading] = useState(true);
 
   // Accumulated stats from history
