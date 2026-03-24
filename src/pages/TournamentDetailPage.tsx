@@ -604,16 +604,27 @@ export function TournamentDetailPage() {
                       <div className="space-y-4">
                         <div className="space-y-2">
                           <label className="text-sm font-medium text-muted-foreground">FASE</label>
-                          <Select value={selectedPhase} onValueChange={setSelectedPhase}>
+                          <Select value={selectedPhase} onValueChange={(v) => { setSelectedPhase(v); setSelectedJornada("all"); }}>
                             <SelectTrigger className="w-full bg-background">
                               <SelectValue placeholder="Seleccionar fase" />
                             </SelectTrigger>
                             <SelectContent className="bg-background z-50">
                               <SelectItem value="all">Todas las fases</SelectItem>
-                              <SelectItem value="Fase de Grupos">Fase de Grupos</SelectItem>
-                              <SelectItem value="Fase Oro">Fase Oro</SelectItem>
-                              <SelectItem value="Fase Plata">Fase Plata</SelectItem>
-                              <SelectItem value="Fase Bronce">Fase Bronce</SelectItem>
+                              {(() => {
+                                const existingPhases = new Set(matches.map(m => m.phase));
+                                const hasGroups = matches.some(m => isGroupStagePhase(m.phase));
+                                const hasGold = matches.some(m => m.phase?.startsWith('gold_'));
+                                const hasSilver = matches.some(m => m.phase?.startsWith('silver_'));
+                                const hasBronze = matches.some(m => m.phase?.startsWith('bronze_'));
+                                return (
+                                  <>
+                                    {hasGroups && <SelectItem value="Fase de Grupos">Fase de Grupos</SelectItem>}
+                                    {hasGold && <SelectItem value="Fase Oro">Fase Oro</SelectItem>}
+                                    {hasSilver && <SelectItem value="Fase Plata">Fase Plata</SelectItem>}
+                                    {hasBronze && <SelectItem value="Fase Bronce">Fase Bronce</SelectItem>}
+                                  </>
+                                );
+                              })()}
                             </SelectContent>
                           </Select>
                         </div>
