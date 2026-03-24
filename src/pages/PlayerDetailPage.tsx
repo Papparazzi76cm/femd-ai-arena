@@ -118,6 +118,30 @@ export const PlayerDetailPage = () => {
         .order('created_at', { ascending: false });
       setGoals(goalsData || []);
 
+      // Fetch FEMD tournament participation via team_rosters → event_teams → events
+      const { data: rosterData } = await supabase
+        .from('team_rosters')
+        .select('event_team_id')
+        .eq('participant_id', id);
+
+      if (rosterData && rosterData.length > 0) {
+        const etIds = [...new Set(rosterData.map(r => r.event_team_id))];
+        const { data: etData } = await supabase
+          .from('event_teams')
+          .select('event_id')
+          .in('id', etIds);
+
+        if (etData && etData.length > 0) {
+          const eventIds = [...new Set(etData.map(e => e.event_id))];
+          const { data: eventsData } = await supabase
+            .from('events')
+            .select('id, title, date')
+            .in('id', eventIds)
+            .order('date', { ascending: false });
+          setPlayerEvents(eventsData || []);
+        }
+      }
+
     } catch (error) {
       console.error('Error loading player:', error);
       toast({
