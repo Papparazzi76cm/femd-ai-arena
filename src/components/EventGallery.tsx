@@ -32,7 +32,7 @@ const tournamentLogos: TournamentLogo[] = [
   },
   {
     id: "copa-cyl",
-    name: "Copa Castilla y León",
+    name: "Copa CyL",
     logoUrl: "/logos-torneos/copa-cyl.png",
     slug: "copa-cyl",
   },

@@ -23,7 +23,7 @@ const tournamentBrands = [
     keywords: ["medina"],
   },
   {
-    name: "Copa Castilla y León",
+    name: "Copa CyL",
     shortName: "Copa CyL",
     logoUrl: "/logos-torneos/copa-cyl.png",
     keywords: ["copa cyl", "castilla y león", "castilla y leon"],

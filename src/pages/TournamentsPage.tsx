@@ -60,7 +60,7 @@ const tournamentBrands: TournamentBrand[] = [
   },
   {
     slug: "copa-cyl",
-    name: "Copa Castilla y León",
+    name: "Copa CyL",
     logoUrl: "/logos-torneos/copa-cyl.png",
     keywords: ["copa cyl", "castilla y león"],
   },

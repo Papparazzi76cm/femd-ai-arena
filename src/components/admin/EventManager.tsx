@@ -45,7 +45,7 @@ export const EventManager = () => {
   const { toast } = useToast();
 
   const tournamentBrands = [
-    { slug: 'copa-cyl', name: 'Copa Castilla y León', logoUrl: '/logos-torneos/copa-cyl.png' },
+    { slug: 'copa-cyl', name: 'Copa CyL', logoUrl: '/logos-torneos/copa-cyl.png' },
     { slug: 'copa-rioseco', name: 'Copa Internacional Rioseco Caramanzana', logoUrl: '/logos-torneos/copa-rioseco.png' },
     { slug: 'villa-aranda', name: 'Torneo Internacional Villa de Aranda', logoUrl: '/logos-torneos/villa-aranda.png' },
     { slug: 'medina-cup', name: 'Medina International Cup', logoUrl: '/logos-torneos/medina-cup.png' },
