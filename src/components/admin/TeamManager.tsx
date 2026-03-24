@@ -71,7 +71,10 @@ export const TeamManager = () => {
         description: formData.description.trim() || undefined,
         founded_year: formData.founded_year ? parseInt(formData.founded_year) : undefined,
         colors: formData.colors.trim() || undefined,
-        parent_team_id: formData.is_filial && formData.parent_team_id ? formData.parent_team_id : null
+        parent_team_id: formData.is_filial && formData.parent_team_id ? formData.parent_team_id : null,
+        country: formData.country.trim() || null,
+        province: formData.province.trim() || null,
+        city: formData.city.trim() || null,
       };
 
       if (editingId) {
