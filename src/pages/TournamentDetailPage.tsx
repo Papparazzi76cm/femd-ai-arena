@@ -102,6 +102,56 @@ const PHASE_LABELS: Record<string, string> = {
   'group': 'Fase de Grupos'
 };
 
+// Numeric priority for sorting phases in the correct tournament order
+const getPhaseOrderIndex = (phase: string): number => {
+  if (isGroupStagePhase(phase)) return 0;
+  // Gold phases
+  if (phase === 'gold_round_of_16') return 10;
+  if (phase === 'gold_round_of_8') return 11;
+  if (phase === 'gold_quarter_final') return 12;
+  if (phase === 'gold_semi_final') return 13;
+  if (phase === 'gold_third_place') return 14;
+  if (phase === 'gold_final') return 15;
+  // Silver phases
+  if (phase === 'silver_round_of_16') return 20;
+  if (phase === 'silver_round_of_8') return 21;
+  if (phase === 'silver_quarter_final') return 22;
+  if (phase === 'silver_semi_final') return 23;
+  if (phase === 'silver_third_place') return 24;
+  if (phase === 'silver_final') return 25;
+  // Bronze phases
+  if (phase === 'bronze_round_of_16') return 30;
+  if (phase === 'bronze_round_of_8') return 31;
+  if (phase === 'bronze_quarter_final') return 32;
+  if (phase === 'bronze_semi_final') return 33;
+  if (phase === 'bronze_third_place') return 34;
+  if (phase === 'bronze_final') return 35;
+  // Generic (no tier prefix)
+  if (phase === 'round_of_16') return 10;
+  if (phase === 'round_of_8') return 11;
+  if (phase === 'quarter_final') return 12;
+  if (phase === 'semi_final') return 13;
+  if (phase === 'third_place') return 14;
+  if (phase === 'final') return 15;
+  return 99;
+};
+
+const getPhaseDisplayLabel = (phase: string): string => {
+  if (isGroupStagePhase(phase)) return 'Fase de Grupos';
+  const tierPrefix = phase.startsWith('gold_') ? 'Fase Oro' : phase.startsWith('silver_') ? 'Fase Plata' : phase.startsWith('bronze_') ? 'Fase Bronce' : '';
+  const base = phase.replace(/^(gold_|silver_|bronze_)/, '');
+  const roundLabels: Record<string, string> = {
+    'round_of_16': '1/16 de Final',
+    'round_of_8': '1/8 de Final',
+    'quarter_final': '1/4 de Final',
+    'semi_final': 'Semifinales',
+    'third_place': '3er y 4º puesto',
+    'final': 'Final',
+  };
+  const roundLabel = roundLabels[base] || base;
+  return tierPrefix ? `${tierPrefix} - ${roundLabel}` : roundLabel;
+};
+
 const isCompletedStatus = (status: string | null | undefined) =>
   status === 'finished' || status === 'completed';
 
