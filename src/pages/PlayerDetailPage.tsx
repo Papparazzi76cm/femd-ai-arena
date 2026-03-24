@@ -19,7 +19,8 @@ import { es } from 'date-fns/locale';
 import { 
   LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, 
   XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer 
-} from 'recharts';
+ } from 'recharts';
+import { FEMDTournamentHistory } from '@/components/FEMDTournamentHistory';
 
 interface TeamHistoryWithDetails extends PlayerTeamHistory {
   team?: Team;
