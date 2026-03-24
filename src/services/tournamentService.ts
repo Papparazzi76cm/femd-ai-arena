@@ -247,37 +247,27 @@ export const tournamentService = {
     return 0;
   },
 
-  // Sort teams with tie-breaking criteria
+  // Sort teams within a group with FIFA-style tie-breaking criteria
+  // 1. Points, 2. Head-to-head, 3. Goal difference, 4. Goals for
   async sortTeamsByStandings(eventId: string, teams: EventTeam[]): Promise<EventTeam[]> {
     const sorted = [...teams].sort((a, b) => {
       // 1. Points
       if (b.points !== a.points) return b.points - a.points;
       
-      // 2. Goal difference
+      // 3. Goal difference (head-to-head checked below)
       if (b.goal_difference !== a.goal_difference) return b.goal_difference - a.goal_difference;
       
-      // 3. Goals for
+      // 4. Goals for
       if (b.goals_for !== a.goals_for) return b.goals_for - a.goals_for;
-      
-      // 4. Goals against (fewer is better)
-      if (a.goals_against !== b.goals_against) return a.goals_against - b.goals_against;
-      
-      // 5. Red cards (fewer is better)
-      if (a.red_cards !== b.red_cards) return a.red_cards - b.red_cards;
-      
-      // 6. Yellow cards (fewer is better)
-      if (a.yellow_cards !== b.yellow_cards) return a.yellow_cards - b.yellow_cards;
       
       return 0;
     });
 
-    // For 2-team ties, check head-to-head
+    // For 2-team ties, check head-to-head (criterion 2)
     for (let i = 0; i < sorted.length - 1; i++) {
-      if (sorted[i].points === sorted[i + 1].points &&
-          sorted[i].goal_difference === sorted[i + 1].goal_difference) {
+      if (sorted[i].points === sorted[i + 1].points) {
         const h2h = await this.getHeadToHeadResult(eventId, sorted[i].team_id, sorted[i + 1].team_id);
         if (h2h === -1) {
-          // Swap teams
           [sorted[i], sorted[i + 1]] = [sorted[i + 1], sorted[i]];
         }
       }
