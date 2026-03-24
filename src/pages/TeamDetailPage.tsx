@@ -340,83 +340,137 @@ export const TeamDetailPage = () => {
                   </div>
                 ) : (
                   <div className="space-y-3">
-                    {tournamentRosters.map((roster) => (
-                      <Collapsible
-                        key={roster.eventId}
-                        open={openRosters[roster.eventId]}
-                        onOpenChange={(open) => setOpenRosters(prev => ({ ...prev, [roster.eventId]: open }))}
-                      >
-                        <CollapsibleTrigger asChild>
-                          <Button variant="ghost" className="w-full justify-between p-4 h-auto border rounded-lg hover:bg-muted/50">
-                            <div className="flex items-center gap-3">
-                              <Trophy className="w-5 h-5 text-primary" />
-                              <div className="text-left">
-                                <p className="font-semibold">{roster.eventTitle}</p>
-                                <p className="text-xs text-muted-foreground">
-                                  {new Date(roster.eventDate).toLocaleDateString('es-ES', { year: 'numeric', month: 'long' })}
-                                  {' · '}{roster.players.filter(p => p.roster_role === 'player').length} jugadores
-                                  {roster.players.filter(p => p.roster_role === 'staff').length > 0 && `, ${roster.players.filter(p => p.roster_role === 'staff').length} cuerpo técnico`}
-                                </p>
-                              </div>
-                            </div>
-                            <ChevronDown className={`w-5 h-5 transition-transform ${openRosters[roster.eventId] ? 'rotate-180' : ''}`} />
-                          </Button>
-                        </CollapsibleTrigger>
-                        <CollapsibleContent className="mt-2">
-                          <div className="border rounded-lg overflow-hidden">
-                            {/* Staff section */}
-                            {roster.players.filter(p => p.roster_role === 'staff').length > 0 && (
-                              <div className="bg-muted/30 p-3 border-b">
-                                <p className="text-xs font-semibold text-muted-foreground mb-2 uppercase">Cuerpo Técnico</p>
-                                <div className="grid gap-2 sm:grid-cols-2">
-                                  {roster.players.filter(p => p.roster_role === 'staff').map(({ participant, staff_position }) => (
-                                    <div key={participant.id} className="flex items-center gap-2 text-sm">
-                                      <Link to={`/jugador/${participant.id}`} className="font-medium hover:text-primary hover:underline">
-                                        {participant.name}
-                                      </Link>
-                                      {staff_position && <Badge variant="outline" className="text-xs">{staff_position}</Badge>}
-                                    </div>
-                                  ))}
+                    {tournamentRosters.map((roster) => {
+                      const players = roster.players.filter(p => p.roster_role === 'player').sort((a, b) => (a.jersey_number ?? 99) - (b.jersey_number ?? 99));
+                      const staff = roster.players.filter(p => p.roster_role === 'staff');
+                      const headCoach = staff.find(s => s.staff_position === 'Primer Entrenador');
+                      const otherStaff = staff.filter(s => s.staff_position !== 'Primer Entrenador');
+
+                      return (
+                        <Collapsible
+                          key={roster.eventId}
+                          open={openRosters[roster.eventId]}
+                          onOpenChange={(open) => setOpenRosters(prev => ({ ...prev, [roster.eventId]: open }))}
+                        >
+                          <CollapsibleTrigger asChild>
+                            <Button variant="ghost" className="w-full justify-between p-4 h-auto border rounded-lg hover:bg-muted/50">
+                              <div className="flex items-center gap-3">
+                                <Trophy className="w-5 h-5 text-primary" />
+                                <div className="text-left">
+                                  <p className="font-semibold">{roster.eventTitle}</p>
+                                  <p className="text-xs text-muted-foreground">
+                                    {new Date(roster.eventDate).toLocaleDateString('es-ES', { year: 'numeric', month: 'long' })}
+                                    {' · '}{players.length} jugadores
+                                    {staff.length > 0 && `, ${staff.length} cuerpo técnico`}
+                                  </p>
                                 </div>
                               </div>
-                            )}
-                            {/* Players table */}
-                            <Table>
-                              <TableHeader>
-                                <TableRow>
-                                  <TableHead className="w-12">N°</TableHead>
-                                  <TableHead>Nombre</TableHead>
-                                  <TableHead>Posición</TableHead>
-                                </TableRow>
-                              </TableHeader>
-                              <TableBody>
-                                {roster.players.filter(p => p.roster_role === 'player').sort((a, b) => (a.jersey_number ?? 99) - (b.jersey_number ?? 99)).map(({ participant, jersey_number, is_captain }) => (
-                                  <TableRow key={participant.id}>
-                                    <TableCell className="font-bold">{jersey_number || '-'}</TableCell>
-                                    <TableCell>
-                                      <Link to={`/jugador/${participant.id}`} className="flex items-center gap-2 hover:text-primary">
-                                        {participant.photo_url ? (
-                                          <img src={participant.photo_url} alt={participant.name} className="w-8 h-8 rounded-full object-cover" />
-                                        ) : (
-                                          <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center">
-                                            <Users className="w-4 h-4 text-muted-foreground" />
-                                          </div>
-                                        )}
-                                        <span className="hover:underline">{participant.name}</span>
-                                        {is_captain && <Badge variant="secondary" className="text-xs ml-1">C</Badge>}
-                                      </Link>
-                                    </TableCell>
-                                    <TableCell>
-                                      {participant.position ? <Badge variant="outline">{participant.position}</Badge> : '-'}
-                                    </TableCell>
+                              <ChevronDown className={`w-5 h-5 transition-transform ${openRosters[roster.eventId] ? 'rotate-180' : ''}`} />
+                            </Button>
+                          </CollapsibleTrigger>
+                          <CollapsibleContent className="mt-2">
+                            <div className="border rounded-lg overflow-hidden">
+                              {/* Players table with stats */}
+                              <Table>
+                                <TableHeader>
+                                  <TableRow className="bg-muted/50">
+                                    <TableHead className="w-12">N°</TableHead>
+                                    <TableHead>Nombre</TableHead>
+                                    <TableHead className="hidden sm:table-cell">Posición</TableHead>
+                                    <TableHead className="text-center w-10" title="Partidos Jugados">PJ</TableHead>
+                                    <TableHead className="text-center w-10" title="Victorias">G</TableHead>
+                                    <TableHead className="text-center w-10" title="Empates">E</TableHead>
+                                    <TableHead className="text-center w-10" title="Derrotas">P</TableHead>
+                                    <TableHead className="text-center w-10" title="Goles">⚽</TableHead>
+                                    <TableHead className="text-center w-10" title="Tarjetas Amarillas">🟨</TableHead>
+                                    <TableHead className="text-center w-10" title="Tarjetas Rojas">🟥</TableHead>
                                   </TableRow>
-                                ))}
-                              </TableBody>
-                            </Table>
-                          </div>
-                        </CollapsibleContent>
-                      </Collapsible>
-                    ))}
+                                </TableHeader>
+                                <TableBody>
+                                  {players.map(({ participant, jersey_number, is_captain }) => (
+                                    <TableRow key={participant.id}>
+                                      <TableCell className="font-bold">{jersey_number || '-'}</TableCell>
+                                      <TableCell>
+                                        <Link to={`/jugador/${participant.id}`} className="flex items-center gap-2 hover:text-primary">
+                                          {participant.photo_url ? (
+                                            <img src={participant.photo_url} alt={participant.name} className="w-8 h-8 rounded-full object-cover" />
+                                          ) : (
+                                            <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center">
+                                              <Users className="w-4 h-4 text-muted-foreground" />
+                                            </div>
+                                          )}
+                                          <span className="hover:underline">{participant.name}</span>
+                                          {is_captain && <Badge variant="secondary" className="text-xs ml-1">C</Badge>}
+                                        </Link>
+                                      </TableCell>
+                                      <TableCell className="hidden sm:table-cell">
+                                        {participant.position ? <Badge variant="outline">{participant.position}</Badge> : '-'}
+                                      </TableCell>
+                                      <TableCell className="text-center text-sm">{participant.matches_played || 0}</TableCell>
+                                      <TableCell className="text-center text-sm">-</TableCell>
+                                      <TableCell className="text-center text-sm">-</TableCell>
+                                      <TableCell className="text-center text-sm">-</TableCell>
+                                      <TableCell className="text-center text-sm font-medium text-primary">{participant.goals_scored || 0}</TableCell>
+                                      <TableCell className="text-center text-sm">{participant.yellow_cards || 0}</TableCell>
+                                      <TableCell className="text-center text-sm">{participant.red_cards || 0}</TableCell>
+                                    </TableRow>
+                                  ))}
+                                </TableBody>
+                              </Table>
+
+                              {/* Staff section - styled prominently */}
+                              {staff.length > 0 && (
+                                <div className="border-t bg-muted/20 p-4">
+                                  <p className="text-xs font-bold text-muted-foreground mb-3 uppercase tracking-wider">Cuerpo Técnico</p>
+                                  
+                                  {/* Head Coach - Featured */}
+                                  {headCoach && (
+                                    <div className="flex items-center gap-4 p-4 mb-3 rounded-lg bg-primary/10 border border-primary/20">
+                                      <div className="w-14 h-14 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0 ring-2 ring-primary/30">
+                                        {headCoach.participant.photo_url ? (
+                                          <img src={headCoach.participant.photo_url} alt={headCoach.participant.name} className="w-full h-full rounded-full object-cover" />
+                                        ) : (
+                                          <Shield className="w-7 h-7 text-primary" />
+                                        )}
+                                      </div>
+                                      <div>
+                                        <Link to={`/jugador/${headCoach.participant.id}`} className="font-bold text-lg hover:text-primary hover:underline">
+                                          {headCoach.participant.name}
+                                        </Link>
+                                        <p className="text-sm text-primary font-semibold">Primer Entrenador</p>
+                                      </div>
+                                    </div>
+                                  )}
+
+                                  {/* Other Staff */}
+                                  {otherStaff.length > 0 && (
+                                    <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                                      {otherStaff.map(({ participant, staff_position }) => (
+                                        <div key={participant.id} className="flex items-center gap-3 p-3 rounded-lg bg-background/50 border">
+                                          <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
+                                            {participant.photo_url ? (
+                                              <img src={participant.photo_url} alt={participant.name} className="w-full h-full rounded-full object-cover" />
+                                            ) : (
+                                              <Users className="w-5 h-5 text-muted-foreground" />
+                                            )}
+                                          </div>
+                                          <div>
+                                            <Link to={`/jugador/${participant.id}`} className="font-medium text-sm hover:text-primary hover:underline">
+                                              {participant.name}
+                                            </Link>
+                                            {staff_position && <p className="text-xs text-muted-foreground">{staff_position}</p>}
+                                          </div>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  )}
+                                </div>
+                              )}
+                            </div>
+                          </CollapsibleContent>
+                        </Collapsible>
+                      );
+                    })}
                   </div>
                 )}
               </CardContent>
