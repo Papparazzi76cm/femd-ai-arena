@@ -1093,11 +1093,33 @@ export const TournamentManager = ({ eventId }: TournamentManagerProps) => {
                         {getPhaseLabel(phase as TournamentPhase)} {group ? `- Grupo ${group}` : ''}
                       </h4>
                       <div className="space-y-2">
-                         {matchList.map(match => (
+                         {matchList.map(match => {
+                           const isKnockout = match.phase !== 'group' && !match.phase?.startsWith('Jornada');
+                           const hasUnresolvedHome = isKnockout && match.home_placeholder && !match.home_team_id;
+                           const hasUnresolvedAway = isKnockout && match.away_placeholder && !match.away_team_id;
+                           return (
                            <Card key={match.id} className="p-4">
                              <div className="flex items-center justify-between gap-4">
                                <div className="flex-1">
-                                 <div className={`font-semibold ${!match.home_team_id ? 'text-muted-foreground italic' : ''}`}>{getMatchTeamLabel(match, 'home')}</div>
+                                 <div className={`font-semibold ${!match.home_team_id ? 'text-muted-foreground italic' : ''}`}>
+                                   {getMatchTeamLabel(match, 'home')}
+                                 </div>
+                                 {hasUnresolvedHome && (
+                                   <div className="mt-1">
+                                     <Select onValueChange={v => handleManualAssign(match.id, 'home', v)}>
+                                       <SelectTrigger className="h-7 text-xs w-full border-dashed border-amber-400">
+                                         <SelectValue placeholder="Asignar manualmente..." />
+                                       </SelectTrigger>
+                                       <SelectContent>
+                                         {eventTeams.map(et => (
+                                           <SelectItem key={et.id} value={et.team_id}>
+                                             {getTeamName(et.team_id)}
+                                           </SelectItem>
+                                         ))}
+                                       </SelectContent>
+                                     </Select>
+                                   </div>
+                                 )}
                                </div>
                                <div className="flex gap-2 items-center">
                                  <Input
@@ -1117,7 +1139,25 @@ export const TournamentManager = ({ eventId }: TournamentManagerProps) => {
                                  />
                                </div>
                                <div className="flex-1 text-right">
-                                 <div className={`font-semibold ${!match.away_team_id ? 'text-muted-foreground italic' : ''}`}>{getMatchTeamLabel(match, 'away')}</div>
+                                 <div className={`font-semibold ${!match.away_team_id ? 'text-muted-foreground italic' : ''}`}>
+                                   {getMatchTeamLabel(match, 'away')}
+                                 </div>
+                                 {hasUnresolvedAway && (
+                                   <div className="mt-1">
+                                     <Select onValueChange={v => handleManualAssign(match.id, 'away', v)}>
+                                       <SelectTrigger className="h-7 text-xs w-full border-dashed border-amber-400">
+                                         <SelectValue placeholder="Asignar manualmente..." />
+                                       </SelectTrigger>
+                                       <SelectContent>
+                                         {eventTeams.map(et => (
+                                           <SelectItem key={et.id} value={et.team_id}>
+                                             {getTeamName(et.team_id)}
+                                           </SelectItem>
+                                         ))}
+                                       </SelectContent>
+                                     </Select>
+                                   </div>
+                                 )}
                                </div>
                                <div className="flex gap-1">
                                  <Button
@@ -1136,6 +1176,9 @@ export const TournamentManager = ({ eventId }: TournamentManagerProps) => {
                                  </Button>
                                </div>
                              </div>
+                             {match.group_name && isKnockout && (
+                               <Badge variant="outline" className="mt-1 text-xs">{match.group_name}</Badge>
+                             )}
                              {match.match_date && (
                                <p className="text-xs text-muted-foreground mt-1">
                                  📅 {formatMatchDate(match.match_date)}
@@ -1156,7 +1199,8 @@ export const TournamentManager = ({ eventId }: TournamentManagerProps) => {
                                </p>
                              )}
                            </Card>
-                         ))}
+                         );})}
+
                       </div>
                     </div>
                   );
