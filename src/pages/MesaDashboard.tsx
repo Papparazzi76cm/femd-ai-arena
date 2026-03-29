@@ -116,6 +116,17 @@ export const MesaDashboard = () => {
         await tournamentService.updateTeamStatistics(match.event_id);
       }
 
+      // Auto-resolve winner/loser placeholders when a match finishes
+      if (updates.status === 'finished' && match) {
+        const resolved = await tournamentService.resolveWinnerForFinishedMatch(match.event_id, matchId);
+        if (resolved > 0) {
+          toast({
+            title: '✅ Cruces actualizados',
+            description: `Se asignaron ${resolved} equipo(s) automáticamente a los cruces de la siguiente ronda.`,
+          });
+        }
+      }
+
       toast({
         title: 'Partido actualizado',
         description: 'Los datos del partido se guardaron correctamente',

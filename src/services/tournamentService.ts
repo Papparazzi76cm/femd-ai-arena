@@ -559,4 +559,76 @@ export const tournamentService = {
 
     return resolved;
   },
+
+  // Auto-resolve winner/loser placeholders when a specific knockout match finishes
+  async resolveWinnerForFinishedMatch(eventId: string, matchId: string): Promise<number> {
+    const { data: finishedMatch } = await supabase
+      .from('matches')
+      .select('*')
+      .eq('id', matchId)
+      .single();
+
+    if (!finishedMatch || finishedMatch.status !== 'finished' || !finishedMatch.group_name) return 0;
+    if (finishedMatch.home_score == null || finishedMatch.away_score == null) return 0;
+
+    const bracketName = finishedMatch.group_name;
+    const winnerId = finishedMatch.home_score > finishedMatch.away_score
+      ? finishedMatch.home_team_id
+      : finishedMatch.away_team_id;
+    const loserId = finishedMatch.home_score > finishedMatch.away_score
+      ? finishedMatch.away_team_id
+      : finishedMatch.home_team_id;
+
+    if (!winnerId || !loserId) return 0;
+
+    // Find matches with placeholders referencing this bracket name
+    const { data: dependentMatches } = await supabase
+      .from('matches')
+      .select('*')
+      .eq('event_id', eventId)
+      .neq('id', matchId);
+
+    if (!dependentMatches) return 0;
+
+    let resolved = 0;
+    for (const m of dependentMatches) {
+      const updates: any = {};
+      if (m.home_placeholder === `Ganador ${bracketName}` && !m.home_team_id) {
+        updates.home_team_id = winnerId;
+        resolved++;
+      }
+      if (m.away_placeholder === `Ganador ${bracketName}` && !m.away_team_id) {
+        updates.away_team_id = winnerId;
+        resolved++;
+      }
+      if (m.home_placeholder === `Perdedor ${bracketName}` && !m.home_team_id) {
+        updates.home_team_id = loserId;
+        resolved++;
+      }
+      if (m.away_placeholder === `Perdedor ${bracketName}` && !m.away_team_id) {
+        updates.away_team_id = loserId;
+        resolved++;
+      }
+      if (Object.keys(updates).length > 0) {
+        await supabase.from('matches').update(updates).eq('id', m.id);
+      }
+    }
+
+    return resolved;
+  },
+
+  // Manually assign a team to a match slot
+  async manuallyAssignTeam(matchId: string, side: 'home' | 'away', teamId: string): Promise<void> {
+    const updates: any = {};
+    if (side === 'home') {
+      updates.home_team_id = teamId;
+    } else {
+      updates.away_team_id = teamId;
+    }
+    const { error } = await supabase
+      .from('matches')
+      .update(updates)
+      .eq('id', matchId);
+    if (error) throw error;
+  },
 };
