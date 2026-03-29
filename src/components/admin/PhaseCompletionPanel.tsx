@@ -148,10 +148,10 @@ export const PhaseCompletionPanel = ({ matches, eventId, onResolved }: PhaseComp
 
       {/* Auto-resolve button when there are unresolved placeholders */}
       {unresolvedCount > 0 && (
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-4 rounded-lg bg-primary/5 border border-primary/20">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-4 rounded-lg bg-primary/10 border-2 border-primary/30">
           <div>
-            <p className="font-medium text-sm">
-              Hay {unresolvedCount} cruce(s) con equipos por asignar
+            <p className="font-bold text-sm">
+              🏆 Hay {unresolvedCount} cruce(s) con equipos por asignar
             </p>
             <p className="text-xs text-muted-foreground mt-0.5">
               Puedes asignar automáticamente según clasificación o hacerlo manualmente en cada cruce.
@@ -159,16 +159,17 @@ export const PhaseCompletionPanel = ({ matches, eventId, onResolved }: PhaseComp
           </div>
           <div className="flex gap-2 shrink-0">
             <Button
-              size="sm"
+              size="default"
               onClick={handleAutoResolve}
               disabled={resolving}
+              className="font-bold"
             >
               {resolving ? (
                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
               ) : (
-                <RefreshCw className="w-4 h-4 mr-2" />
+                <Zap className="w-4 h-4 mr-2" />
               )}
-              Asignar automáticamente
+              Generar cruces
             </Button>
           </div>
         </div>
