@@ -342,9 +342,29 @@ export const TournamentManager = ({ eventId }: TournamentManagerProps) => {
       const numValue = parseInt(value) || 0;
       await tournamentService.updateMatch(matchId, { [field]: numValue });
       await tournamentService.updateTeamStatistics(eventId);
+      
+      // Check if this update makes the match finished and auto-resolve
+      const match = matches.find(m => m.id === matchId);
+      if (match?.status === 'finished') {
+        const resolved = await tournamentService.resolveWinnerForFinishedMatch(eventId, matchId);
+        if (resolved > 0) {
+          toast({ title: '✅ Cruces actualizados', description: `Se asignaron ${resolved} equipo(s) a la siguiente ronda.` });
+        }
+      }
+      
       await loadData();
     } catch (error) {
       toast({ title: 'Error', description: 'No se pudo actualizar', variant: 'destructive' });
+    }
+  };
+
+  const handleManualAssign = async (matchId: string, side: 'home' | 'away', teamId: string) => {
+    try {
+      await tournamentService.manuallyAssignTeam(matchId, side, teamId);
+      toast({ title: 'Equipo asignado', description: 'Se asignó el equipo manualmente al cruce.' });
+      await loadData();
+    } catch (error) {
+      toast({ title: 'Error', description: 'No se pudo asignar el equipo', variant: 'destructive' });
     }
   };
 
