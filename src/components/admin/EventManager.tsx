@@ -188,6 +188,7 @@ export const EventManager = () => {
       title: event.title,
       description: event.description || '',
       date: event.date.split('T')[0],
+      end_date: (event as any).end_date ? (event as any).end_date.split('T')[0] : '',
       location: event.location || '',
       poster_url: (event as any).poster_url || ''
     });
