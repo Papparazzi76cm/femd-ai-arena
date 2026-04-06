@@ -404,9 +404,9 @@ export const EventManager = () => {
                   maxLength={1000}
                 />
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-3 gap-4">
                 <div>
-                  <label className="block text-sm font-medium mb-1">Fecha *</label>
+                  <label className="block text-sm font-medium mb-1">Fecha inicio *</label>
                   <Input
                     value={formData.date}
                     onChange={(e) => {
@@ -418,6 +418,16 @@ export const EventManager = () => {
                     type="date"
                     required
                   />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">Fecha fin (opcional)</label>
+                  <Input
+                    value={formData.end_date}
+                    onChange={(e) => setFormData(prev => ({ ...prev, end_date: e.target.value }))}
+                    type="date"
+                    min={formData.date}
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">Dejar vacío para evento de un solo día</p>
                 </div>
                 <div>
                   <label className="block text-sm font-medium mb-1">Ubicación</label>
