@@ -462,6 +462,13 @@ export const MatchCard = ({
                   <Goal className="w-4 h-4 mr-2" />
                   Goleadores
                 </Button>
+                <Button 
+                  variant="outline" 
+                  onClick={() => setShowCards(true)}
+                >
+                  <CreditCard className="w-4 h-4 mr-2" />
+                  Tarjetas
+                </Button>
                 <Button variant="outline" onClick={handleSaveLive} disabled={saving}>
                   <Save className="w-4 h-4 mr-2" />
                   {saving ? 'Guardando...' : 'Guardar Cambios'}
