@@ -91,6 +91,8 @@ interface EventOption {
 }
 
 type MatchGoalMap = Map<string, MatchGoal[]>;
+type MatchCardMap = Map<string, MatchCard[]>;
+type MatchMvpMap = Map<string, MatchMvp>;
 type PlayerNameMap = Map<string, { name: string; number: number | null }>;
 
 const getPhaseLabel = (phase: string, groupName: string | null): string => {
