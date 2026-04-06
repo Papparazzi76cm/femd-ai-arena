@@ -540,6 +540,18 @@ export const MatchCard = ({
         awayTeamId={awayTeamId}
         homeTeamName={homeTeamName}
         awayTeamName={awayTeamName}
+        eventId={eventId}
+      />
+
+      <CardManagerDialog
+        open={showCards}
+        onOpenChange={setShowCards}
+        matchId={match.id}
+        homeTeamId={homeTeamId}
+        awayTeamId={awayTeamId}
+        homeTeamName={homeTeamName}
+        awayTeamName={awayTeamName}
+        eventId={eventId}
       />
 
       {/* MVP Dialog */}
