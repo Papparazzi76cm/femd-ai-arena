@@ -373,10 +373,15 @@ export function TournamentDetailPage() {
       }
     });
 
-    // First compare points in head-to-head
+    // 1. Points in head-to-head
     if (teamAPoints !== teamBPoints) return teamBPoints - teamAPoints;
-    // Then compare goal difference in head-to-head
-    return (teamBGoals - teamAGoals) - (teamAGoals - teamBGoals);
+    // 2. Goal difference in head-to-head
+    const teamAGD = teamAGoals - teamBGoals;
+    const teamBGD = teamBGoals - teamAGoals;
+    if (teamAGD !== teamBGD) return teamBGD - teamAGD;
+    // 3. Goals scored in head-to-head
+    if (teamAGoals !== teamBGoals) return teamBGoals - teamAGoals;
+    return 0;
   };
 
   // Group calculated standings by group_name and sort
