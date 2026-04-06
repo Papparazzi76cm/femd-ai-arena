@@ -402,13 +402,15 @@ export function TournamentDetailPage() {
       grouped[groupName].sort((a, b) => {
         // 1. Points
         if (b.points !== a.points) return b.points - a.points;
-        // 2. Head-to-head result (when points are equal)
+        // 2. Head-to-head result (h2h points → h2h GD → h2h GF)
         const h2h = getHeadToHeadResult(a.team_id, b.team_id, groupMatches);
         if (h2h !== 0) return h2h;
         // 3. Goal difference
         if (b.goal_difference !== a.goal_difference) return b.goal_difference - a.goal_difference;
         // 4. Goals for
         if (b.goals_for !== a.goals_for) return b.goals_for - a.goals_for;
+        // 5. Number of wins
+        if (b.wins !== a.wins) return b.wins - a.wins;
         return 0;
       });
     });
