@@ -33,10 +33,12 @@ export const MatchCard = ({
   homeTeamId,
   awayTeamId,
   onUpdate,
-  readOnly = false 
+  readOnly = false,
+  eventId 
 }: MatchCardProps) => {
   const [isEditing, setIsEditing] = useState(false);
   const [showGoalScorers, setShowGoalScorers] = useState(false);
+  const [showCards, setShowCards] = useState(false);
   const [mvpOpen, setMvpOpen] = useState(false);
   const [mvpPlayers, setMvpPlayers] = useState<any[]>([]);
   const [selectedMvp, setSelectedMvp] = useState<string>('');
