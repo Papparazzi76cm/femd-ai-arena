@@ -302,7 +302,7 @@ export const EventManager = () => {
   };
 
   const resetForm = () => {
-    setFormData({ title: '', description: '', date: '', location: '', poster_url: '' });
+    setFormData({ title: '', description: '', date: '', end_date: '', location: '', poster_url: '' });
     setSelectedTeamIds([]);
     setSelectedCategoryIds([]);
     setTeamGroups({});
