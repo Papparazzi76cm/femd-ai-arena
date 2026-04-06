@@ -1489,6 +1489,8 @@ export const TournamentManager = ({ eventId }: TournamentManagerProps) => {
           <PhaseCompletionPanel
             matches={matches}
             eventId={eventId}
+            eventTeams={eventTeams}
+            teams={teams}
             onResolved={() => loadData()}
           />
           <KnockoutBracketGenerator
