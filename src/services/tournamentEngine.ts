@@ -48,7 +48,7 @@ export interface GeneratedMatch {
 export interface BracketAnalysis {
   totalClassified: number;
   isOptimal: boolean; // true if direct bracket possible (8, 16, 32)
-  startingRound: 'round_of_16' | 'round_of_8' | 'quarter_final' | 'semi_final' | 'final';
+  startingRound: string;
   startingRoundSize: number; // e.g. 8 for quarter_final means 8 teams, 4 matches
   directQualifiers: number; // teams that skip preliminary
   preliminaryNeeded: boolean;
