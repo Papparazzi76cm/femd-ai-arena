@@ -92,6 +92,7 @@ export const EventManager = () => {
         title: formData.title.trim(),
         description: formData.description.trim() || null,
         date: new Date(formData.date).toISOString(),
+        end_date: formData.end_date ? new Date(formData.end_date).toISOString() : null,
         location: formData.location.trim() || null,
         poster_url: formData.poster_url.trim() || null,
         team_ids: selectedTeamIds.length > 0 ? selectedTeamIds : []
