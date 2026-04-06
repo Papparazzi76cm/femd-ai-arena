@@ -497,13 +497,13 @@ export const MatchCard = ({
                 <Button variant="outline" size="sm" onClick={() => setIsEditing(true)}>
                   Editar Resultado
                 </Button>
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={() => setShowGoalScorers(true)}
-                >
+                <Button variant="outline" size="sm" onClick={() => setShowGoalScorers(true)}>
                   <Goal className="w-4 h-4 mr-1" />
                   Goleadores
+                </Button>
+                <Button variant="outline" size="sm" onClick={() => setShowCards(true)}>
+                  <CreditCard className="w-4 h-4 mr-1" />
+                  Tarjetas
                 </Button>
                 <Button 
                   variant="outline" 
