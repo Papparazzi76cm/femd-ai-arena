@@ -1,5 +1,6 @@
 import { supabase } from '@/integrations/supabase/client';
 import { EventTeam, Match, MatchScheduleConflict } from '@/types/tournament';
+import { buildGroupStandings, buildCrossGroupRankings, sortCrossGroupRanking, GroupMatch } from '@/services/tournamentEngine';
 
 export const tournamentService = {
   // Event Teams
