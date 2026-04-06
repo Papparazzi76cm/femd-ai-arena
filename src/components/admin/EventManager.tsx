@@ -39,6 +39,7 @@ export const EventManager = () => {
     title: '',
     description: '',
     date: '',
+    end_date: '',
     location: '',
     poster_url: ''
   });
@@ -91,6 +92,7 @@ export const EventManager = () => {
         title: formData.title.trim(),
         description: formData.description.trim() || null,
         date: new Date(formData.date).toISOString(),
+        end_date: formData.end_date ? new Date(formData.end_date).toISOString() : null,
         location: formData.location.trim() || null,
         poster_url: formData.poster_url.trim() || null,
         team_ids: selectedTeamIds.length > 0 ? selectedTeamIds : []
@@ -186,6 +188,7 @@ export const EventManager = () => {
       title: event.title,
       description: event.description || '',
       date: event.date.split('T')[0],
+      end_date: (event as any).end_date ? (event as any).end_date.split('T')[0] : '',
       location: event.location || '',
       poster_url: (event as any).poster_url || ''
     });
@@ -299,7 +302,7 @@ export const EventManager = () => {
   };
 
   const resetForm = () => {
-    setFormData({ title: '', description: '', date: '', location: '', poster_url: '' });
+    setFormData({ title: '', description: '', date: '', end_date: '', location: '', poster_url: '' });
     setSelectedTeamIds([]);
     setSelectedCategoryIds([]);
     setTeamGroups({});
@@ -401,9 +404,9 @@ export const EventManager = () => {
                   maxLength={1000}
                 />
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-3 gap-4">
                 <div>
-                  <label className="block text-sm font-medium mb-1">Fecha *</label>
+                  <label className="block text-sm font-medium mb-1">Fecha inicio *</label>
                   <Input
                     value={formData.date}
                     onChange={(e) => {
@@ -415,6 +418,16 @@ export const EventManager = () => {
                     type="date"
                     required
                   />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">Fecha fin (opcional)</label>
+                  <Input
+                    value={formData.end_date}
+                    onChange={(e) => setFormData(prev => ({ ...prev, end_date: e.target.value }))}
+                    type="date"
+                    min={formData.date}
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">Dejar vacío para evento de un solo día</p>
                 </div>
                 <div>
                   <label className="block text-sm font-medium mb-1">Ubicación</label>

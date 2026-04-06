@@ -352,6 +352,7 @@ export type Database = {
           created_at: string | null
           date: string
           description: string | null
+          end_date: string | null
           id: string
           location: string | null
           poster_url: string | null
@@ -362,6 +363,7 @@ export type Database = {
           created_at?: string | null
           date: string
           description?: string | null
+          end_date?: string | null
           id?: string
           location?: string | null
           poster_url?: string | null
@@ -372,6 +374,7 @@ export type Database = {
           created_at?: string | null
           date?: string
           description?: string | null
+          end_date?: string | null
           id?: string
           location?: string | null
           poster_url?: string | null
@@ -441,6 +444,58 @@ export type Database = {
             columns: ["facility_id"]
             isOneToOne: false
             referencedRelation: "facilities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      match_cards: {
+        Row: {
+          card_type: string
+          created_at: string
+          id: string
+          match_id: string
+          minute: number | null
+          player_id: string | null
+          team_id: string
+        }
+        Insert: {
+          card_type: string
+          created_at?: string
+          id?: string
+          match_id: string
+          minute?: number | null
+          player_id?: string | null
+          team_id: string
+        }
+        Update: {
+          card_type?: string
+          created_at?: string
+          id?: string
+          match_id?: string
+          minute?: number | null
+          player_id?: string | null
+          team_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "match_cards_match_id_fkey"
+            columns: ["match_id"]
+            isOneToOne: false
+            referencedRelation: "matches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "match_cards_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "participants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "match_cards_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
             referencedColumns: ["id"]
           },
         ]

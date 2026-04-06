@@ -7,11 +7,12 @@ import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Match } from '@/types/tournament';
-import { Calendar, MapPin, Save, Play, Square, Check, Goal, RotateCcw, Star, Upload } from 'lucide-react';
+import { Calendar, MapPin, Save, Play, Square, Check, Goal, RotateCcw, Star, Upload, CreditCard } from 'lucide-react';
 import { MatchTimer } from './MatchTimer';
 import { useGoalSound } from '@/hooks/useGoalSound';
 import { useMatchNotifications } from '@/hooks/useMatchNotifications';
 import { GoalScorersDialog } from './GoalScorersDialog';
+import { CardManagerDialog } from './CardManagerDialog';
 import { supabase } from '@/integrations/supabase/client';
 
 interface MatchCardProps {
@@ -22,6 +23,7 @@ interface MatchCardProps {
   awayTeamId: string;
   onUpdate: (matchId: string, updates: Partial<Match>) => Promise<void>;
   readOnly?: boolean;
+  eventId?: string;
 }
 
 export const MatchCard = ({ 
@@ -31,10 +33,12 @@ export const MatchCard = ({
   homeTeamId,
   awayTeamId,
   onUpdate,
-  readOnly = false 
+  readOnly = false,
+  eventId 
 }: MatchCardProps) => {
   const [isEditing, setIsEditing] = useState(false);
   const [showGoalScorers, setShowGoalScorers] = useState(false);
+  const [showCards, setShowCards] = useState(false);
   const [mvpOpen, setMvpOpen] = useState(false);
   const [mvpPlayers, setMvpPlayers] = useState<any[]>([]);
   const [selectedMvp, setSelectedMvp] = useState<string>('');
@@ -458,6 +462,13 @@ export const MatchCard = ({
                   <Goal className="w-4 h-4 mr-2" />
                   Goleadores
                 </Button>
+                <Button 
+                  variant="outline" 
+                  onClick={() => setShowCards(true)}
+                >
+                  <CreditCard className="w-4 h-4 mr-2" />
+                  Tarjetas
+                </Button>
                 <Button variant="outline" onClick={handleSaveLive} disabled={saving}>
                   <Save className="w-4 h-4 mr-2" />
                   {saving ? 'Guardando...' : 'Guardar Cambios'}
@@ -486,13 +497,13 @@ export const MatchCard = ({
                 <Button variant="outline" size="sm" onClick={() => setIsEditing(true)}>
                   Editar Resultado
                 </Button>
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={() => setShowGoalScorers(true)}
-                >
+                <Button variant="outline" size="sm" onClick={() => setShowGoalScorers(true)}>
                   <Goal className="w-4 h-4 mr-1" />
                   Goleadores
+                </Button>
+                <Button variant="outline" size="sm" onClick={() => setShowCards(true)}>
+                  <CreditCard className="w-4 h-4 mr-1" />
+                  Tarjetas
                 </Button>
                 <Button 
                   variant="outline" 
@@ -529,6 +540,18 @@ export const MatchCard = ({
         awayTeamId={awayTeamId}
         homeTeamName={homeTeamName}
         awayTeamName={awayTeamName}
+        eventId={eventId}
+      />
+
+      <CardManagerDialog
+        open={showCards}
+        onOpenChange={setShowCards}
+        matchId={match.id}
+        homeTeamId={homeTeamId}
+        awayTeamId={awayTeamId}
+        homeTeamName={homeTeamName}
+        awayTeamName={awayTeamName}
+        eventId={eventId}
       />
 
       {/* MVP Dialog */}
