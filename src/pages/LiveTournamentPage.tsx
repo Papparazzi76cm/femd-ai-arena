@@ -144,6 +144,8 @@ export const LiveTournamentPage = () => {
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
   const [topScorers, setTopScorers] = useState<TopScorer[]>([]);
   const [matchGoals, setMatchGoals] = useState<MatchGoalMap>(new Map());
+  const [matchCards, setMatchCards] = useState<MatchCardMap>(new Map());
+  const [matchMvps, setMatchMvps] = useState<MatchMvpMap>(new Map());
   const [playerNames, setPlayerNames] = useState<PlayerNameMap>(new Map());
   const [categories, setCategories] = useState<Map<string, CategoryInfo>>(new Map());
   const [fields, setFields] = useState<Map<string, FieldInfo>>(new Map());
