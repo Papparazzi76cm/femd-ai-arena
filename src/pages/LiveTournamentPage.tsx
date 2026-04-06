@@ -40,6 +40,23 @@ interface MatchGoal {
   is_own_goal: boolean;
 }
 
+interface MatchCard {
+  id: string;
+  match_id: string;
+  team_id: string;
+  player_id: string | null;
+  card_type: string;
+  minute: number | null;
+}
+
+interface MatchMvp {
+  id: string;
+  match_id: string;
+  player_id: string;
+  photo_url: string | null;
+  player?: { name: string; number: number | null };
+}
+
 interface TopScorer {
   player: Participant;
   team: Team | null;
@@ -74,6 +91,8 @@ interface EventOption {
 }
 
 type MatchGoalMap = Map<string, MatchGoal[]>;
+type MatchCardMap = Map<string, MatchCard[]>;
+type MatchMvpMap = Map<string, MatchMvp>;
 type PlayerNameMap = Map<string, { name: string; number: number | null }>;
 
 const getPhaseLabel = (phase: string, groupName: string | null): string => {
@@ -125,6 +144,8 @@ export const LiveTournamentPage = () => {
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
   const [topScorers, setTopScorers] = useState<TopScorer[]>([]);
   const [matchGoals, setMatchGoals] = useState<MatchGoalMap>(new Map());
+  const [matchCards, setMatchCards] = useState<MatchCardMap>(new Map());
+  const [matchMvps, setMatchMvps] = useState<MatchMvpMap>(new Map());
   const [playerNames, setPlayerNames] = useState<PlayerNameMap>(new Map());
   const [categories, setCategories] = useState<Map<string, CategoryInfo>>(new Map());
   const [fields, setFields] = useState<Map<string, FieldInfo>>(new Map());
@@ -336,6 +357,42 @@ export const LiveTournamentPage = () => {
         } else {
           setTopScorers([]);
           setMatchGoals(new Map());
+        }
+
+        // Load match cards
+        const { data: cardsData } = await supabase.from('match_cards').select('*').in('match_id', matchIds);
+        if (cardsData && cardsData.length > 0) {
+          const cardsMap: MatchCardMap = new Map();
+          (cardsData as MatchCard[]).forEach(card => {
+            const existing = cardsMap.get(card.match_id) || [];
+            existing.push(card);
+            cardsMap.set(card.match_id, existing);
+          });
+          setMatchCards(cardsMap);
+
+          // Also add card player names to playerNames
+          const cardPlayerIds = cardsData.filter(c => c.player_id).map(c => c.player_id!);
+          const missingIds = cardPlayerIds.filter(id => !playerNames.has(id));
+          if (missingIds.length > 0) {
+            const { data: cardPlayers } = await supabase.from('participants').select('id, name, number').in('id', missingIds);
+            if (cardPlayers) {
+              const updated = new Map(playerNames);
+              cardPlayers.forEach((p: any) => updated.set(p.id, { name: p.name, number: p.number }));
+              setPlayerNames(updated);
+            }
+          }
+        } else {
+          setMatchCards(new Map());
+        }
+
+        // Load MVPs
+        const { data: mvpsData } = await supabase.from('match_mvps').select('*, player:participants(name, number)').in('match_id', matchIds);
+        if (mvpsData && mvpsData.length > 0) {
+          const mvpMap: MatchMvpMap = new Map();
+          (mvpsData as MatchMvp[]).forEach(mvp => mvpMap.set(mvp.match_id, mvp));
+          setMatchMvps(mvpMap);
+        } else {
+          setMatchMvps(new Map());
         }
       }
     } catch (error) {
@@ -800,6 +857,43 @@ export const LiveTournamentPage = () => {
                       </div>
                     </div>
                   )}
+                  {/* Cards */}
+                  {matchCards.get(selectedMatchDetail.id) && matchCards.get(selectedMatchDetail.id)!.length > 0 && (
+                    <div className="border-t pt-3">
+                      <h4 className="text-sm font-semibold mb-2">Tarjetas</h4>
+                      <div className="grid grid-cols-2 gap-2">
+                        <div className="space-y-1">
+                          {matchCards.get(selectedMatchDetail.id)!.filter(c => c.team_id === selectedMatchDetail.home_team_id).sort((a, b) => (a.minute || 0) - (b.minute || 0)).map(c => {
+                            const p = c.player_id ? playerNames.get(c.player_id) : null;
+                            return <p key={c.id} className="text-sm">{c.card_type === 'yellow' ? '🟨' : '🟥'} {p ? `${p.number ? `#${p.number} ` : ''}${p.name}` : 'Jugador'}{c.minute ? ` (${c.minute}')` : ''}</p>;
+                          })}
+                        </div>
+                        <div className="space-y-1 text-right">
+                          {matchCards.get(selectedMatchDetail.id)!.filter(c => c.team_id === selectedMatchDetail.away_team_id).sort((a, b) => (a.minute || 0) - (b.minute || 0)).map(c => {
+                            const p = c.player_id ? playerNames.get(c.player_id) : null;
+                            return <p key={c.id} className="text-sm">{p ? `${p.number ? `#${p.number} ` : ''}${p.name}` : 'Jugador'}{c.minute ? ` (${c.minute}')` : ''} {c.card_type === 'yellow' ? '🟨' : '🟥'}</p>;
+                          })}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                  {/* MVP */}
+                  {matchMvps.get(selectedMatchDetail.id) && (() => {
+                    const mvp = matchMvps.get(selectedMatchDetail.id)!;
+                    return (
+                      <div className="border-t pt-3">
+                        <h4 className="text-sm font-semibold mb-2 flex items-center gap-1">⭐ MVP del Partido</h4>
+                        <div className="flex items-center gap-3 justify-center">
+                          {mvp.photo_url && <img src={mvp.photo_url} alt="MVP" className="w-16 h-16 rounded-lg object-cover" />}
+                          <div className="text-center">
+                            <p className="font-bold">
+                              {mvp.player ? `${mvp.player.number ? `#${mvp.player.number} ` : ''}${mvp.player.name}` : 'MVP'}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })()}
                 </div>
               )}
             </DialogContent>
