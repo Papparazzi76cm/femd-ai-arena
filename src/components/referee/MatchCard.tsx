@@ -241,18 +241,57 @@ export const MatchCard = ({
   const loadMvpData = async () => {
     setMvpLoading(true);
     try {
-      const [homeData, awayData, mvpData] = await Promise.all([
-        homeTeamId ? supabase.from('participants').select('*').eq('team_id', homeTeamId).order('number') : { data: [] },
-        awayTeamId ? supabase.from('participants').select('*').eq('team_id', awayTeamId).order('number') : { data: [] },
-        supabase.from('match_mvps').select('*, player:participants(*)').eq('match_id', match.id).maybeSingle(),
-      ]);
+      // Load roster-filtered players (same logic as GoalScorersDialog)
+      let homeRosterPlayers: any[] = [];
+      let awayRosterPlayers: any[] = [];
+
+      if (eventId) {
+        const { data: eventTeamsData } = await supabase
+          .from('event_teams')
+          .select('id, team_id')
+          .eq('event_id', eventId)
+          .in('team_id', [homeTeamId, awayTeamId].filter(Boolean));
+
+        if (eventTeamsData) {
+          const homeET = eventTeamsData.find(et => et.team_id === homeTeamId);
+          const awayET = eventTeamsData.find(et => et.team_id === awayTeamId);
+
+          if (homeET) {
+            const { data: rosters } = await supabase.from('team_rosters').select('participant_id').eq('event_team_id', homeET.id).eq('roster_role', 'player');
+            if (rosters && rosters.length > 0) {
+              const { data } = await supabase.from('participants').select('*').in('id', rosters.map(r => r.participant_id)).order('number');
+              homeRosterPlayers = (data || []);
+            }
+          }
+          if (awayET) {
+            const { data: rosters } = await supabase.from('team_rosters').select('participant_id').eq('event_team_id', awayET.id).eq('roster_role', 'player');
+            if (rosters && rosters.length > 0) {
+              const { data } = await supabase.from('participants').select('*').in('id', rosters.map(r => r.participant_id)).order('number');
+              awayRosterPlayers = (data || []);
+            }
+          }
+        }
+      }
+
+      // Fallback to team_id if no roster
+      if (homeRosterPlayers.length === 0 && homeTeamId) {
+        const { data } = await supabase.from('participants').select('*').eq('team_id', homeTeamId).order('number');
+        homeRosterPlayers = data || [];
+      }
+      if (awayRosterPlayers.length === 0 && awayTeamId) {
+        const { data } = await supabase.from('participants').select('*').eq('team_id', awayTeamId).order('number');
+        awayRosterPlayers = data || [];
+      }
+
+      const { data: mvpData } = await supabase.from('match_mvps').select('*, player:participants(*)').eq('match_id', match.id).maybeSingle();
+
       setMvpPlayers([
-        ...(homeData.data || []).map((p: any) => ({ ...p, _teamName: homeTeamName })),
-        ...(awayData.data || []).map((p: any) => ({ ...p, _teamName: awayTeamName })),
+        ...homeRosterPlayers.map((p: any) => ({ ...p, _teamName: homeTeamName })),
+        ...awayRosterPlayers.map((p: any) => ({ ...p, _teamName: awayTeamName })),
       ]);
-      if (mvpData.data) {
-        setCurrentMvp(mvpData.data);
-        setSelectedMvp(mvpData.data.player_id);
+      if (mvpData) {
+        setCurrentMvp(mvpData);
+        setSelectedMvp(mvpData.player_id);
       } else {
         setCurrentMvp(null);
         setSelectedMvp('');

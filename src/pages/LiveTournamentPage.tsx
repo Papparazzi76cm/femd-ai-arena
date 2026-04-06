@@ -40,6 +40,23 @@ interface MatchGoal {
   is_own_goal: boolean;
 }
 
+interface MatchCard {
+  id: string;
+  match_id: string;
+  team_id: string;
+  player_id: string | null;
+  card_type: string;
+  minute: number | null;
+}
+
+interface MatchMvp {
+  id: string;
+  match_id: string;
+  player_id: string;
+  photo_url: string | null;
+  player?: { name: string; number: number | null };
+}
+
 interface TopScorer {
   player: Participant;
   team: Team | null;
