@@ -7,11 +7,12 @@ import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Match } from '@/types/tournament';
-import { Calendar, MapPin, Save, Play, Square, Check, Goal, RotateCcw, Star, Upload } from 'lucide-react';
+import { Calendar, MapPin, Save, Play, Square, Check, Goal, RotateCcw, Star, Upload, CreditCard } from 'lucide-react';
 import { MatchTimer } from './MatchTimer';
 import { useGoalSound } from '@/hooks/useGoalSound';
 import { useMatchNotifications } from '@/hooks/useMatchNotifications';
 import { GoalScorersDialog } from './GoalScorersDialog';
+import { CardManagerDialog } from './CardManagerDialog';
 import { supabase } from '@/integrations/supabase/client';
 
 interface MatchCardProps {
