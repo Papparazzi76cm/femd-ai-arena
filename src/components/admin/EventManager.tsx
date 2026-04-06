@@ -39,6 +39,7 @@ export const EventManager = () => {
     title: '',
     description: '',
     date: '',
+    end_date: '',
     location: '',
     poster_url: ''
   });
