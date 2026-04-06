@@ -857,6 +857,43 @@ export const LiveTournamentPage = () => {
                       </div>
                     </div>
                   )}
+                  {/* Cards */}
+                  {matchCards.get(selectedMatchDetail.id) && matchCards.get(selectedMatchDetail.id)!.length > 0 && (
+                    <div className="border-t pt-3">
+                      <h4 className="text-sm font-semibold mb-2">Tarjetas</h4>
+                      <div className="grid grid-cols-2 gap-2">
+                        <div className="space-y-1">
+                          {matchCards.get(selectedMatchDetail.id)!.filter(c => c.team_id === selectedMatchDetail.home_team_id).sort((a, b) => (a.minute || 0) - (b.minute || 0)).map(c => {
+                            const p = c.player_id ? playerNames.get(c.player_id) : null;
+                            return <p key={c.id} className="text-sm">{c.card_type === 'yellow' ? '🟨' : '🟥'} {p ? `${p.number ? `#${p.number} ` : ''}${p.name}` : 'Jugador'}{c.minute ? ` (${c.minute}')` : ''}</p>;
+                          })}
+                        </div>
+                        <div className="space-y-1 text-right">
+                          {matchCards.get(selectedMatchDetail.id)!.filter(c => c.team_id === selectedMatchDetail.away_team_id).sort((a, b) => (a.minute || 0) - (b.minute || 0)).map(c => {
+                            const p = c.player_id ? playerNames.get(c.player_id) : null;
+                            return <p key={c.id} className="text-sm">{p ? `${p.number ? `#${p.number} ` : ''}${p.name}` : 'Jugador'}{c.minute ? ` (${c.minute}')` : ''} {c.card_type === 'yellow' ? '🟨' : '🟥'}</p>;
+                          })}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                  {/* MVP */}
+                  {matchMvps.get(selectedMatchDetail.id) && (() => {
+                    const mvp = matchMvps.get(selectedMatchDetail.id)!;
+                    return (
+                      <div className="border-t pt-3">
+                        <h4 className="text-sm font-semibold mb-2 flex items-center gap-1">⭐ MVP del Partido</h4>
+                        <div className="flex items-center gap-3 justify-center">
+                          {mvp.photo_url && <img src={mvp.photo_url} alt="MVP" className="w-16 h-16 rounded-lg object-cover" />}
+                          <div className="text-center">
+                            <p className="font-bold">
+                              {mvp.player ? `${mvp.player.number ? `#${mvp.player.number} ` : ''}${mvp.player.name}` : 'MVP'}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })()}
                 </div>
               )}
             </DialogContent>
