@@ -358,6 +358,42 @@ export const LiveTournamentPage = () => {
           setTopScorers([]);
           setMatchGoals(new Map());
         }
+
+        // Load match cards
+        const { data: cardsData } = await supabase.from('match_cards').select('*').in('match_id', matchIds);
+        if (cardsData && cardsData.length > 0) {
+          const cardsMap: MatchCardMap = new Map();
+          (cardsData as MatchCard[]).forEach(card => {
+            const existing = cardsMap.get(card.match_id) || [];
+            existing.push(card);
+            cardsMap.set(card.match_id, existing);
+          });
+          setMatchCards(cardsMap);
+
+          // Also add card player names to playerNames
+          const cardPlayerIds = cardsData.filter(c => c.player_id).map(c => c.player_id!);
+          const missingIds = cardPlayerIds.filter(id => !playerNames.has(id));
+          if (missingIds.length > 0) {
+            const { data: cardPlayers } = await supabase.from('participants').select('id, name, number').in('id', missingIds);
+            if (cardPlayers) {
+              const updated = new Map(playerNames);
+              cardPlayers.forEach((p: any) => updated.set(p.id, { name: p.name, number: p.number }));
+              setPlayerNames(updated);
+            }
+          }
+        } else {
+          setMatchCards(new Map());
+        }
+
+        // Load MVPs
+        const { data: mvpsData } = await supabase.from('match_mvps').select('*, player:participants(name, number)').in('match_id', matchIds);
+        if (mvpsData && mvpsData.length > 0) {
+          const mvpMap: MatchMvpMap = new Map();
+          (mvpsData as MatchMvp[]).forEach(mvp => mvpMap.set(mvp.match_id, mvp));
+          setMatchMvps(mvpMap);
+        } else {
+          setMatchMvps(new Map());
+        }
       }
     } catch (error) {
       console.error('Error loading live data:', error);
