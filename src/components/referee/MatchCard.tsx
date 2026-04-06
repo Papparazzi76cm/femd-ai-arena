@@ -23,6 +23,7 @@ interface MatchCardProps {
   awayTeamId: string;
   onUpdate: (matchId: string, updates: Partial<Match>) => Promise<void>;
   readOnly?: boolean;
+  eventId?: string;
 }
 
 export const MatchCard = ({ 
