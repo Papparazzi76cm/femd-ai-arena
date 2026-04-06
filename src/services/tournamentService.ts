@@ -1,5 +1,6 @@
 import { supabase } from '@/integrations/supabase/client';
 import { EventTeam, Match, MatchScheduleConflict } from '@/types/tournament';
+import { buildGroupStandings, buildCrossGroupRankings, sortCrossGroupRanking, GroupMatch } from '@/services/tournamentEngine';
 
 export const tournamentService = {
   // Event Teams
@@ -364,7 +365,7 @@ export const tournamentService = {
 
   // Resolve knockout placeholders to actual team IDs
   async resolveKnockoutPlaceholders(eventId: string): Promise<number> {
-    // Get all event teams with club data sorted by standings
+    // Get all event teams
     const { data: eventTeams } = await supabase
       .from('event_teams')
       .select('*, team:teams(*)')
@@ -380,113 +381,50 @@ export const tournamentService = {
 
     if (!allMatches) return 0;
 
-    // Build group standings
-    const groupMatches = allMatches.filter((m: any) =>
-      (m.phase === 'group' || m.phase === 'Fase de Grupos' || m.phase?.startsWith('Jornada') || m.phase?.toLowerCase().includes('grupo')) &&
-      m.status === 'finished' && m.home_score != null && m.away_score != null
+    // Convert to GroupMatch format for the engine
+    const groupMatchData: GroupMatch[] = allMatches
+      .filter((m: any) =>
+        (m.phase === 'group' || m.phase === 'Fase de Grupos' || m.phase?.startsWith('Jornada') || m.phase?.toLowerCase().includes('grupo')) &&
+        m.status === 'finished' && m.home_score != null && m.away_score != null
+      )
+      .map((m: any) => ({
+        id: m.id,
+        homeTeamId: m.home_team_id,
+        awayTeamId: m.away_team_id,
+        homeScore: m.home_score,
+        awayScore: m.away_score,
+        homeYellowCards: m.home_yellow_cards || 0,
+        homeRedCards: m.home_red_cards || 0,
+        awayYellowCards: m.away_yellow_cards || 0,
+        awayRedCards: m.away_red_cards || 0,
+        phase: m.phase,
+        groupName: m.group_name,
+        status: m.status,
+      }));
+
+    // Use engine to build standings with proper tiebreakers
+    const standings = buildGroupStandings(
+      eventTeams.map((et: any) => ({ id: et.id, team_id: et.team_id, group_name: et.group_name })),
+      groupMatchData,
     );
 
-    // Calculate standings per group
+    // Build cross-group rankings with average-based criteria
+    const rankings = buildCrossGroupRankings(standings);
+
+    // Build groups map for position lookup (groupName → sorted team list)
     const groups: Record<string, any[]> = {};
-    eventTeams.forEach((et: any) => {
-      const g = et.group_name || 'Sin grupo';
-      if (!groups[g]) groups[g] = [];
-      groups[g].push({
-        ...et,
-        _points: 0, _gf: 0, _gc: 0, _gd: 0, _w: 0, _d: 0, _l: 0, _mp: 0, _yc: 0, _rc: 0,
-      });
+    standings.forEach((teamsList, groupName) => {
+      if (groupName === 'Sin grupo') return;
+      groups[groupName] = teamsList;
     });
 
-    groupMatches.forEach((m: any) => {
-      Object.values(groups).forEach((teamsList: any[]) => {
-        const home = teamsList.find(t => t.team_id === m.home_team_id);
-        const away = teamsList.find(t => t.team_id === m.away_team_id);
-        if (!home || !away) return;
-        home._mp++; away._mp++;
-        home._gf += m.home_score; home._gc += m.away_score;
-        away._gf += m.away_score; away._gc += m.home_score;
-        home._yc += m.home_yellow_cards || 0; home._rc += m.home_red_cards || 0;
-        away._yc += m.away_yellow_cards || 0; away._rc += m.away_red_cards || 0;
-        if (m.home_score > m.away_score) { home._w++; home._points += 3; away._l++; }
-        else if (m.home_score < m.away_score) { away._w++; away._points += 3; home._l++; }
-        else { home._d++; away._d++; home._points++; away._points++; }
-        home._gd = home._gf - home._gc;
-        away._gd = away._gf - away._gc;
-      });
-    });
-
-    // Sort each group with head-to-head tiebreaker (FIFA-style within-group criteria)
-    // 1. Points, 2. Head-to-head, 3. Goal difference, 4. Goals for
-    Object.keys(groups).forEach(g => {
-      const teamsList = groups[g];
-      // First pass: sort by points, GD, GF
-      teamsList.sort((a: any, b: any) => {
-        if (b._points !== a._points) return b._points - a._points;
-        if (b._gd !== a._gd) return b._gd - a._gd;
-        if (b._gf !== a._gf) return b._gf - a._gf;
-        return 0;
-      });
-
-      // Second pass: resolve ties with head-to-head
-      for (let i = 0; i < teamsList.length - 1; i++) {
-        if (teamsList[i]._points === teamsList[i + 1]._points) {
-          // Check head-to-head between these two teams
-          const h2hMatches = groupMatches.filter((m: any) =>
-            (m.home_team_id === teamsList[i].team_id && m.away_team_id === teamsList[i + 1].team_id) ||
-            (m.home_team_id === teamsList[i + 1].team_id && m.away_team_id === teamsList[i].team_id)
-          );
-          if (h2hMatches.length > 0) {
-            let team1Pts = 0, team2Pts = 0;
-            h2hMatches.forEach((m: any) => {
-              if (m.home_team_id === teamsList[i].team_id) {
-                if (m.home_score > m.away_score) team1Pts += 3;
-                else if (m.home_score < m.away_score) team2Pts += 3;
-                else { team1Pts++; team2Pts++; }
-              } else {
-                if (m.home_score > m.away_score) team2Pts += 3;
-                else if (m.home_score < m.away_score) team1Pts += 3;
-                else { team1Pts++; team2Pts++; }
-              }
-            });
-            if (team2Pts > team1Pts) {
-              [teamsList[i], teamsList[i + 1]] = [teamsList[i + 1], teamsList[i]];
-            }
-          }
-        }
-      }
-    });
-
-    // Build "best Nth" rankings across groups using AVERAGE criteria
-    const sortedGroupNames = Object.keys(groups).filter(g => g !== 'Sin grupo').sort();
+    // Build "best Nth" rankings
     const bestByPosition: Record<number, any[]> = {};
-    sortedGroupNames.forEach(g => {
-      groups[g].forEach((t: any, idx: number) => {
-        const pos = idx + 1;
-        if (!bestByPosition[pos]) bestByPosition[pos] = [];
-        bestByPosition[pos].push(t);
-      });
-    });
-    // Sort each position ranking by:
-    // 1. Average points per match (higher is better)
-    // 2. Average goals scored per match (higher is better)
-    // 3. Average goals conceded per match (lower is better)
-    Object.keys(bestByPosition).forEach(pos => {
-      bestByPosition[Number(pos)].sort((a: any, b: any) => {
-        const avgPtsA = a._mp > 0 ? a._points / a._mp : 0;
-        const avgPtsB = b._mp > 0 ? b._points / b._mp : 0;
-        if (Math.abs(avgPtsB - avgPtsA) > 0.0001) return avgPtsB - avgPtsA;
-
-        const avgGfA = a._mp > 0 ? a._gf / a._mp : 0;
-        const avgGfB = b._mp > 0 ? b._gf / b._mp : 0;
-        if (Math.abs(avgGfB - avgGfA) > 0.0001) return avgGfB - avgGfA;
-
-        const avgGcA = a._mp > 0 ? a._gc / a._mp : 0;
-        const avgGcB = b._mp > 0 ? b._gc / b._mp : 0;
-        return avgGcA - avgGcB; // lower conceded is better
-      });
+    rankings.forEach((teams, pos) => {
+      bestByPosition[pos] = teams;
     });
 
-    // Resolve function: placeholder text → event_team_id
+    // Resolve function: placeholder text → event_team_id (using et.id not team_id)
     const resolveTeamId = (placeholder: string | null): string | null => {
       if (!placeholder) return null;
 
@@ -496,7 +434,7 @@ export const tournamentService = {
         const pos = parseInt(groupMatch[1]);
         const groupName = groupMatch[2];
         const groupTeams = groups[groupName];
-        if (groupTeams && groupTeams[pos - 1]) return groupTeams[pos - 1].id;
+        if (groupTeams && groupTeams[pos - 1]) return groupTeams[pos - 1].eventTeamId;
       }
 
       // "1er Mejor 2º" or "2º Mejor 1º" format
@@ -505,7 +443,7 @@ export const tournamentService = {
         const rank = bestMatch[1] ? parseInt(bestMatch[1]) : 1;
         const pos = parseInt(bestMatch[2]);
         const ranked = bestByPosition[pos];
-        if (ranked && ranked[rank - 1]) return ranked[rank - 1].id;
+        if (ranked && ranked[rank - 1]) return ranked[rank - 1].eventTeamId;
       }
 
       // "Ganador O1" format — find finished match with that bracket name
@@ -545,12 +483,31 @@ export const tournamentService = {
     for (const m of knockoutMatches) {
       const updates: any = {};
       if (m.home_placeholder && !m.home_team_id) {
-        const teamId = resolveTeamId(m.home_placeholder);
-        if (teamId) { updates.home_team_id = teamId; resolved++; }
+        const resolvedId = resolveTeamId(m.home_placeholder);
+        if (resolvedId) {
+          // resolvedId could be an eventTeamId or a teamId depending on the placeholder type
+          // For group/best placeholders it's eventTeamId, for winner/loser it's teamId
+          if (m.home_placeholder.startsWith('Ganador') || m.home_placeholder.startsWith('Perdedor')) {
+            updates.home_team_id = resolvedId;
+          } else {
+            // It's an eventTeamId, need to get the team_id
+            const et = eventTeams.find((e: any) => e.id === resolvedId);
+            if (et) updates.home_team_id = et.team_id;
+          }
+          resolved++;
+        }
       }
       if (m.away_placeholder && !m.away_team_id) {
-        const teamId = resolveTeamId(m.away_placeholder);
-        if (teamId) { updates.away_team_id = teamId; resolved++; }
+        const resolvedId = resolveTeamId(m.away_placeholder);
+        if (resolvedId) {
+          if (m.away_placeholder.startsWith('Ganador') || m.away_placeholder.startsWith('Perdedor')) {
+            updates.away_team_id = resolvedId;
+          } else {
+            const et = eventTeams.find((e: any) => e.id === resolvedId);
+            if (et) updates.away_team_id = et.team_id;
+          }
+          resolved++;
+        }
       }
       if (Object.keys(updates).length > 0) {
         await supabase.from('matches').update(updates).eq('id', m.id);
