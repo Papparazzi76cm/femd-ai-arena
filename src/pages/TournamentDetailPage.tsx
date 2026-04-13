@@ -656,10 +656,10 @@ export function TournamentDetailPage() {
 
         {/* Tabs */}
         <Tabs defaultValue="bracket" className="w-full">
-          <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 gap-1 h-auto p-1 mb-8">
+          <TabsList className="grid w-full grid-cols-3 md:grid-cols-5 gap-1 h-auto p-1 mb-8">
             <TabsTrigger value="bracket" className="text-xs sm:text-sm py-2 px-2 sm:px-4">
               <Trophy className="h-4 w-4 mr-1 sm:mr-2 flex-shrink-0" />
-              <span className="truncate">Cuadro del Torneo</span>
+              <span className="truncate">Cuadro</span>
             </TabsTrigger>
             <TabsTrigger value="teams" className="text-xs sm:text-sm py-2 px-2 sm:px-4">
               <Users className="h-4 w-4 mr-1 sm:mr-2 flex-shrink-0" />
@@ -672,6 +672,10 @@ export function TournamentDetailPage() {
             <TabsTrigger value="stats" className="text-xs sm:text-sm py-2 px-2 sm:px-4">
               <Medal className="h-4 w-4 mr-1 sm:mr-2 flex-shrink-0" />
               <span className="truncate">Estadísticas</span>
+            </TabsTrigger>
+            <TabsTrigger value="gallery" className="text-xs sm:text-sm py-2 px-2 sm:px-4">
+              <ImageIcon className="h-4 w-4 mr-1 sm:mr-2 flex-shrink-0" />
+              <span className="truncate">Galería</span>
             </TabsTrigger>
           </TabsList>
 
