@@ -182,6 +182,9 @@ export function TournamentDetailPage() {
   const [selectedBracketGroup, setSelectedBracketGroup] = useState<string>("all");
   const [selectedJornada, setSelectedJornada] = useState<string>("all");
   const [selectedMatchDetail, setSelectedMatchDetail] = useState<Match | null>(null);
+  const [topGoalScorers, setTopGoalScorers] = useState<any[]>([]);
+  const [mvpRanking, setMvpRanking] = useState<any[]>([]);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
     if (!id) return;
