@@ -53,6 +53,7 @@ interface Match {
   away_team_id: string | null;
   home_placeholder: string | null;
   away_placeholder: string | null;
+  field_id: string | null;
   home_team: {
     id: string;
     name: string;
@@ -62,6 +63,15 @@ interface Match {
     id: string;
     name: string;
     logo_url: string | null;
+  } | null;
+  field: {
+    id: string;
+    name: string;
+    facility_id: string;
+    facilities: {
+      id: string;
+      name: string;
+    } | null;
   } | null;
 }
 
