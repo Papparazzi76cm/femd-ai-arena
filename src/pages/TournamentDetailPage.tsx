@@ -228,6 +228,15 @@ export function TournamentDetailPage() {
               id,
               name,
               logo_url
+            ),
+            field:fields!matches_field_id_fkey (
+              id,
+              name,
+              facility_id,
+              facilities:facility_id (
+                id,
+                name
+              )
             )
           `)
           .eq("event_id", id)
