@@ -717,10 +717,16 @@ export const MesaMatchPanel = () => {
 
         {/* Goal scorers button - during live match */}
         {isLive && homeTeam && awayTeam && (
-          <Button variant="outline" className="w-full" onClick={() => setGoalScorersOpen(true)}>
-            <Goal className="w-4 h-4 mr-2" />
-            Registrar Goleadores
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" className="flex-1" onClick={() => setGoalScorersOpen(true)}>
+              <Goal className="w-4 h-4 mr-2" />
+              Registrar Goleadores
+            </Button>
+            <Button variant="outline" className="flex-1" onClick={() => { loadMvpData(); setMvpOpen(true); }}>
+              <Star className="w-4 h-4 mr-2" />
+              MVP
+            </Button>
+          </div>
         )}
 
         {/* Actions */}
@@ -909,6 +915,8 @@ export const MesaMatchPanel = () => {
             awayTeamId={awayTeam.id}
             homeTeamName={homeTeam.name}
             awayTeamName={awayTeam.name}
+            eventId={match.event_id}
+            categoryId={(match as any).category_id || undefined}
           />
         )}
       </div>
