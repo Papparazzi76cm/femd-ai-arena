@@ -1032,7 +1032,7 @@ export function TournamentDetailPage() {
                               {teams.map((team, index) => (
                                 <TableRow 
                                   key={team.team_id}
-                                  className={index < 2 ? "border-l-4 border-l-primary bg-primary/5" : ""}
+                                  className={index === 0 ? "border-l-4 border-l-primary bg-primary/5" : ""}
                                 >
                                   <TableCell className="font-bold text-muted-foreground">
                                     {String(index + 1).padStart(2, '0')}
