@@ -7,12 +7,13 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Calendar, MapPin, Trophy, ArrowLeft, Medal, Target, AlertTriangle, Users, ChevronDown, Crown, Star, Goal } from "lucide-react";
+import { Calendar, MapPin, Trophy, ArrowLeft, Medal, Target, AlertTriangle, Users, ChevronDown, Crown, Star, Goal, Image as ImageIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { TournamentGalleryDisplay } from "@/components/TournamentGalleryDisplay";
+import { TournamentGalleryManager } from "@/components/admin/TournamentGalleryManager";
 
 interface EventTeam {
   id: string;
