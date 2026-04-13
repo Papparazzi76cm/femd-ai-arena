@@ -43,6 +43,7 @@ interface AssignmentData {
     match_duration_minutes: number;
     match_halves: number;
     started_at: string | null;
+    category_id: string | null;
   };
   homeTeam: { id: string; name: string; logo_url: string | null } | null;
   awayTeam: { id: string; name: string; logo_url: string | null } | null;
@@ -326,21 +327,63 @@ export const MesaMatchPanel = () => {
     if (!data?.match?.id) return;
     setMvpLoading(true);
     try {
-      // Load all players from both teams
       const homeId = data.homeTeam?.id;
       const awayId = data.awayTeam?.id;
-      const [homeData, awayData, mvpData] = await Promise.all([
-        homeId ? supabase.from('participants').select('*').eq('team_id', homeId).order('number') : { data: [] },
-        awayId ? supabase.from('participants').select('*').eq('team_id', awayId).order('number') : { data: [] },
-        supabase.from('match_mvps').select('*, player:participants(*)').eq('match_id', data.match.id).maybeSingle(),
-      ]);
+      let homePlayers: any[] = [];
+      let awayPlayers: any[] = [];
+
+      // Load roster-filtered players by event and category
+      if (data.match.event_id && homeId && awayId) {
+        let query = supabase
+          .from('event_teams')
+          .select('id, team_id')
+          .eq('event_id', data.match.event_id)
+          .in('team_id', [homeId, awayId]);
+        if (data.match.category_id) {
+          query = query.eq('category_id', data.match.category_id);
+        }
+        const { data: eventTeams } = await query;
+
+        if (eventTeams) {
+          const homeET = eventTeams.find(et => et.team_id === homeId);
+          const awayET = eventTeams.find(et => et.team_id === awayId);
+
+          const loadRoster = async (etId: string) => {
+            const { data: rosters } = await supabase.from('team_rosters').select('participant_id').eq('event_team_id', etId).eq('roster_role', 'player');
+            if (rosters && rosters.length > 0) {
+              const { data } = await supabase.from('participants').select('*').in('id', rosters.map(r => r.participant_id)).order('number');
+              return data || [];
+            }
+            return [];
+          };
+
+          if (homeET) homePlayers = await loadRoster(homeET.id);
+          if (awayET) awayPlayers = await loadRoster(awayET.id);
+        }
+      }
+
+      // Fallback to team_id if no roster
+      if (homePlayers.length === 0 && homeId) {
+        const { data: d } = await supabase.from('participants').select('*').eq('team_id', homeId).order('number');
+        homePlayers = d || [];
+      }
+      if (awayPlayers.length === 0 && awayId) {
+        const { data: d } = await supabase.from('participants').select('*').eq('team_id', awayId).order('number');
+        awayPlayers = d || [];
+      }
+
+      const { data: mvpData } = await supabase.from('match_mvps').select('*, player:participants(*)').eq('match_id', data.match.id).maybeSingle();
+
       setMvpPlayers([
-        ...(homeData.data || []).map((p: any) => ({ ...p, _teamName: data.homeTeam?.name })),
-        ...(awayData.data || []).map((p: any) => ({ ...p, _teamName: data.awayTeam?.name })),
+        ...homePlayers.map((p: any) => ({ ...p, _teamName: data.homeTeam?.name })),
+        ...awayPlayers.map((p: any) => ({ ...p, _teamName: data.awayTeam?.name })),
       ]);
-      if (mvpData.data) {
-        setCurrentMvp(mvpData.data);
-        setSelectedMvp(mvpData.data.player_id);
+      if (mvpData) {
+        setCurrentMvp(mvpData);
+        setSelectedMvp(mvpData.player_id);
+      } else {
+        setCurrentMvp(null);
+        setSelectedMvp('');
       }
     } catch (err) {
       console.error('Error loading MVP data:', err);
@@ -675,10 +718,16 @@ export const MesaMatchPanel = () => {
 
         {/* Goal scorers button - during live match */}
         {isLive && homeTeam && awayTeam && (
-          <Button variant="outline" className="w-full" onClick={() => setGoalScorersOpen(true)}>
-            <Goal className="w-4 h-4 mr-2" />
-            Registrar Goleadores
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" className="flex-1" onClick={() => setGoalScorersOpen(true)}>
+              <Goal className="w-4 h-4 mr-2" />
+              Registrar Goleadores
+            </Button>
+            <Button variant="outline" className="flex-1" onClick={() => { loadMvpData(); setMvpOpen(true); }}>
+              <Star className="w-4 h-4 mr-2" />
+              MVP
+            </Button>
+          </div>
         )}
 
         {/* Actions */}
@@ -867,6 +916,8 @@ export const MesaMatchPanel = () => {
             awayTeamId={awayTeam.id}
             homeTeamName={homeTeam.name}
             awayTeamName={awayTeam.name}
+            eventId={match.event_id}
+            categoryId={match.category_id || undefined}
           />
         )}
       </div>

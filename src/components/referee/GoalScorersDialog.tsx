@@ -28,6 +28,7 @@ interface GoalScorersDialogProps {
   homeTeamName: string;
   awayTeamName: string;
   eventId?: string;
+  categoryId?: string;
 }
 
 export const GoalScorersDialog = ({
@@ -39,6 +40,7 @@ export const GoalScorersDialog = ({
   homeTeamName,
   awayTeamName,
   eventId,
+  categoryId,
 }: GoalScorersDialogProps) => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -63,12 +65,16 @@ export const GoalScorersDialog = ({
       let awayRosterPlayers: Participant[] = [];
 
       if (eventId) {
-        // Get event_team ids for both teams in this event
-        const { data: eventTeams } = await supabase
+        // Get event_team ids for both teams in this event, filtered by category
+        let query = supabase
           .from('event_teams')
           .select('id, team_id')
           .eq('event_id', eventId)
           .in('team_id', [homeTeamId, awayTeamId]);
+        if (categoryId) {
+          query = query.eq('category_id', categoryId);
+        }
+        const { data: eventTeams } = await query;
 
         if (eventTeams && eventTeams.length > 0) {
           const homeET = eventTeams.find(et => et.team_id === homeTeamId);

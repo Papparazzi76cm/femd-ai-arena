@@ -246,11 +246,15 @@ export const MatchCard = ({
       let awayRosterPlayers: any[] = [];
 
       if (eventId) {
-        const { data: eventTeamsData } = await supabase
+        let query = supabase
           .from('event_teams')
           .select('id, team_id')
           .eq('event_id', eventId)
           .in('team_id', [homeTeamId, awayTeamId].filter(Boolean));
+        if (match.category_id) {
+          query = query.eq('category_id', match.category_id);
+        }
+        const { data: eventTeamsData } = await query;
 
         if (eventTeamsData) {
           const homeET = eventTeamsData.find(et => et.team_id === homeTeamId);
@@ -580,6 +584,7 @@ export const MatchCard = ({
         homeTeamName={homeTeamName}
         awayTeamName={awayTeamName}
         eventId={eventId}
+        categoryId={match.category_id || undefined}
       />
 
       <CardManagerDialog
@@ -591,6 +596,7 @@ export const MatchCard = ({
         homeTeamName={homeTeamName}
         awayTeamName={awayTeamName}
         eventId={eventId}
+        categoryId={match.category_id || undefined}
       />
 
       {/* MVP Dialog */}
