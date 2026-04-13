@@ -1385,6 +1385,11 @@ function MatchDetailDialog({ match, onClose }: { match: Match | null; onClose: (
                     {format(new Date(match.match_date), "d MMM yyyy, HH:mm", { locale: es })}
                   </p>
                 )}
+                {match.field && (
+                  <p className="text-xs text-muted-foreground">
+                    📍 {match.field.facilities?.name ? `${match.field.facilities.name} - ` : ''}{match.field.name}
+                  </p>
+                )}
               </div>
               <div className="flex flex-col items-center">
                 {awayLogo && <img src={awayLogo} alt={awayName} className="h-12 w-12 object-contain mb-1" />}
