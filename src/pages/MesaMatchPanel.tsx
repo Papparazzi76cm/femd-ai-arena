@@ -917,7 +917,7 @@ export const MesaMatchPanel = () => {
             homeTeamName={homeTeam.name}
             awayTeamName={awayTeam.name}
             eventId={match.event_id}
-            categoryId={(match as any).category_id || undefined}
+            categoryId={match.category_id || undefined}
           />
         )}
       </div>
