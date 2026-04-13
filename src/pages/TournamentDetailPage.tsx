@@ -1066,10 +1066,6 @@ export function TournamentDetailPage() {
                         </div>
                       </div>
                     ))}
-                  <p className="text-xs text-muted-foreground mt-3">
-                    <Badge variant="default" className="mr-1 bg-primary text-[10px]">C</Badge>
-                    = Clasificado a siguiente fase
-                  </p>
                 </CardContent>
               </Card>
             )}
@@ -1087,60 +1083,109 @@ export function TournamentDetailPage() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  {topScorers.length > 0 ? (
-                    <div className="space-y-3">
-                      {topScorers.map((scorer, index) => (
+                  {(() => {
+                    const teamGoals = calculatedStandings
+                      .map(team => ({
+                        team: team.teams.name,
+                        logo: team.teams.logo_url,
+                        goals: team.goals_for
+                      }))
+                      .sort((a, b) => b.goals - a.goals)
+                      .slice(0, 10);
+                    return teamGoals.length > 0 ? (
+                      <div className="space-y-3">
+                        {teamGoals.map((scorer, index) => (
+                          <div key={index} className="flex items-center justify-between p-3 rounded-lg bg-accent/50">
+                            <div className="flex items-center gap-3">
+                              <span className="text-lg font-bold text-primary">{index + 1}</span>
+                              {scorer.logo && (
+                                <img src={scorer.logo} alt={scorer.team} className="h-6 w-6 object-contain" />
+                              )}
+                              <span className="font-medium">{scorer.team}</span>
+                            </div>
+                            <Badge variant="secondary">
+                              {scorer.goals} goles
+                            </Badge>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-muted-foreground text-center py-4">Sin datos disponibles</p>
+                    );
+                  })()}
+                </CardContent>
+              </Card>
+
+              {/* Top Goal Scorers (Players) */}
+              <Card className="animate-fade-in">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Goal className="h-5 w-5 text-primary" />
+                    Máximos goleadores
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {topGoalScorers.length > 0 ? (
+                    <div className="space-y-3 max-h-[400px] overflow-y-auto">
+                      {topGoalScorers.slice(0, 20).map((scorer, index) => (
                         <div key={index} className="flex items-center justify-between p-3 rounded-lg bg-accent/50">
                           <div className="flex items-center gap-3">
                             <span className="text-lg font-bold text-primary">{index + 1}</span>
-                            <span className="font-medium">{scorer.team}</span>
+                            {scorer.teamLogo && (
+                              <img src={scorer.teamLogo} alt={scorer.team} className="h-6 w-6 object-contain" />
+                            )}
+                            <div>
+                              <span className="font-medium">{scorer.name}</span>
+                              <p className="text-xs text-muted-foreground">{scorer.team}</p>
+                            </div>
                           </div>
                           <Badge variant="secondary">
-                            {scorer.goals} goles
+                            {scorer.goals} {scorer.goals === 1 ? 'gol' : 'goles'}
                           </Badge>
                         </div>
                       ))}
                     </div>
                   ) : (
-                    <p className="text-muted-foreground text-center py-4">
-                      Sin datos disponibles
-                    </p>
-                  )}
-                </CardContent>
-              </Card>
-
-              {/* Cards Statistics */}
-              <Card className="animate-fade-in">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <AlertTriangle className="h-5 w-5 text-primary" />
-                    Tarjetas
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {calculatedStandings.length > 0 ? (
-                    <div className="space-y-3">
-                      <div className="flex items-center justify-between p-3 rounded-lg bg-yellow-500/10">
-                        <span className="font-medium">Tarjetas amarillas</span>
-                        <Badge variant="outline" className="bg-yellow-500/20 text-yellow-700 border-yellow-500">
-                          {calculatedStandings.reduce((sum, t) => sum + t.yellow_cards, 0)}
-                        </Badge>
-                      </div>
-                      <div className="flex items-center justify-between p-3 rounded-lg bg-red-500/10">
-                        <span className="font-medium">Tarjetas rojas</span>
-                        <Badge variant="outline" className="bg-red-500/20 text-red-700 border-red-500">
-                          {calculatedStandings.reduce((sum, t) => sum + t.red_cards, 0)}
-                        </Badge>
-                      </div>
-                    </div>
-                  ) : (
-                    <p className="text-muted-foreground text-center py-4">
-                      Sin datos disponibles
-                    </p>
+                    <p className="text-muted-foreground text-center py-4">Sin datos disponibles</p>
                   )}
                 </CardContent>
               </Card>
             </div>
+
+            {/* MVP Ranking */}
+            <Card className="animate-fade-in">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Star className="h-5 w-5 text-primary" />
+                  Ranking de MVP's
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {mvpRanking.length > 0 ? (
+                  <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-3">
+                    {mvpRanking.map((mvp, index) => (
+                      <div key={index} className="flex items-center justify-between p-3 rounded-lg bg-accent/50">
+                        <div className="flex items-center gap-3">
+                          <span className="text-lg font-bold text-primary">{index + 1}</span>
+                          {mvp.teamLogo && (
+                            <img src={mvp.teamLogo} alt={mvp.team} className="h-6 w-6 object-contain" />
+                          )}
+                          <div>
+                            <span className="font-medium">{mvp.name}</span>
+                            <p className="text-xs text-muted-foreground">{mvp.team}</p>
+                          </div>
+                        </div>
+                        <Badge variant="secondary" className="bg-yellow-500/20 text-yellow-700 border-yellow-500">
+                          {mvp.count} MVP{mvp.count > 1 ? 's' : ''}
+                        </Badge>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-muted-foreground text-center py-4">Sin datos de MVP disponibles</p>
+                )}
+              </CardContent>
+            </Card>
 
             {/* Tournament Summary */}
             <Card className="animate-fade-in">
@@ -1175,6 +1220,18 @@ export function TournamentDetailPage() {
                 </div>
               </CardContent>
             </Card>
+          </TabsContent>
+
+          {/* Gallery Tab */}
+          <TabsContent value="gallery" className="space-y-6">
+            {isAdmin && (
+              <Card className="animate-fade-in">
+                <CardContent className="pt-6">
+                  <TournamentGalleryManager eventId={id!} />
+                </CardContent>
+              </Card>
+            )}
+            <TournamentGalleryDisplay eventId={id!} />
           </TabsContent>
         </Tabs>
 
