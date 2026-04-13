@@ -566,14 +566,6 @@ export function TournamentDetailPage() {
     );
   }
 
-  // Top scorers (mock data - would need a goals table in real implementation)
-  const topScorers = calculatedStandings
-    .flatMap(team => [{
-      team: team.teams.name,
-      goals: team.goals_for
-    }])
-    .sort((a, b) => b.goals - a.goals)
-    .slice(0, 5);
 
   return (
     <div className="min-h-screen py-20">
