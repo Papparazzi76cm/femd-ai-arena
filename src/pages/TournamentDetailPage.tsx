@@ -7,12 +7,13 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Calendar, MapPin, Trophy, ArrowLeft, Medal, Target, AlertTriangle, Users, ChevronDown, Crown, Star, Goal } from "lucide-react";
+import { Calendar, MapPin, Trophy, ArrowLeft, Medal, Target, AlertTriangle, Users, ChevronDown, Crown, Star, Goal, Image as ImageIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { TournamentGalleryDisplay } from "@/components/TournamentGalleryDisplay";
+import { TournamentGalleryManager } from "@/components/admin/TournamentGalleryManager";
 
 interface EventTeam {
   id: string;
@@ -52,6 +53,7 @@ interface Match {
   away_team_id: string | null;
   home_placeholder: string | null;
   away_placeholder: string | null;
+  field_id: string | null;
   home_team: {
     id: string;
     name: string;
@@ -61,6 +63,15 @@ interface Match {
     id: string;
     name: string;
     logo_url: string | null;
+  } | null;
+  field: {
+    id: string;
+    name: string;
+    facility_id: string;
+    facilities: {
+      id: string;
+      name: string;
+    } | null;
   } | null;
 }
 
@@ -171,6 +182,9 @@ export function TournamentDetailPage() {
   const [selectedBracketGroup, setSelectedBracketGroup] = useState<string>("all");
   const [selectedJornada, setSelectedJornada] = useState<string>("all");
   const [selectedMatchDetail, setSelectedMatchDetail] = useState<Match | null>(null);
+  const [topGoalScorers, setTopGoalScorers] = useState<any[]>([]);
+  const [mvpRanking, setMvpRanking] = useState<any[]>([]);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
     if (!id) return;
@@ -217,6 +231,15 @@ export function TournamentDetailPage() {
               id,
               name,
               logo_url
+            ),
+            field:fields!matches_field_id_fkey (
+              id,
+              name,
+              facility_id,
+              facilities:facility_id (
+                id,
+                name
+              )
             )
           `)
           .eq("event_id", id)
@@ -224,6 +247,70 @@ export function TournamentDetailPage() {
 
         if (matchesError) throw matchesError;
         setMatches(matchesData || []);
+
+        // Load top goal scorers
+        const { data: goalsData } = await supabase
+          .from('match_goals')
+          .select('player_id, team_id, player:participants(name, number), team:teams(name, logo_url)')
+          .in('match_id', (matchesData || []).map((m: any) => m.id));
+
+        if (goalsData && goalsData.length > 0) {
+          const scorerMap = new Map<string, { name: string; team: string; teamLogo: string | null; goals: number }>();
+          goalsData.forEach((g: any) => {
+            const key = g.player_id || 'unknown';
+            const existing = scorerMap.get(key);
+            if (existing) {
+              existing.goals++;
+            } else {
+              scorerMap.set(key, {
+                name: g.player?.name || 'Desconocido',
+                team: g.team?.name || '',
+                teamLogo: g.team?.logo_url || null,
+                goals: 1
+              });
+            }
+          });
+          setTopGoalScorers(Array.from(scorerMap.values()).sort((a, b) => b.goals - a.goals));
+        }
+
+        // Load MVP ranking
+        const { data: mvpsData } = await supabase
+          .from('match_mvps')
+          .select('player_id, player:participants(name, number, team_id)')
+          .in('match_id', (matchesData || []).map((m: any) => m.id));
+
+        if (mvpsData && mvpsData.length > 0) {
+          // Get team info for MVPs
+          const playerTeamIds = new Set<string>();
+          mvpsData.forEach((m: any) => { if (m.player?.team_id) playerTeamIds.add(m.player.team_id); });
+          const { data: mvpTeams } = await supabase.from('teams').select('id, name, logo_url').in('id', Array.from(playerTeamIds));
+          const teamMap = new Map((mvpTeams || []).map((t: any) => [t.id, t]));
+          
+          const mvpMap = new Map<string, { name: string; team: string; teamLogo: string | null; count: number }>();
+          mvpsData.forEach((m: any) => {
+            const key = m.player_id;
+            const team = teamMap.get(m.player?.team_id);
+            const existing = mvpMap.get(key);
+            if (existing) {
+              existing.count++;
+            } else {
+              mvpMap.set(key, {
+                name: m.player?.name || 'Desconocido',
+                team: team?.name || '',
+                teamLogo: team?.logo_url || null,
+                count: 1
+              });
+            }
+          });
+          setMvpRanking(Array.from(mvpMap.values()).filter(m => m.count >= 1).sort((a, b) => b.count - a.count));
+        }
+
+        // Check admin role
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          const { data: roleData } = await supabase.from('user_roles').select('role').eq('user_id', user.id).eq('role', 'admin').maybeSingle();
+          setIsAdmin(!!roleData);
+        }
       } catch (error) {
         console.error("Error loading tournament data:", error);
       } finally {
@@ -479,14 +566,6 @@ export function TournamentDetailPage() {
     );
   }
 
-  // Top scorers (mock data - would need a goals table in real implementation)
-  const topScorers = calculatedStandings
-    .flatMap(team => [{
-      team: team.teams.name,
-      goals: team.goals_for
-    }])
-    .sort((a, b) => b.goals - a.goals)
-    .slice(0, 5);
 
   return (
     <div className="min-h-screen py-20">
@@ -569,10 +648,10 @@ export function TournamentDetailPage() {
 
         {/* Tabs */}
         <Tabs defaultValue="bracket" className="w-full">
-          <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 gap-1 h-auto p-1 mb-8">
+          <TabsList className="grid w-full grid-cols-3 md:grid-cols-5 gap-1 h-auto p-1 mb-8">
             <TabsTrigger value="bracket" className="text-xs sm:text-sm py-2 px-2 sm:px-4">
               <Trophy className="h-4 w-4 mr-1 sm:mr-2 flex-shrink-0" />
-              <span className="truncate">Cuadro del Torneo</span>
+              <span className="truncate">Cuadro</span>
             </TabsTrigger>
             <TabsTrigger value="teams" className="text-xs sm:text-sm py-2 px-2 sm:px-4">
               <Users className="h-4 w-4 mr-1 sm:mr-2 flex-shrink-0" />
@@ -585,6 +664,10 @@ export function TournamentDetailPage() {
             <TabsTrigger value="stats" className="text-xs sm:text-sm py-2 px-2 sm:px-4">
               <Medal className="h-4 w-4 mr-1 sm:mr-2 flex-shrink-0" />
               <span className="truncate">Estadísticas</span>
+            </TabsTrigger>
+            <TabsTrigger value="gallery" className="text-xs sm:text-sm py-2 px-2 sm:px-4">
+              <ImageIcon className="h-4 w-4 mr-1 sm:mr-2 flex-shrink-0" />
+              <span className="truncate">Galería</span>
             </TabsTrigger>
           </TabsList>
 
@@ -941,7 +1024,7 @@ export function TournamentDetailPage() {
                               {teams.map((team, index) => (
                                 <TableRow 
                                   key={team.team_id}
-                                  className={index < 2 ? "border-l-4 border-l-primary bg-primary/5" : ""}
+                                  className={index === 0 ? "border-l-4 border-l-primary bg-primary/5" : ""}
                                 >
                                   <TableCell className="font-bold text-muted-foreground">
                                     {String(index + 1).padStart(2, '0')}
@@ -975,10 +1058,6 @@ export function TournamentDetailPage() {
                         </div>
                       </div>
                     ))}
-                  <p className="text-xs text-muted-foreground mt-3">
-                    <Badge variant="default" className="mr-1 bg-primary text-[10px]">C</Badge>
-                    = Clasificado a siguiente fase
-                  </p>
                 </CardContent>
               </Card>
             )}
@@ -996,60 +1075,109 @@ export function TournamentDetailPage() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  {topScorers.length > 0 ? (
-                    <div className="space-y-3">
-                      {topScorers.map((scorer, index) => (
+                  {(() => {
+                    const teamGoals = calculatedStandings
+                      .map(team => ({
+                        team: team.teams.name,
+                        logo: team.teams.logo_url,
+                        goals: team.goals_for
+                      }))
+                      .sort((a, b) => b.goals - a.goals)
+                      .slice(0, 10);
+                    return teamGoals.length > 0 ? (
+                      <div className="space-y-3">
+                        {teamGoals.map((scorer, index) => (
+                          <div key={index} className="flex items-center justify-between p-3 rounded-lg bg-accent/50">
+                            <div className="flex items-center gap-3">
+                              <span className="text-lg font-bold text-primary">{index + 1}</span>
+                              {scorer.logo && (
+                                <img src={scorer.logo} alt={scorer.team} className="h-6 w-6 object-contain" />
+                              )}
+                              <span className="font-medium">{scorer.team}</span>
+                            </div>
+                            <Badge variant="secondary">
+                              {scorer.goals} goles
+                            </Badge>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-muted-foreground text-center py-4">Sin datos disponibles</p>
+                    );
+                  })()}
+                </CardContent>
+              </Card>
+
+              {/* Top Goal Scorers (Players) */}
+              <Card className="animate-fade-in">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Goal className="h-5 w-5 text-primary" />
+                    Máximos goleadores
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {topGoalScorers.length > 0 ? (
+                    <div className="space-y-3 max-h-[400px] overflow-y-auto">
+                      {topGoalScorers.slice(0, 20).map((scorer, index) => (
                         <div key={index} className="flex items-center justify-between p-3 rounded-lg bg-accent/50">
                           <div className="flex items-center gap-3">
                             <span className="text-lg font-bold text-primary">{index + 1}</span>
-                            <span className="font-medium">{scorer.team}</span>
+                            {scorer.teamLogo && (
+                              <img src={scorer.teamLogo} alt={scorer.team} className="h-6 w-6 object-contain" />
+                            )}
+                            <div>
+                              <span className="font-medium">{scorer.name}</span>
+                              <p className="text-xs text-muted-foreground">{scorer.team}</p>
+                            </div>
                           </div>
                           <Badge variant="secondary">
-                            {scorer.goals} goles
+                            {scorer.goals} {scorer.goals === 1 ? 'gol' : 'goles'}
                           </Badge>
                         </div>
                       ))}
                     </div>
                   ) : (
-                    <p className="text-muted-foreground text-center py-4">
-                      Sin datos disponibles
-                    </p>
-                  )}
-                </CardContent>
-              </Card>
-
-              {/* Cards Statistics */}
-              <Card className="animate-fade-in">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <AlertTriangle className="h-5 w-5 text-primary" />
-                    Tarjetas
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {calculatedStandings.length > 0 ? (
-                    <div className="space-y-3">
-                      <div className="flex items-center justify-between p-3 rounded-lg bg-yellow-500/10">
-                        <span className="font-medium">Tarjetas amarillas</span>
-                        <Badge variant="outline" className="bg-yellow-500/20 text-yellow-700 border-yellow-500">
-                          {calculatedStandings.reduce((sum, t) => sum + t.yellow_cards, 0)}
-                        </Badge>
-                      </div>
-                      <div className="flex items-center justify-between p-3 rounded-lg bg-red-500/10">
-                        <span className="font-medium">Tarjetas rojas</span>
-                        <Badge variant="outline" className="bg-red-500/20 text-red-700 border-red-500">
-                          {calculatedStandings.reduce((sum, t) => sum + t.red_cards, 0)}
-                        </Badge>
-                      </div>
-                    </div>
-                  ) : (
-                    <p className="text-muted-foreground text-center py-4">
-                      Sin datos disponibles
-                    </p>
+                    <p className="text-muted-foreground text-center py-4">Sin datos disponibles</p>
                   )}
                 </CardContent>
               </Card>
             </div>
+
+            {/* MVP Ranking */}
+            <Card className="animate-fade-in">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Star className="h-5 w-5 text-primary" />
+                  Ranking de MVP's
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {mvpRanking.length > 0 ? (
+                  <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-3">
+                    {mvpRanking.map((mvp, index) => (
+                      <div key={index} className="flex items-center justify-between p-3 rounded-lg bg-accent/50">
+                        <div className="flex items-center gap-3">
+                          <span className="text-lg font-bold text-primary">{index + 1}</span>
+                          {mvp.teamLogo && (
+                            <img src={mvp.teamLogo} alt={mvp.team} className="h-6 w-6 object-contain" />
+                          )}
+                          <div>
+                            <span className="font-medium">{mvp.name}</span>
+                            <p className="text-xs text-muted-foreground">{mvp.team}</p>
+                          </div>
+                        </div>
+                        <Badge variant="secondary" className="bg-yellow-500/20 text-yellow-700 border-yellow-500">
+                          {mvp.count} MVP{mvp.count > 1 ? 's' : ''}
+                        </Badge>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-muted-foreground text-center py-4">Sin datos de MVP disponibles</p>
+                )}
+              </CardContent>
+            </Card>
 
             {/* Tournament Summary */}
             <Card className="animate-fade-in">
@@ -1085,12 +1213,20 @@ export function TournamentDetailPage() {
               </CardContent>
             </Card>
           </TabsContent>
+
+          {/* Gallery Tab */}
+          <TabsContent value="gallery" className="space-y-6">
+            {isAdmin && (
+              <Card className="animate-fade-in">
+                <CardContent className="pt-6">
+                  <TournamentGalleryManager eventId={id!} />
+                </CardContent>
+              </Card>
+            )}
+            <TournamentGalleryDisplay eventId={id!} />
+          </TabsContent>
         </Tabs>
 
-        {/* Tournament Gallery */}
-        <div className="mt-12">
-          <TournamentGalleryDisplay eventId={id!} />
-        </div>
 
         {/* Match Detail Dialog */}
         <MatchDetailDialog 
@@ -1159,13 +1295,18 @@ function ResultRow({ match, onClick }: { match: Match; onClick?: () => void }) {
         ) : (
           <span className="text-xl font-bold text-muted-foreground">- vs -</span>
         )}
-        <div className="flex items-center gap-2 mt-1">
+        <div className="flex flex-wrap items-center gap-2 mt-1">
           {phaseLabel && (
             <span className="text-xs text-primary font-medium">{phaseLabel}</span>
           )}
           {match.match_date && (
             <span className="text-xs text-muted-foreground">
               {format(new Date(match.match_date), "dd.MM.yyyy HH:mm", { locale: es })}
+            </span>
+          )}
+          {match.field && (
+            <span className="text-xs text-muted-foreground">
+              📍 {match.field.facilities?.name ? `${match.field.facilities.name} - ` : ''}{match.field.name}
             </span>
           )}
         </div>
@@ -1242,6 +1383,11 @@ function MatchDetailDialog({ match, onClose }: { match: Match | null; onClose: (
                 {match.match_date && (
                   <p className="text-xs text-muted-foreground mt-1">
                     {format(new Date(match.match_date), "d MMM yyyy, HH:mm", { locale: es })}
+                  </p>
+                )}
+                {match.field && (
+                  <p className="text-xs text-muted-foreground">
+                    📍 {match.field.facilities?.name ? `${match.field.facilities.name} - ` : ''}{match.field.name}
                   </p>
                 )}
               </div>
