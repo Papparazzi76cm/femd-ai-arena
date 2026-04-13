@@ -43,6 +43,7 @@ interface AssignmentData {
     match_duration_minutes: number;
     match_halves: number;
     started_at: string | null;
+    category_id: string | null;
   };
   homeTeam: { id: string; name: string; logo_url: string | null } | null;
   awayTeam: { id: string; name: string; logo_url: string | null } | null;
