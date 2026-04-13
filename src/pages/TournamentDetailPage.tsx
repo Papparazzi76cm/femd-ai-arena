@@ -247,6 +247,70 @@ export function TournamentDetailPage() {
 
         if (matchesError) throw matchesError;
         setMatches(matchesData || []);
+
+        // Load top goal scorers
+        const { data: goalsData } = await supabase
+          .from('match_goals')
+          .select('player_id, team_id, player:participants(name, number), team:teams(name, logo_url)')
+          .in('match_id', (matchesData || []).map((m: any) => m.id));
+
+        if (goalsData && goalsData.length > 0) {
+          const scorerMap = new Map<string, { name: string; team: string; teamLogo: string | null; goals: number }>();
+          goalsData.forEach((g: any) => {
+            const key = g.player_id || 'unknown';
+            const existing = scorerMap.get(key);
+            if (existing) {
+              existing.goals++;
+            } else {
+              scorerMap.set(key, {
+                name: g.player?.name || 'Desconocido',
+                team: g.team?.name || '',
+                teamLogo: g.team?.logo_url || null,
+                goals: 1
+              });
+            }
+          });
+          setTopGoalScorers(Array.from(scorerMap.values()).sort((a, b) => b.goals - a.goals));
+        }
+
+        // Load MVP ranking
+        const { data: mvpsData } = await supabase
+          .from('match_mvps')
+          .select('player_id, player:participants(name, number, team_id)')
+          .in('match_id', (matchesData || []).map((m: any) => m.id));
+
+        if (mvpsData && mvpsData.length > 0) {
+          // Get team info for MVPs
+          const playerTeamIds = new Set<string>();
+          mvpsData.forEach((m: any) => { if (m.player?.team_id) playerTeamIds.add(m.player.team_id); });
+          const { data: mvpTeams } = await supabase.from('teams').select('id, name, logo_url').in('id', Array.from(playerTeamIds));
+          const teamMap = new Map((mvpTeams || []).map((t: any) => [t.id, t]));
+          
+          const mvpMap = new Map<string, { name: string; team: string; teamLogo: string | null; count: number }>();
+          mvpsData.forEach((m: any) => {
+            const key = m.player_id;
+            const team = teamMap.get(m.player?.team_id);
+            const existing = mvpMap.get(key);
+            if (existing) {
+              existing.count++;
+            } else {
+              mvpMap.set(key, {
+                name: m.player?.name || 'Desconocido',
+                team: team?.name || '',
+                teamLogo: team?.logo_url || null,
+                count: 1
+              });
+            }
+          });
+          setMvpRanking(Array.from(mvpMap.values()).filter(m => m.count >= 1).sort((a, b) => b.count - a.count));
+        }
+
+        // Check admin role
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          const { data: roleData } = await supabase.from('user_roles').select('role').eq('user_id', user.id).eq('role', 'admin').maybeSingle();
+          setIsAdmin(!!roleData);
+        }
       } catch (error) {
         console.error("Error loading tournament data:", error);
       } finally {
