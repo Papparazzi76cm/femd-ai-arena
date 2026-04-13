@@ -40,6 +40,7 @@ export const CardManagerDialog = ({
   homeTeamName,
   awayTeamName,
   eventId,
+  categoryId,
   onCardsChanged,
 }: CardManagerDialogProps) => {
   const [loading, setLoading] = useState(true);

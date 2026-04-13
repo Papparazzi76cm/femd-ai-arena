@@ -40,7 +40,8 @@ export const GoalScorersDialog = ({
   homeTeamName,
   awayTeamName,
   eventId,
-}: GoalScorersDialogProps & { categoryId?: string }) => {
+  categoryId,
+}: GoalScorersDialogProps) => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [homePlayers, setHomePlayers] = useState<Participant[]>([]);
