@@ -27,6 +27,7 @@ interface CardManagerDialogProps {
   homeTeamName: string;
   awayTeamName: string;
   eventId?: string;
+  categoryId?: string;
   onCardsChanged?: () => void;
 }
 
@@ -63,11 +64,15 @@ export const CardManagerDialog = ({
 
       // Load roster players (players + staff)
       if (eventId) {
-        const { data: eventTeams } = await supabase
+        let query = supabase
           .from('event_teams')
           .select('id, team_id')
           .eq('event_id', eventId)
           .in('team_id', [homeTeamId, awayTeamId]);
+        if (categoryId) {
+          query = query.eq('category_id', categoryId);
+        }
+        const { data: eventTeams } = await query;
 
         if (eventTeams && eventTeams.length > 0) {
           const homeET = eventTeams.find(et => et.team_id === homeTeamId);
