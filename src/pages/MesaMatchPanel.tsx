@@ -339,8 +339,8 @@ export const MesaMatchPanel = () => {
           .select('id, team_id')
           .eq('event_id', data.match.event_id)
           .in('team_id', [homeId, awayId]);
-        if ((data.match as any).category_id) {
-          query = query.eq('category_id', (data.match as any).category_id);
+        if (data.match.category_id) {
+          query = query.eq('category_id', data.match.category_id);
         }
         const { data: eventTeams } = await query;
 
