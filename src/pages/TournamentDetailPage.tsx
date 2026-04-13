@@ -1235,10 +1235,6 @@ export function TournamentDetailPage() {
           </TabsContent>
         </Tabs>
 
-        {/* Tournament Gallery */}
-        <div className="mt-12">
-          <TournamentGalleryDisplay eventId={id!} />
-        </div>
 
         {/* Match Detail Dialog */}
         <MatchDetailDialog 
@@ -1307,13 +1303,18 @@ function ResultRow({ match, onClick }: { match: Match; onClick?: () => void }) {
         ) : (
           <span className="text-xl font-bold text-muted-foreground">- vs -</span>
         )}
-        <div className="flex items-center gap-2 mt-1">
+        <div className="flex flex-wrap items-center gap-2 mt-1">
           {phaseLabel && (
             <span className="text-xs text-primary font-medium">{phaseLabel}</span>
           )}
           {match.match_date && (
             <span className="text-xs text-muted-foreground">
               {format(new Date(match.match_date), "dd.MM.yyyy HH:mm", { locale: es })}
+            </span>
+          )}
+          {match.field && (
+            <span className="text-xs text-muted-foreground">
+              📍 {match.field.facilities?.name ? `${match.field.facilities.name} - ` : ''}{match.field.name}
             </span>
           )}
         </div>
