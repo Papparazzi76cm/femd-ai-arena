@@ -1,11 +1,12 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { sponsorService } from '@/services/sponsorService';
 import { Sponsor } from '@/types/database';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, Edit, Trash2, Save, X } from 'lucide-react';
+import { Plus, Edit, Trash2, Save, X, Upload, Loader2 } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 
 export const SponsorManager = () => {
   const [sponsors, setSponsors] = useState<Sponsor[]>([]);
@@ -18,7 +19,39 @@ export const SponsorManager = () => {
     website: '',
     tier: ''
   });
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
+
+  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      toast({ title: 'Error', description: 'Selecciona un archivo de imagen', variant: 'destructive' });
+      return;
+    }
+
+    setUploading(true);
+    try {
+      const ext = file.name.split('.').pop();
+      const fileName = `sponsors/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+      const { error: uploadError } = await supabase.storage
+        .from('imagenes-web')
+        .upload(fileName, file, { cacheControl: '3600', upsert: false });
+
+      if (uploadError) throw uploadError;
+
+      const { data: publicData } = supabase.storage.from('imagenes-web').getPublicUrl(fileName);
+      setFormData((prev) => ({ ...prev, logo_url: publicData.publicUrl }));
+      toast({ title: 'Logo subido con éxito' });
+    } catch (error: any) {
+      toast({ title: 'Error', description: error.message || 'No se pudo subir el logo', variant: 'destructive' });
+    } finally {
+      setUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
 
   useEffect(() => {
     loadSponsors();
@@ -133,13 +166,37 @@ export const SponsorManager = () => {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1">URL del Logo</label>
-                <Input
-                  value={formData.logo_url}
-                  onChange={(e) => setFormData({ ...formData, logo_url: e.target.value })}
-                  placeholder="https://..."
-                  type="url"
-                />
+                <label className="block text-sm font-medium mb-1">Logo</label>
+                <div className="flex gap-2">
+                  <Input
+                    value={formData.logo_url}
+                    onChange={(e) => setFormData({ ...formData, logo_url: e.target.value })}
+                    placeholder="URL del logo o sube un archivo"
+                    type="url"
+                    className="flex-1"
+                  />
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={handleLogoUpload}
+                    className="hidden"
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={uploading}
+                  >
+                    {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
+                    <span className="ml-2 hidden sm:inline">{uploading ? 'Subiendo...' : 'Subir'}</span>
+                  </Button>
+                </div>
+                {formData.logo_url && (
+                  <div className="mt-2 p-2 border rounded-md bg-muted/30 flex items-center justify-center h-24">
+                    <img src={formData.logo_url} alt="Vista previa" className="max-h-full max-w-full object-contain" />
+                  </div>
+                )}
               </div>
               <div>
                 <label className="block text-sm font-medium mb-1">Sitio Web</label>
