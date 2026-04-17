@@ -331,6 +331,44 @@ export const AuthPage = () => {
           </Tabs>
         </CardContent>
       </Card>
+
+      <Dialog open={forgotOpen} onOpenChange={setForgotOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Recuperar contraseña</DialogTitle>
+            <DialogDescription>
+              Te enviaremos un email con un enlace para restablecer tu contraseña.
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleForgotPassword} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="forgot-email">Email</Label>
+              <Input
+                id="forgot-email"
+                type="email"
+                placeholder="tu@email.com"
+                value={forgotEmail}
+                onChange={(e) => setForgotEmail(e.target.value)}
+                required
+                disabled={forgotLoading}
+              />
+            </div>
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setForgotOpen(false)}
+                disabled={forgotLoading}
+              >
+                Cancelar
+              </Button>
+              <Button type="submit" disabled={forgotLoading}>
+                {forgotLoading ? "Enviando..." : "Enviar enlace"}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
