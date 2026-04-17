@@ -190,9 +190,13 @@ export function Header() {
                 </div>
                 {user ? (
                   <div className="space-y-3">
-                    <p className="text-sm text-muted-foreground">
-                      {user.user_metadata?.name || user.email}
-                    </p>
+                    <Link
+                      to="/perfil"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                      className="block text-sm text-muted-foreground hover:text-primary"
+                    >
+                      {user.user_metadata?.name || user.email} · Mi perfil
+                    </Link>
                     <Button onClick={signOut} variant="outline" className="w-full">
                       Cerrar Sesión
                     </Button>
