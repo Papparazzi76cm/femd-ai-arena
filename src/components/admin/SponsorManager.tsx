@@ -166,13 +166,37 @@ export const SponsorManager = () => {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1">URL del Logo</label>
-                <Input
-                  value={formData.logo_url}
-                  onChange={(e) => setFormData({ ...formData, logo_url: e.target.value })}
-                  placeholder="https://..."
-                  type="url"
-                />
+                <label className="block text-sm font-medium mb-1">Logo</label>
+                <div className="flex gap-2">
+                  <Input
+                    value={formData.logo_url}
+                    onChange={(e) => setFormData({ ...formData, logo_url: e.target.value })}
+                    placeholder="URL del logo o sube un archivo"
+                    type="url"
+                    className="flex-1"
+                  />
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={handleLogoUpload}
+                    className="hidden"
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={uploading}
+                  >
+                    {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
+                    <span className="ml-2 hidden sm:inline">{uploading ? 'Subiendo...' : 'Subir'}</span>
+                  </Button>
+                </div>
+                {formData.logo_url && (
+                  <div className="mt-2 p-2 border rounded-md bg-muted/30 flex items-center justify-center h-24">
+                    <img src={formData.logo_url} alt="Vista previa" className="max-h-full max-w-full object-contain" />
+                  </div>
+                )}
               </div>
               <div>
                 <label className="block text-sm font-medium mb-1">Sitio Web</label>
