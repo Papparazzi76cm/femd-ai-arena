@@ -12,6 +12,8 @@ import { Footer } from "@/components/Footer";
 import { HomePage } from "@/pages/HomePage";
 import { AdminDashboard } from "@/pages/AdminDashboard";
 import { AuthPage } from "@/pages/AuthPage";
+import { ResetPasswordPage } from "@/pages/ResetPasswordPage";
+import { ProfilePage } from "@/pages/ProfilePage";
 import { MesaDashboard } from "@/pages/MesaDashboard";
 import { MesaMatchPanel } from "@/pages/MesaMatchPanel";
 import { TeamsPage } from "@/pages/TeamsPage";
