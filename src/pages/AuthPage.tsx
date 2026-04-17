@@ -252,6 +252,18 @@ export const AuthPage = () => {
                 >
                   {isLoading ? "Iniciando sesión..." : "Iniciar Sesión"}
                 </Button>
+                <div className="text-center">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setForgotEmail(signInEmail);
+                      setForgotOpen(true);
+                    }}
+                    className="text-sm text-primary hover:underline"
+                  >
+                    ¿Olvidaste tu contraseña?
+                  </button>
+                </div>
               </form>
             </TabsContent>
 
