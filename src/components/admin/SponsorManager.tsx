@@ -1,11 +1,12 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { sponsorService } from '@/services/sponsorService';
 import { Sponsor } from '@/types/database';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, Edit, Trash2, Save, X } from 'lucide-react';
+import { Plus, Edit, Trash2, Save, X, Upload, Loader2 } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 
 export const SponsorManager = () => {
   const [sponsors, setSponsors] = useState<Sponsor[]>([]);
