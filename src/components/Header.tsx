@@ -125,9 +125,12 @@ export function Header() {
               <ThemeToggle />
               {user ? (
                 <div className="flex items-center space-x-3">
-                  <span className={`text-sm ${isOverHero ? 'text-white/80' : 'text-muted-foreground'}`}>
+                  <Link
+                    to="/perfil"
+                    className={`text-sm hover:underline ${isOverHero ? 'text-white/80' : 'text-muted-foreground'}`}
+                  >
                     Hola, {user.user_metadata?.name || user.email}
-                  </span>
+                  </Link>
                   <Button onClick={signOut} variant="outline" size="sm">
                     Salir
                   </Button>
