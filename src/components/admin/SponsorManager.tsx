@@ -19,7 +19,39 @@ export const SponsorManager = () => {
     website: '',
     tier: ''
   });
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
+
+  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      toast({ title: 'Error', description: 'Selecciona un archivo de imagen', variant: 'destructive' });
+      return;
+    }
+
+    setUploading(true);
+    try {
+      const ext = file.name.split('.').pop();
+      const fileName = `sponsors/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+      const { error: uploadError } = await supabase.storage
+        .from('imagenes-web')
+        .upload(fileName, file, { cacheControl: '3600', upsert: false });
+
+      if (uploadError) throw uploadError;
+
+      const { data: publicData } = supabase.storage.from('imagenes-web').getPublicUrl(fileName);
+      setFormData((prev) => ({ ...prev, logo_url: publicData.publicUrl }));
+      toast({ title: 'Logo subido con éxito' });
+    } catch (error: any) {
+      toast({ title: 'Error', description: error.message || 'No se pudo subir el logo', variant: 'destructive' });
+    } finally {
+      setUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
 
   useEffect(() => {
     loadSponsors();
