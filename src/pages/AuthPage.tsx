@@ -2,11 +2,20 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { roleService } from "@/services/roleService";
+import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { Shield } from "lucide-react";
 
@@ -15,6 +24,49 @@ export const AuthPage = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
+  const [forgotOpen, setForgotOpen] = useState(false);
+  const [forgotEmail, setForgotEmail] = useState("");
+  const [forgotLoading, setForgotLoading] = useState(false);
+
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!forgotEmail.includes("@")) {
+      toast({
+        title: "Email inválido",
+        description: "Introduce un email válido",
+        variant: "destructive",
+      });
+      return;
+    }
+    setForgotLoading(true);
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(forgotEmail, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
+      if (error) {
+        toast({
+          title: "Error",
+          description: error.message,
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Email enviado",
+          description: "Si la cuenta existe, recibirás un enlace para restablecer tu contraseña.",
+        });
+        setForgotOpen(false);
+        setForgotEmail("");
+      }
+    } catch {
+      toast({
+        title: "Error",
+        description: "Ha ocurrido un error inesperado",
+        variant: "destructive",
+      });
+    } finally {
+      setForgotLoading(false);
+    }
+  };
 
   // Sign in form
   const [signInEmail, setSignInEmail] = useState("");
@@ -200,6 +252,18 @@ export const AuthPage = () => {
                 >
                   {isLoading ? "Iniciando sesión..." : "Iniciar Sesión"}
                 </Button>
+                <div className="text-center">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setForgotEmail(signInEmail);
+                      setForgotOpen(true);
+                    }}
+                    className="text-sm text-primary hover:underline"
+                  >
+                    ¿Olvidaste tu contraseña?
+                  </button>
+                </div>
               </form>
             </TabsContent>
 
@@ -267,6 +331,44 @@ export const AuthPage = () => {
           </Tabs>
         </CardContent>
       </Card>
+
+      <Dialog open={forgotOpen} onOpenChange={setForgotOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Recuperar contraseña</DialogTitle>
+            <DialogDescription>
+              Te enviaremos un email con un enlace para restablecer tu contraseña.
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleForgotPassword} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="forgot-email">Email</Label>
+              <Input
+                id="forgot-email"
+                type="email"
+                placeholder="tu@email.com"
+                value={forgotEmail}
+                onChange={(e) => setForgotEmail(e.target.value)}
+                required
+                disabled={forgotLoading}
+              />
+            </div>
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setForgotOpen(false)}
+                disabled={forgotLoading}
+              >
+                Cancelar
+              </Button>
+              <Button type="submit" disabled={forgotLoading}>
+                {forgotLoading ? "Enviando..." : "Enviar enlace"}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

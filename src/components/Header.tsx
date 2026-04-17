@@ -125,9 +125,12 @@ export function Header() {
               <ThemeToggle />
               {user ? (
                 <div className="flex items-center space-x-3">
-                  <span className={`text-sm ${isOverHero ? 'text-white/80' : 'text-muted-foreground'}`}>
+                  <Link
+                    to="/perfil"
+                    className={`text-sm hover:underline ${isOverHero ? 'text-white/80' : 'text-muted-foreground'}`}
+                  >
                     Hola, {user.user_metadata?.name || user.email}
-                  </span>
+                  </Link>
                   <Button onClick={signOut} variant="outline" size="sm">
                     Salir
                   </Button>
@@ -187,9 +190,13 @@ export function Header() {
                 </div>
                 {user ? (
                   <div className="space-y-3">
-                    <p className="text-sm text-muted-foreground">
-                      {user.user_metadata?.name || user.email}
-                    </p>
+                    <Link
+                      to="/perfil"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                      className="block text-sm text-muted-foreground hover:text-primary"
+                    >
+                      {user.user_metadata?.name || user.email} · Mi perfil
+                    </Link>
                     <Button onClick={signOut} variant="outline" className="w-full">
                       Cerrar Sesión
                     </Button>
