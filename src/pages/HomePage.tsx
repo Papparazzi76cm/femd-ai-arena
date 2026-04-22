@@ -63,20 +63,20 @@ export function HomePage() {
 
         {/* Hero Content */}
         <div className="relative z-10 text-center text-white px-4 animate-fade-in">
-          <h1 className="text-5xl md:text-7xl font-bold mb-6 animate-slide-up">
+          <h1 className="text-4xl sm:text-5xl md:text-7xl font-bold mb-4 sm:mb-6 animate-slide-up leading-tight">
             FEMD EVENTOS
           </h1>
-          <p className="text-xl md:text-2xl mb-4 text-gray-200 max-w-2xl mx-auto animate-slide-up">
+          <p className="text-base sm:text-xl md:text-2xl mb-4 text-gray-200 max-w-2xl mx-auto animate-slide-up px-2">
             Organizadores profesionales de eventos y torneos de fútbol
           </p>
           
           <AudioPlayer />
           
-          <div className="flex flex-col sm:flex-row gap-4 justify-center animate-scale-in mt-4">
-            <Button size="lg" className="gradient-gold text-white hover:opacity-90" asChild>
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center animate-scale-in mt-4 px-4">
+            <Button size="lg" className="gradient-gold text-white hover:opacity-90 w-full sm:w-auto" asChild>
               <Link to="/torneos">Ver Torneos</Link>
             </Button>
-            <Button size="lg" variant="outline" className="bg-white/10 border-white text-white hover:bg-white hover:text-primary" asChild>
+            <Button size="lg" variant="outline" className="bg-white/10 border-white text-white hover:bg-white hover:text-primary w-full sm:w-auto" asChild>
               <Link to="/contacto">Contactar</Link>
             </Button>
           </div>
@@ -99,19 +99,19 @@ export function HomePage() {
 
       {/* Noticias Section */}
       {posts.length > 0 && (
-        <section id="noticias" className="py-20 bg-muted/30">
+        <section id="noticias" className="py-12 sm:py-20 bg-muted/30">
           <div className="container mx-auto px-4">
-            <div className="text-center mb-12 animate-fade-in">
-              <div className="flex items-center justify-center gap-3 mb-4">
-                <Newspaper className="w-10 h-10 text-primary" />
-                <h2 className="text-4xl font-bold">Últimas Noticias</h2>
+            <div className="text-center mb-8 sm:mb-12 animate-fade-in">
+              <div className="flex items-center justify-center gap-2 sm:gap-3 mb-3 sm:mb-4">
+                <Newspaper className="w-7 h-7 sm:w-10 sm:h-10 text-primary" />
+                <h2 className="text-2xl sm:text-4xl font-bold">Últimas Noticias</h2>
               </div>
-              <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
+              <p className="text-muted-foreground text-base sm:text-lg max-w-2xl mx-auto px-2">
                 Mantente informado con las últimas novedades de nuestros eventos
               </p>
             </div>
 
-            <div className="grid md:grid-cols-3 gap-6 mb-8">
+            <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8">
               {posts.map((post, index) => (
                 <Link to={`/noticias/${post.id}`} key={post.id}>
                   <Card
@@ -119,7 +119,7 @@ export function HomePage() {
                     style={{ animationDelay: `${index * 100}ms` }}
                   >
                     {post.image_url && (
-                      <div className="relative h-48 overflow-hidden">
+                      <div className="relative h-40 sm:h-48 overflow-hidden">
                         <img
                           src={post.image_url}
                           alt={post.title}
@@ -127,18 +127,18 @@ export function HomePage() {
                         />
                       </div>
                     )}
-                    <div className="p-6">
-                      <h3 className="text-xl font-bold mb-2 line-clamp-2 group-hover:text-primary transition-colors">
+                    <div className="p-4 sm:p-6">
+                      <h3 className="text-lg sm:text-xl font-bold mb-2 line-clamp-2 group-hover:text-primary transition-colors">
                         {post.title}
                       </h3>
                       {post.description && (
-                        <p className="text-muted-foreground mb-4 line-clamp-3">
+                        <p className="text-sm text-muted-foreground mb-3 sm:mb-4 line-clamp-3">
                           {post.description}
                         </p>
                       )}
-                      <div className="flex items-center justify-between text-sm text-muted-foreground">
+                      <div className="flex items-center justify-between text-xs sm:text-sm text-muted-foreground">
                         <span className="flex items-center gap-1">
-                          <Calendar className="w-4 h-4" />
+                          <Calendar className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                           {new Date(post.created_at).toLocaleDateString('es-ES')}
                         </span>
                       </div>
@@ -164,13 +164,13 @@ export function HomePage() {
       <EventGallery />
 
       {/* Social Media & Contact Section */}
-      <section className="py-16 bg-card">
+      <section className="py-10 sm:py-16 bg-card">
         <div className="container mx-auto px-4">
-          <div className="grid md:grid-cols-2 gap-12 items-center">
+          <div className="grid sm:grid-cols-2 gap-8 sm:gap-12 items-center">
             {/* Contact Info */}
-            <div className="text-center md:text-left">
-              <h3 className="text-2xl font-bold mb-6">Contacto</h3>
-              <div className="space-y-4 text-muted-foreground">
+            <div className="text-center sm:text-left">
+              <h3 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6">Contacto</h3>
+              <div className="space-y-3 sm:space-y-4 text-sm sm:text-base text-muted-foreground">
                 <p>
                   <span className="font-semibold text-foreground">Teléfono:</span>{" "}
                   <a href="tel:+34672266074" className="hover:text-primary transition-colors">
@@ -185,9 +185,9 @@ export function HomePage() {
             </div>
 
             {/* Social Media */}
-            <div className="text-center md:text-right">
-              <h3 className="text-2xl font-bold mb-6">Síguenos</h3>
-              <div className="flex gap-4 justify-center md:justify-end">
+            <div className="text-center sm:text-right">
+              <h3 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6">Síguenos</h3>
+              <div className="flex gap-4 justify-center sm:justify-end">
                 <a
                   href="https://instagram.com/femdeventos"
                   target="_blank"
@@ -207,7 +207,7 @@ export function HomePage() {
                   </svg>
                 </a>
               </div>
-              <p className="mt-3 text-muted-foreground">@femdeventos</p>
+              <p className="mt-3 text-muted-foreground text-sm sm:text-base">@femdeventos</p>
             </div>
           </div>
         </div>
