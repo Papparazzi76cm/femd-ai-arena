@@ -337,31 +337,33 @@ export const MatchCard = ({
   const canEdit = !readOnly;
 
   return (
-    <Card className={`p-6 ${isLive ? 'border-2 border-red-500 animate-heartbeat' : ''}`}>
-      <div className="space-y-4">
+    <Card className={`p-3 sm:p-6 ${isLive ? 'border-2 border-red-500 animate-heartbeat' : ''}`}>
+      <div className="space-y-3 sm:space-y-4">
         {/* Header */}
-        <div className="flex items-center justify-between flex-wrap gap-2">
-          <div className="space-y-1">
-            <h3 className="font-semibold text-lg">{getPhaseLabel(match.phase)}</h3>
+        <div className="flex items-start justify-between flex-wrap gap-2">
+          <div className="space-y-1 min-w-0 flex-1">
+            <h3 className="font-semibold text-base sm:text-lg break-words">{getPhaseLabel(match.phase)}</h3>
             {match.group_name && (
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <MapPin className="w-4 h-4" />
+              <div className="flex items-center gap-2 text-xs sm:text-sm text-muted-foreground">
+                <MapPin className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
                 {match.group_name}
               </div>
             )}
             {match.match_date && (
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <Calendar className="w-4 h-4" />
-                {new Date(match.match_date).toLocaleDateString('es-ES', {
-                  weekday: 'long',
-                  year: 'numeric',
-                  month: 'long',
-                  day: 'numeric',
-                })}
+              <div className="flex items-center gap-2 text-xs sm:text-sm text-muted-foreground">
+                <Calendar className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
+                <span className="break-words">
+                  {new Date(match.match_date).toLocaleDateString('es-ES', {
+                    weekday: 'short',
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric',
+                  })}
+                </span>
               </div>
             )}
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 shrink-0">
             {getStatusBadge()}
           </div>
         </div>
@@ -379,22 +381,23 @@ export const MatchCard = ({
         )}
 
         {/* Teams and Scores */}
-        <div className="grid grid-cols-3 gap-4 items-center">
+        <div className="grid grid-cols-3 gap-2 sm:gap-4 items-center">
           {/* Home Team */}
-          <div className="text-right">
-            <div className={`font-bold text-xl mb-2 ${isLive ? 'text-red-600 dark:text-red-400' : ''}`}>
+          <div className="text-right min-w-0">
+            <div className={`font-bold text-sm sm:text-xl mb-2 break-words leading-tight ${isLive ? 'text-red-600 dark:text-red-400' : ''}`}>
               {homeTeamName}
             </div>
             {isEditing || isLive ? (
               <Input
                 type="number"
                 min="0"
+                inputMode="numeric"
                 value={homeScore}
                 onChange={(e) => handleScoreChange('home', Number(e.target.value))}
-                className="w-20 ml-auto text-center text-2xl font-bold"
+                className="w-16 sm:w-20 ml-auto text-center text-xl sm:text-2xl font-bold h-11"
               />
             ) : (
-              <div className="text-4xl font-bold text-primary">
+              <div className="text-3xl sm:text-4xl font-bold text-primary">
                 {match.home_score ?? '-'}
               </div>
             )}
@@ -402,26 +405,27 @@ export const MatchCard = ({
 
           {/* VS */}
           <div className="text-center">
-            <div className={`text-2xl font-bold ${isLive ? 'text-red-500 animate-pulse-live' : 'text-muted-foreground'}`}>
+            <div className={`text-sm sm:text-2xl font-bold ${isLive ? 'text-red-500 animate-pulse-live' : 'text-muted-foreground'}`}>
               {isLive ? 'EN VIVO' : 'VS'}
             </div>
           </div>
 
           {/* Away Team */}
-          <div className="text-left">
-            <div className={`font-bold text-xl mb-2 ${isLive ? 'text-red-600 dark:text-red-400' : ''}`}>
+          <div className="text-left min-w-0">
+            <div className={`font-bold text-sm sm:text-xl mb-2 break-words leading-tight ${isLive ? 'text-red-600 dark:text-red-400' : ''}`}>
               {awayTeamName}
             </div>
             {isEditing || isLive ? (
               <Input
                 type="number"
                 min="0"
+                inputMode="numeric"
                 value={awayScore}
                 onChange={(e) => handleScoreChange('away', Number(e.target.value))}
-                className="w-20 text-center text-2xl font-bold"
+                className="w-16 sm:w-20 text-center text-xl sm:text-2xl font-bold h-11"
               />
             ) : (
-              <div className="text-4xl font-bold text-primary">
+              <div className="text-3xl sm:text-4xl font-bold text-primary">
                 {match.away_score ?? '-'}
               </div>
             )}
@@ -430,32 +434,32 @@ export const MatchCard = ({
 
         {/* Cards Statistics */}
         {(isEditing || isLive) && (
-          <div className="border-t pt-4">
-            <h4 className="font-semibold mb-4">Tarjetas</h4>
-            <div className="grid md:grid-cols-2 gap-6">
-              <div>
-                <Label className="text-sm font-medium mb-3 block">{homeTeamName}</Label>
-                <div className="grid grid-cols-2 gap-3">
+          <div className="border-t pt-3 sm:pt-4">
+            <h4 className="font-semibold mb-3 sm:mb-4 text-sm sm:text-base">Tarjetas</h4>
+            <div className="grid grid-cols-2 gap-3 sm:gap-6">
+              <div className="min-w-0">
+                <Label className="text-xs sm:text-sm font-medium mb-2 sm:mb-3 block truncate">{homeTeamName}</Label>
+                <div className="grid grid-cols-2 gap-2 sm:gap-3">
                   <div>
-                    <Label htmlFor="home-yellow" className="text-xs">🟨 Amarillas</Label>
-                    <Input id="home-yellow" type="number" min="0" value={homeYellow} onChange={(e) => setHomeYellow(Number(e.target.value))} className="mt-1" />
+                    <Label htmlFor="home-yellow" className="text-xs">🟨</Label>
+                    <Input id="home-yellow" type="number" min="0" inputMode="numeric" value={homeYellow} onChange={(e) => setHomeYellow(Number(e.target.value))} className="mt-1 h-10 text-center" />
                   </div>
                   <div>
-                    <Label htmlFor="home-red" className="text-xs">🟥 Rojas</Label>
-                    <Input id="home-red" type="number" min="0" value={homeRed} onChange={(e) => setHomeRed(Number(e.target.value))} className="mt-1" />
+                    <Label htmlFor="home-red" className="text-xs">🟥</Label>
+                    <Input id="home-red" type="number" min="0" inputMode="numeric" value={homeRed} onChange={(e) => setHomeRed(Number(e.target.value))} className="mt-1 h-10 text-center" />
                   </div>
                 </div>
               </div>
-              <div>
-                <Label className="text-sm font-medium mb-3 block">{awayTeamName}</Label>
-                <div className="grid grid-cols-2 gap-3">
+              <div className="min-w-0">
+                <Label className="text-xs sm:text-sm font-medium mb-2 sm:mb-3 block truncate">{awayTeamName}</Label>
+                <div className="grid grid-cols-2 gap-2 sm:gap-3">
                   <div>
-                    <Label htmlFor="away-yellow" className="text-xs">🟨 Amarillas</Label>
-                    <Input id="away-yellow" type="number" min="0" value={awayYellow} onChange={(e) => setAwayYellow(Number(e.target.value))} className="mt-1" />
+                    <Label htmlFor="away-yellow" className="text-xs">🟨</Label>
+                    <Input id="away-yellow" type="number" min="0" inputMode="numeric" value={awayYellow} onChange={(e) => setAwayYellow(Number(e.target.value))} className="mt-1 h-10 text-center" />
                   </div>
                   <div>
-                    <Label htmlFor="away-red" className="text-xs">🟥 Rojas</Label>
-                    <Input id="away-red" type="number" min="0" value={awayRed} onChange={(e) => setAwayRed(Number(e.target.value))} className="mt-1" />
+                    <Label htmlFor="away-red" className="text-xs">🟥</Label>
+                    <Input id="away-red" type="number" min="0" inputMode="numeric" value={awayRed} onChange={(e) => setAwayRed(Number(e.target.value))} className="mt-1 h-10 text-center" />
                   </div>
                 </div>
               </div>
@@ -483,12 +487,12 @@ export const MatchCard = ({
 
         {/* Actions */}
         {canEdit && (
-          <div className="flex gap-2 justify-end border-t pt-4 flex-wrap">
+          <div className="grid grid-cols-2 sm:flex sm:justify-end gap-2 border-t pt-3 sm:pt-4 sm:flex-wrap">
             {match.status === 'scheduled' && (
               <Button 
                 onClick={handleStartMatch} 
                 disabled={saving}
-                className="bg-green-600 hover:bg-green-700 text-white"
+                className="bg-green-600 hover:bg-green-700 text-white col-span-2 h-11"
               >
                 <Play className="w-4 h-4 mr-2" />
                 {saving ? 'Iniciando...' : 'Iniciar Partido'}
@@ -500,7 +504,7 @@ export const MatchCard = ({
                 <Button 
                   variant="outline" 
                   onClick={() => setShowGoalScorers(true)}
-                  className="border-yellow-500 text-yellow-600 hover:bg-yellow-50 dark:hover:bg-yellow-900/20"
+                  className="border-yellow-500 text-yellow-600 hover:bg-yellow-50 dark:hover:bg-yellow-900/20 h-11"
                 >
                   <Goal className="w-4 h-4 mr-2" />
                   Goleadores
@@ -508,43 +512,44 @@ export const MatchCard = ({
                 <Button 
                   variant="outline" 
                   onClick={() => setShowCards(true)}
+                  className="h-11"
                 >
                   <CreditCard className="w-4 h-4 mr-2" />
                   Tarjetas
                 </Button>
-                <Button variant="outline" onClick={handleSaveLive} disabled={saving}>
+                <Button variant="outline" onClick={handleSaveLive} disabled={saving} className="h-11">
                   <Save className="w-4 h-4 mr-2" />
-                  {saving ? 'Guardando...' : 'Guardar Cambios'}
+                  {saving ? 'Guardando...' : 'Guardar'}
                 </Button>
                 <Button 
                   onClick={handleEndMatch} 
                   disabled={saving}
-                  className="bg-red-600 hover:bg-red-700 text-white"
+                  className="bg-red-600 hover:bg-red-700 text-white h-11"
                 >
                   <Square className="w-4 h-4 mr-2" />
-                  {saving ? 'Finalizando...' : 'Finalizar Partido'}
+                  {saving ? 'Finalizando...' : 'Finalizar'}
                 </Button>
               </>
             )}
 
             {isFinished && !isEditing && (
               <>
-                <Button variant="outline" size="sm" onClick={handleResumeMatch} disabled={saving}>
+                <Button variant="outline" size="sm" onClick={handleResumeMatch} disabled={saving} className="h-10">
                   <Play className="w-4 h-4 mr-1" />
                   Reanudar
                 </Button>
-                <Button variant="outline" size="sm" onClick={handleRestartMatch} disabled={saving}>
+                <Button variant="outline" size="sm" onClick={handleRestartMatch} disabled={saving} className="h-10">
                   <RotateCcw className="w-4 h-4 mr-1" />
                   Reiniciar
                 </Button>
-                <Button variant="outline" size="sm" onClick={() => setIsEditing(true)}>
-                  Editar Resultado
+                <Button variant="outline" size="sm" onClick={() => setIsEditing(true)} className="h-10">
+                  Editar
                 </Button>
-                <Button variant="outline" size="sm" onClick={() => setShowGoalScorers(true)}>
+                <Button variant="outline" size="sm" onClick={() => setShowGoalScorers(true)} className="h-10">
                   <Goal className="w-4 h-4 mr-1" />
-                  Goleadores
+                  Goles
                 </Button>
-                <Button variant="outline" size="sm" onClick={() => setShowCards(true)}>
+                <Button variant="outline" size="sm" onClick={() => setShowCards(true)} className="h-10">
                   <CreditCard className="w-4 h-4 mr-1" />
                   Tarjetas
                 </Button>
@@ -552,6 +557,7 @@ export const MatchCard = ({
                   variant="outline" 
                   size="sm" 
                   onClick={() => { loadMvpData(); setMvpOpen(true); }}
+                  className="h-10"
                 >
                   <Star className="w-4 h-4 mr-1" />
                   MVP
@@ -561,10 +567,10 @@ export const MatchCard = ({
 
             {isFinished && isEditing && (
               <>
-                <Button variant="outline" onClick={handleCancel} disabled={saving}>
+                <Button variant="outline" onClick={handleCancel} disabled={saving} className="h-11">
                   Cancelar
                 </Button>
-                <Button onClick={handleSaveFinishedEdit} disabled={saving}>
+                <Button onClick={handleSaveFinishedEdit} disabled={saving} className="h-11">
                   <Save className="w-4 h-4 mr-2" />
                   {saving ? 'Guardando...' : 'Guardar'}
                 </Button>

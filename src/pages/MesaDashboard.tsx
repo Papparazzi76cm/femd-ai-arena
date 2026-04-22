@@ -186,91 +186,95 @@ export const MesaDashboard = () => {
   const completedMatches = filteredMatches.filter(m => m.status === 'finished');
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-muted/20 to-background pt-20">
+    <div className="min-h-screen bg-gradient-to-b from-muted/20 to-background pt-16 sm:pt-20">
       {/* Header */}
-      <div className="bg-gradient-to-r from-emerald-600 to-blue-600 text-white py-6 px-4">
+      <div className="bg-gradient-to-r from-emerald-600 to-blue-600 text-white py-4 sm:py-6 px-3 sm:px-4">
         <div className="container mx-auto">
-          <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
-            <div className="min-w-0 flex-1">
-              <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold mb-1">Panel de Mesa</h1>
-              <p className="text-emerald-100 text-sm truncate">Bienvenido, {user?.email}</p>
+          <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-3 sm:gap-4">
+            <div className="min-w-0 flex-1 w-full">
+              <h1 className="text-lg sm:text-2xl lg:text-3xl font-bold mb-0.5 sm:mb-1">Panel de Mesa</h1>
+              <p className="text-emerald-100 text-xs sm:text-sm truncate">Bienvenido, {user?.email}</p>
             </div>
-            <div className="flex flex-wrap gap-2 shrink-0">
+            <div className="flex flex-wrap gap-2 shrink-0 w-full lg:w-auto">
               {isAdmin && (
-                <Button variant="outline" size="sm" className="bg-white/10 border-white/20 text-white hover:bg-white/20" onClick={() => navigate('/admin')}>
-                  <ArrowLeft className="w-4 h-4 mr-2" />Volver al Admin
+                <Button variant="outline" size="sm" className="bg-white/10 border-white/20 text-white hover:bg-white/20 flex-1 lg:flex-none h-10" onClick={() => navigate('/admin')}>
+                  <ArrowLeft className="w-4 h-4 mr-2" />
+                  <span className="hidden xs:inline">Volver al Admin</span>
+                  <span className="xs:hidden">Admin</span>
                 </Button>
               )}
-              <Button variant="outline" size="sm" className="bg-white/10 border-white/20 text-white hover:bg-white/20" onClick={handleSignOut}>
-                <LogOut className="w-4 h-4 mr-2" />Cerrar Sesión
+              <Button variant="outline" size="sm" className="bg-white/10 border-white/20 text-white hover:bg-white/20 flex-1 lg:flex-none h-10" onClick={handleSignOut}>
+                <LogOut className="w-4 h-4 mr-2" />
+                <span className="hidden xs:inline">Cerrar Sesión</span>
+                <span className="xs:hidden">Salir</span>
               </Button>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-8">
         {/* Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-          <Card className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-emerald-100 dark:bg-emerald-900/30 rounded-lg">
-                <Trophy className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-4 mb-4 sm:mb-6">
+          <Card className="p-3 sm:p-4">
+            <div className="flex items-center gap-2 sm:gap-3">
+              <div className="p-1.5 sm:p-2 bg-emerald-100 dark:bg-emerald-900/30 rounded-lg shrink-0">
+                <Trophy className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-600 dark:text-emerald-400" />
               </div>
-              <div>
-                <p className="text-xs text-muted-foreground">Total</p>
-                <p className="text-xl font-bold">{filteredMatches.length}</p>
+              <div className="min-w-0">
+                <p className="text-[10px] sm:text-xs text-muted-foreground">Total</p>
+                <p className="text-lg sm:text-xl font-bold">{filteredMatches.length}</p>
               </div>
             </div>
           </Card>
-          <Card className="p-4 border-2 border-red-500/50">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-red-100 dark:bg-red-900/30 rounded-lg relative">
-                <Trophy className="w-5 h-5 text-red-600 dark:text-red-400" />
+          <Card className="p-3 sm:p-4 border-2 border-red-500/50">
+            <div className="flex items-center gap-2 sm:gap-3">
+              <div className="p-1.5 sm:p-2 bg-red-100 dark:bg-red-900/30 rounded-lg relative shrink-0">
+                <Trophy className="w-4 h-4 sm:w-5 sm:h-5 text-red-600 dark:text-red-400" />
                 {liveMatches.length > 0 && <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-red-500 rounded-full animate-pulse" />}
               </div>
-              <div>
-                <p className="text-xs text-muted-foreground">En Juego</p>
-                <p className="text-xl font-bold text-red-600">{liveMatches.length}</p>
+              <div className="min-w-0">
+                <p className="text-[10px] sm:text-xs text-muted-foreground">En Juego</p>
+                <p className="text-lg sm:text-xl font-bold text-red-600">{liveMatches.length}</p>
               </div>
             </div>
           </Card>
-          <Card className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
-                <Calendar className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+          <Card className="p-3 sm:p-4">
+            <div className="flex items-center gap-2 sm:gap-3">
+              <div className="p-1.5 sm:p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg shrink-0">
+                <Calendar className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600 dark:text-blue-400" />
               </div>
-              <div>
-                <p className="text-xs text-muted-foreground">Pendientes</p>
-                <p className="text-xl font-bold">{upcomingMatches.length}</p>
+              <div className="min-w-0">
+                <p className="text-[10px] sm:text-xs text-muted-foreground">Pendientes</p>
+                <p className="text-lg sm:text-xl font-bold">{upcomingMatches.length}</p>
               </div>
             </div>
           </Card>
-          <Card className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-green-100 dark:bg-green-900/30 rounded-lg">
-                <Trophy className="w-5 h-5 text-green-600 dark:text-green-400" />
+          <Card className="p-3 sm:p-4">
+            <div className="flex items-center gap-2 sm:gap-3">
+              <div className="p-1.5 sm:p-2 bg-green-100 dark:bg-green-900/30 rounded-lg shrink-0">
+                <Trophy className="w-4 h-4 sm:w-5 sm:h-5 text-green-600 dark:text-green-400" />
               </div>
-              <div>
-                <p className="text-xs text-muted-foreground">Completados</p>
-                <p className="text-xl font-bold">{completedMatches.length}</p>
+              <div className="min-w-0">
+                <p className="text-[10px] sm:text-xs text-muted-foreground">Completados</p>
+                <p className="text-lg sm:text-xl font-bold">{completedMatches.length}</p>
               </div>
             </div>
           </Card>
         </div>
 
         {/* Filters */}
-        <Card className="p-4 mb-6">
+        <Card className="p-3 sm:p-4 mb-4 sm:mb-6">
           <div className="flex items-center gap-2 mb-3">
             <Filter className="w-4 h-4 text-muted-foreground" />
             <span className="text-sm font-semibold">Filtros</span>
             {hasActiveFilters && (
-              <Button variant="ghost" size="sm" onClick={clearFilters} className="ml-auto h-7 text-xs">
+              <Button variant="ghost" size="sm" onClick={clearFilters} className="ml-auto h-8 text-xs">
                 <X className="w-3 h-3 mr-1" />Limpiar
               </Button>
             )}
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3">
             {/* Event filter */}
             <Select value={filterEvent} onValueChange={setFilterEvent}>
               <SelectTrigger>
@@ -317,7 +321,7 @@ export const MesaDashboard = () => {
                 placeholder="Buscar equipo..."
                 value={searchText}
                 onChange={e => setSearchText(e.target.value)}
-                className="pl-9"
+                className="pl-9 h-11"
               />
             </div>
           </div>
@@ -325,12 +329,12 @@ export const MesaDashboard = () => {
 
         {/* Matches */}
         {filteredMatches.length === 0 ? (
-          <Card className="p-12 text-center">
-            <AlertCircle className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-            <h3 className="text-xl font-semibold mb-2">
+          <Card className="p-6 sm:p-12 text-center">
+            <AlertCircle className="w-10 h-10 sm:w-12 sm:h-12 text-muted-foreground mx-auto mb-4" />
+            <h3 className="text-lg sm:text-xl font-semibold mb-2">
               {hasActiveFilters ? 'No hay partidos con estos filtros' : 'No hay partidos disponibles'}
             </h3>
-            <p className="text-muted-foreground">
+            <p className="text-sm sm:text-base text-muted-foreground">
               {hasActiveFilters
                 ? 'Prueba a cambiar los filtros para ver otros partidos.'
                 : isAdmin
@@ -342,14 +346,14 @@ export const MesaDashboard = () => {
             )}
           </Card>
         ) : (
-          <div className="space-y-8">
+          <div className="space-y-6 sm:space-y-8">
             {liveMatches.length > 0 && (
               <div>
-                <h2 className="text-2xl font-bold mb-4 flex items-center gap-2 text-red-600">
-                  <span className="w-3 h-3 bg-red-500 rounded-full animate-pulse" />
+                <h2 className="text-lg sm:text-2xl font-bold mb-3 sm:mb-4 flex items-center gap-2 text-red-600">
+                  <span className="w-2.5 h-2.5 sm:w-3 sm:h-3 bg-red-500 rounded-full animate-pulse" />
                   Partidos en Juego
                 </h2>
-                <div className="grid gap-4">
+                <div className="grid gap-3 sm:gap-4">
                   {liveMatches.map(match => (
                     <MatchCard key={match.id} match={match} homeTeamName={getTeamName(match.home_team_id)} awayTeamName={getTeamName(match.away_team_id)} homeTeamId={match.home_team_id} awayTeamId={match.away_team_id} onUpdate={handleMatchUpdate} />
                   ))}
@@ -359,8 +363,8 @@ export const MesaDashboard = () => {
 
             {upcomingMatches.length > 0 && (
               <div>
-                <h2 className="text-2xl font-bold mb-4">Partidos Pendientes</h2>
-                <div className="grid gap-4">
+                <h2 className="text-lg sm:text-2xl font-bold mb-3 sm:mb-4">Partidos Pendientes</h2>
+                <div className="grid gap-3 sm:gap-4">
                   {upcomingMatches.map(match => (
                     <MatchCard key={match.id} match={match} homeTeamName={getTeamName(match.home_team_id)} awayTeamName={getTeamName(match.away_team_id)} homeTeamId={match.home_team_id} awayTeamId={match.away_team_id} onUpdate={handleMatchUpdate} />
                   ))}
@@ -370,8 +374,8 @@ export const MesaDashboard = () => {
 
             {completedMatches.length > 0 && (
               <div>
-                <h2 className="text-2xl font-bold mb-4">Partidos Completados</h2>
-                <div className="grid gap-4">
+                <h2 className="text-lg sm:text-2xl font-bold mb-3 sm:mb-4">Partidos Completados</h2>
+                <div className="grid gap-3 sm:gap-4">
                   {completedMatches.map(match => (
                     <MatchCard key={match.id} match={match} homeTeamName={getTeamName(match.home_team_id)} awayTeamName={getTeamName(match.away_team_id)} homeTeamId={match.home_team_id} awayTeamId={match.away_team_id} onUpdate={handleMatchUpdate} readOnly={!isAdmin} />
                   ))}
