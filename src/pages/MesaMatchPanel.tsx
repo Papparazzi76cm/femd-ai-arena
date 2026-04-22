@@ -596,22 +596,22 @@ export const MesaMatchPanel = () => {
   return (
     <div className="min-h-screen bg-gradient-to-b from-muted/20 to-background">
       {/* Header */}
-      <div className={`py-4 px-4 text-white ${isLive ? 'bg-gradient-to-r from-red-600 to-orange-600' : isFinished ? 'bg-gradient-to-r from-emerald-600 to-green-600' : 'bg-gradient-to-r from-primary to-blue-600'}`}>
+      <div className={`py-3 sm:py-4 px-3 sm:px-4 text-white ${isLive ? 'bg-gradient-to-r from-red-600 to-orange-600' : isFinished ? 'bg-gradient-to-r from-emerald-600 to-green-600' : 'bg-gradient-to-r from-primary to-blue-600'}`}>
         <div className="container mx-auto max-w-2xl">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-lg font-bold">Panel de Mesa</h1>
-              <p className="text-sm opacity-80">{assignment.mesa_name}</p>
+          <div className="flex items-center justify-between gap-2">
+            <div className="min-w-0 flex-1">
+              <h1 className="text-base sm:text-lg font-bold">Panel de Mesa</h1>
+              <p className="text-xs sm:text-sm opacity-80 truncate">{assignment.mesa_name}</p>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 shrink-0">
               {isLive && (
-                <Badge className="bg-white/20 text-white animate-pulse-live">
+                <Badge className="bg-white/20 text-white animate-pulse-live text-xs">
                   <span className="w-2 h-2 bg-white rounded-full mr-1" />
                   EN VIVO
                 </Badge>
               )}
               {isFinished && (
-                <Badge className="bg-white/20 text-white">
+                <Badge className="bg-white/20 text-white text-xs">
                   <CheckCircle className="w-3 h-3 mr-1" />
                   Finalizado
                 </Badge>
@@ -621,17 +621,17 @@ export const MesaMatchPanel = () => {
         </div>
       </div>
 
-      <div className="container mx-auto max-w-2xl px-4 py-6 space-y-6">
+      <div className="container mx-auto max-w-2xl px-3 sm:px-4 py-4 sm:py-6 space-y-4 sm:space-y-6">
         {/* Match info */}
-        <Card className="p-4">
-          <div className="space-y-2 text-sm">
-            {event && <p className="font-semibold text-primary">{event.title}</p>}
+        <Card className="p-3 sm:p-4">
+          <div className="space-y-2 text-xs sm:text-sm">
+            {event && <p className="font-semibold text-primary break-words">{event.title}</p>}
             {category && <Badge variant="secondary">{category.name}</Badge>}
             <p className="text-muted-foreground">{getPhaseLabel(match.phase)}{match.group_name && match.phase === 'group' ? ` - Grupo ${match.group_name}` : match.group_name && match.phase !== 'group' ? ` (${match.group_name})` : ''}</p>
-            {facility && <p className="text-muted-foreground flex items-center gap-1"><Building2 className="w-3 h-3" />{facility.name}{field ? ` · ${field.name}` : ''}</p>}
+            {facility && <p className="text-muted-foreground flex items-start gap-1"><Building2 className="w-3 h-3 mt-0.5 shrink-0" /><span className="break-words">{facility.name}{field ? ` · ${field.name}` : ''}</span></p>}
             {match.match_date && (
               <p className="text-muted-foreground flex items-center gap-1">
-                <Calendar className="w-3 h-3" />
+                <Calendar className="w-3 h-3 shrink-0" />
                 {new Date(match.match_date).toLocaleDateString('es-ES', { weekday: 'short', day: 'numeric', month: 'short' })}
                 {' · '}
                 {new Date(match.match_date).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}
@@ -641,43 +641,43 @@ export const MesaMatchPanel = () => {
         </Card>
 
         {/* Scoreboard */}
-        <Card className={`p-6 ${isLive ? 'border-2 border-red-500' : ''}`}>
-          <div className="grid grid-cols-3 gap-4 items-center">
-            <div className="text-center">
+        <Card className={`p-3 sm:p-6 ${isLive ? 'border-2 border-red-500' : ''}`}>
+          <div className="grid grid-cols-3 gap-2 sm:gap-4 items-center">
+            <div className="text-center min-w-0">
               {homeTeam?.logo_url && (
-                <img src={homeTeam.logo_url} alt={homeTeam.name} className="w-12 h-12 mx-auto mb-2 object-contain" />
+                <img src={homeTeam.logo_url} alt={homeTeam.name} className="w-10 h-10 sm:w-12 sm:h-12 mx-auto mb-2 object-contain" />
               )}
-              <p className="font-bold text-sm">{homeTeam?.name || '?'}</p>
+              <p className="font-bold text-xs sm:text-sm break-words leading-tight">{homeTeam?.name || '?'}</p>
               {(isLive || (isAccepted && match.status === 'scheduled')) && !isFinished ? (
                 <div className="mt-2 flex items-center justify-center gap-1">
-                  <Button size="sm" variant="outline" className="h-10 w-10 text-xl" onClick={() => setHomeScore(Math.max(0, homeScore - 1))}>-</Button>
-                  <span className="text-3xl font-bold w-12 text-center">{homeScore}</span>
-                  <Button size="sm" variant="outline" className="h-10 w-10 text-xl" onClick={() => setHomeScore(homeScore + 1)}>+</Button>
+                  <Button size="sm" variant="outline" className="h-9 w-9 sm:h-10 sm:w-10 text-lg sm:text-xl p-0" onClick={() => setHomeScore(Math.max(0, homeScore - 1))}>-</Button>
+                  <span className="text-2xl sm:text-3xl font-bold w-10 sm:w-12 text-center">{homeScore}</span>
+                  <Button size="sm" variant="outline" className="h-9 w-9 sm:h-10 sm:w-10 text-lg sm:text-xl p-0" onClick={() => setHomeScore(homeScore + 1)}>+</Button>
                 </div>
               ) : (
-                <p className="text-3xl font-bold mt-2">{match.home_score ?? '-'}</p>
+                <p className="text-2xl sm:text-3xl font-bold mt-2">{match.home_score ?? '-'}</p>
               )}
             </div>
 
             <div className="text-center">
-              <p className={`text-lg font-bold ${isLive ? 'text-red-500 animate-pulse' : 'text-muted-foreground'}`}>
+              <p className={`text-sm sm:text-lg font-bold ${isLive ? 'text-red-500 animate-pulse' : 'text-muted-foreground'}`}>
                 {isLive ? 'EN VIVO' : isFinished ? 'FINAL' : 'VS'}
               </p>
             </div>
 
-            <div className="text-center">
+            <div className="text-center min-w-0">
               {awayTeam?.logo_url && (
-                <img src={awayTeam.logo_url} alt={awayTeam.name} className="w-12 h-12 mx-auto mb-2 object-contain" />
+                <img src={awayTeam.logo_url} alt={awayTeam.name} className="w-10 h-10 sm:w-12 sm:h-12 mx-auto mb-2 object-contain" />
               )}
-              <p className="font-bold text-sm">{awayTeam?.name || '?'}</p>
+              <p className="font-bold text-xs sm:text-sm break-words leading-tight">{awayTeam?.name || '?'}</p>
               {(isLive || (isAccepted && match.status === 'scheduled')) && !isFinished ? (
                 <div className="mt-2 flex items-center justify-center gap-1">
-                  <Button size="sm" variant="outline" className="h-10 w-10 text-xl" onClick={() => setAwayScore(Math.max(0, awayScore - 1))}>-</Button>
-                  <span className="text-3xl font-bold w-12 text-center">{awayScore}</span>
-                  <Button size="sm" variant="outline" className="h-10 w-10 text-xl" onClick={() => setAwayScore(awayScore + 1)}>+</Button>
+                  <Button size="sm" variant="outline" className="h-9 w-9 sm:h-10 sm:w-10 text-lg sm:text-xl p-0" onClick={() => setAwayScore(Math.max(0, awayScore - 1))}>-</Button>
+                  <span className="text-2xl sm:text-3xl font-bold w-10 sm:w-12 text-center">{awayScore}</span>
+                  <Button size="sm" variant="outline" className="h-9 w-9 sm:h-10 sm:w-10 text-lg sm:text-xl p-0" onClick={() => setAwayScore(awayScore + 1)}>+</Button>
                 </div>
               ) : (
-                <p className="text-3xl font-bold mt-2">{match.away_score ?? '-'}</p>
+                <p className="text-2xl sm:text-3xl font-bold mt-2">{match.away_score ?? '-'}</p>
               )}
             </div>
           </div>
@@ -685,32 +685,32 @@ export const MesaMatchPanel = () => {
 
         {/* Cards */}
         {(isLive || (isAccepted && match.status === 'scheduled')) && !isFinished && (
-          <Card className="p-4">
-            <h3 className="font-semibold mb-3">Tarjetas</h3>
-            <div className="grid grid-cols-2 gap-4">
+          <Card className="p-3 sm:p-4">
+            <h3 className="font-semibold mb-3 text-sm sm:text-base">Tarjetas</h3>
+            <div className="grid grid-cols-2 gap-3 sm:gap-4">
               <div>
-                <Label className="text-xs font-medium block mb-2">{homeTeam?.name}</Label>
+                <Label className="text-xs font-medium block mb-2 truncate">{homeTeam?.name}</Label>
                 <div className="grid grid-cols-2 gap-2">
                   <div>
                     <Label className="text-xs">🟨</Label>
-                    <Input type="number" min="0" value={homeYellow} onChange={(e) => setHomeYellow(Number(e.target.value))} className="mt-1" />
+                    <Input type="number" min="0" inputMode="numeric" value={homeYellow} onChange={(e) => setHomeYellow(Number(e.target.value))} className="mt-1 h-10 text-center" />
                   </div>
                   <div>
                     <Label className="text-xs">🟥</Label>
-                    <Input type="number" min="0" value={homeRed} onChange={(e) => setHomeRed(Number(e.target.value))} className="mt-1" />
+                    <Input type="number" min="0" inputMode="numeric" value={homeRed} onChange={(e) => setHomeRed(Number(e.target.value))} className="mt-1 h-10 text-center" />
                   </div>
                 </div>
               </div>
               <div>
-                <Label className="text-xs font-medium block mb-2">{awayTeam?.name}</Label>
+                <Label className="text-xs font-medium block mb-2 truncate">{awayTeam?.name}</Label>
                 <div className="grid grid-cols-2 gap-2">
                   <div>
                     <Label className="text-xs">🟨</Label>
-                    <Input type="number" min="0" value={awayYellow} onChange={(e) => setAwayYellow(Number(e.target.value))} className="mt-1" />
+                    <Input type="number" min="0" inputMode="numeric" value={awayYellow} onChange={(e) => setAwayYellow(Number(e.target.value))} className="mt-1 h-10 text-center" />
                   </div>
                   <div>
                     <Label className="text-xs">🟥</Label>
-                    <Input type="number" min="0" value={awayRed} onChange={(e) => setAwayRed(Number(e.target.value))} className="mt-1" />
+                    <Input type="number" min="0" inputMode="numeric" value={awayRed} onChange={(e) => setAwayRed(Number(e.target.value))} className="mt-1 h-10 text-center" />
                   </div>
                 </div>
               </div>
@@ -720,12 +720,12 @@ export const MesaMatchPanel = () => {
 
         {/* Goal scorers button - during live match */}
         {isLive && homeTeam && awayTeam && (
-          <div className="flex gap-2">
-            <Button variant="outline" className="flex-1" onClick={() => setGoalScorersOpen(true)}>
+          <div className="flex flex-col sm:flex-row gap-2">
+            <Button variant="outline" className="flex-1 h-11" onClick={() => setGoalScorersOpen(true)}>
               <Goal className="w-4 h-4 mr-2" />
               Registrar Goleadores
             </Button>
-            <Button variant="outline" className="flex-1" onClick={() => { loadMvpData(); setMvpOpen(true); }}>
+            <Button variant="outline" className="flex-1 h-11" onClick={() => { loadMvpData(); setMvpOpen(true); }}>
               <Star className="w-4 h-4 mr-2" />
               MVP
             </Button>
@@ -734,20 +734,20 @@ export const MesaMatchPanel = () => {
 
         {/* Actions */}
         {!isFinished && isAccepted && (
-          <div className="flex gap-3 flex-wrap">
+          <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
             {match.status === 'scheduled' && (
-              <Button onClick={handleStartMatch} className="flex-1 bg-emerald-600 hover:bg-emerald-700" disabled={saving}>
+              <Button onClick={handleStartMatch} className="flex-1 h-11 bg-emerald-600 hover:bg-emerald-700" disabled={saving}>
                 <Play className="w-4 h-4 mr-2" />
                 Iniciar Partido
               </Button>
             )}
             {isLive && (
               <>
-                <Button variant="outline" onClick={handleSave} disabled={saving} className="flex-1">
+                <Button variant="outline" onClick={handleSave} disabled={saving} className="flex-1 h-11">
                   <Save className="w-4 h-4 mr-2" />
                   Guardar
                 </Button>
-                <Button onClick={handleEndMatch} className="flex-1 bg-red-600 hover:bg-red-700" disabled={saving}>
+                <Button onClick={handleEndMatch} className="flex-1 h-11 bg-red-600 hover:bg-red-700" disabled={saving}>
                   <Square className="w-4 h-4 mr-2" />
                   Finalizar
                 </Button>
