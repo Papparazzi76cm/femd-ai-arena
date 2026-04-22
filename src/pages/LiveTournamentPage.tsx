@@ -637,12 +637,18 @@ export const LiveTournamentPage = () => {
                     <Card key={groupName} className="overflow-hidden">
                       <div className="bg-primary/10 px-4 py-2 border-b"><h3 className="font-bold">{groupName}</h3></div>
                       <div className="overflow-x-auto">
-                        <table className="w-full text-sm">
+                        <table className="w-full text-xs sm:text-sm">
                           <thead>
                             <tr className="border-b bg-muted/50">
-                              <th className="text-left p-3">Equipo</th>
-                              <th className="text-center p-3">PJ</th><th className="text-center p-3">G</th><th className="text-center p-3">E</th><th className="text-center p-3">P</th>
-                              <th className="text-center p-3">GF</th><th className="text-center p-3">GC</th><th className="text-center p-3">DG</th><th className="text-center p-3 font-bold">Pts</th>
+                              <th className="text-left p-2 sm:p-3">Equipo</th>
+                              <th className="text-center p-1.5 sm:p-3">PJ</th>
+                              <th className="text-center p-1.5 sm:p-3">G</th>
+                              <th className="text-center p-1.5 sm:p-3 hidden sm:table-cell">E</th>
+                              <th className="text-center p-1.5 sm:p-3">P</th>
+                              <th className="text-center p-1.5 sm:p-3 hidden md:table-cell">GF</th>
+                              <th className="text-center p-1.5 sm:p-3 hidden md:table-cell">GC</th>
+                              <th className="text-center p-1.5 sm:p-3 hidden sm:table-cell">DG</th>
+                              <th className="text-center p-1.5 sm:p-3 font-bold">Pts</th>
                             </tr>
                           </thead>
                           <tbody>
@@ -650,28 +656,31 @@ export const LiveTournamentPage = () => {
                               const isLive = liveTeamIds.has(et.team_id);
                               return (
                                 <tr key={et.id} className={`border-b hover:bg-muted/30 ${isLive ? 'animate-heartbeat bg-red-500/10' : ''}`}>
-                                  <td className="p-3">
-                                    <div className="flex items-center gap-2">
-                                      <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${idx < 2 ? 'bg-primary text-primary-foreground' : 'bg-muted'}`}>{idx + 1}</span>
-                                      {getTeamLogo(et.team_id) && <img src={getTeamLogo(et.team_id)!} alt="" className="w-6 h-6 object-contain" />}
-                                      <span className={`font-medium ${isLive ? 'text-red-600 dark:text-red-400 font-bold' : ''}`}>{getTeamName(et.team_id)}</span>
-                                      {isLive && <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse-live" />}
+                                  <td className="p-2 sm:p-3 max-w-[150px] sm:max-w-none">
+                                    <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
+                                      <span className={`w-5 h-5 sm:w-6 sm:h-6 rounded-full flex items-center justify-center text-[10px] sm:text-xs font-bold shrink-0 ${idx < 2 ? 'bg-primary text-primary-foreground' : 'bg-muted'}`}>{idx + 1}</span>
+                                      {getTeamLogo(et.team_id) && <img src={getTeamLogo(et.team_id)!} alt="" className="w-5 h-5 sm:w-6 sm:h-6 object-contain shrink-0" />}
+                                      <span className={`font-medium truncate ${isLive ? 'text-red-600 dark:text-red-400 font-bold' : ''}`}>{getTeamName(et.team_id)}</span>
+                                      {isLive && <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse-live shrink-0" />}
                                     </div>
                                   </td>
-                                  <td className="text-center p-3">{et.matches_played || 0}</td>
-                                  <td className="text-center p-3">{et.wins || 0}</td>
-                                  <td className="text-center p-3">{et.draws || 0}</td>
-                                  <td className="text-center p-3">{et.losses || 0}</td>
-                                  <td className="text-center p-3">{et.goals_for || 0}</td>
-                                  <td className="text-center p-3">{et.goals_against || 0}</td>
-                                  <td className="text-center p-3">{et.goal_difference || 0}</td>
-                                  <td className="text-center p-3 font-bold text-primary">{et.points || 0}</td>
+                                  <td className="text-center p-1.5 sm:p-3">{et.matches_played || 0}</td>
+                                  <td className="text-center p-1.5 sm:p-3">{et.wins || 0}</td>
+                                  <td className="text-center p-1.5 sm:p-3 hidden sm:table-cell">{et.draws || 0}</td>
+                                  <td className="text-center p-1.5 sm:p-3">{et.losses || 0}</td>
+                                  <td className="text-center p-1.5 sm:p-3 hidden md:table-cell">{et.goals_for || 0}</td>
+                                  <td className="text-center p-1.5 sm:p-3 hidden md:table-cell">{et.goals_against || 0}</td>
+                                  <td className="text-center p-1.5 sm:p-3 hidden sm:table-cell">{et.goal_difference || 0}</td>
+                                  <td className="text-center p-1.5 sm:p-3 font-bold text-primary">{et.points || 0}</td>
                                 </tr>
                               );
                             })}
                           </tbody>
                         </table>
                       </div>
+                      <p className="text-[10px] text-muted-foreground sm:hidden px-3 py-1.5 border-t bg-muted/20">
+                        Vista reducida. Gira el móvil para ver E, GF, GC y DG.
+                      </p>
                     </Card>
                   ))}
                 </div>
