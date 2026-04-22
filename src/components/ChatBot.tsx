@@ -209,7 +209,7 @@ export const ChatBot = () => {
           </div>
 
           {/* Input */}
-          <div className="p-4 border-t border-border bg-background">
+          <div className="p-3 sm:p-4 border-t border-border bg-background">
             <div className="flex gap-2">
               <input
                 type="text"
@@ -217,16 +217,16 @@ export const ChatBot = () => {
                 onChange={(e) => setInput(e.target.value)}
                 onKeyPress={handleKeyPress}
                 placeholder="Escribe tu mensaje..."
-                className="flex-1 px-3 py-2 border border-border rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-emerald-600 text-sm"
+                className="flex-1 px-3 h-10 sm:h-11 border border-border rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-emerald-600 text-sm min-w-0"
                 disabled={isLoading}
               />
               <button
                 onClick={sendMessage}
                 disabled={!input.trim() || isLoading}
-                className="bg-emerald-600 hover:bg-emerald-700 disabled:bg-muted disabled:cursor-not-allowed text-white p-2 rounded-lg transition-colors"
+                className="bg-emerald-600 hover:bg-emerald-700 disabled:bg-muted disabled:cursor-not-allowed text-white p-2 rounded-lg transition-colors flex-shrink-0 w-10 sm:w-11 flex items-center justify-center"
                 aria-label="Enviar mensaje"
               >
-                <Send size={20} />
+                <Send size={18} />
               </button>
             </div>
           </div>
