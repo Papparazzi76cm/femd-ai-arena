@@ -964,13 +964,12 @@ export const TeamDetailPage = () => {
                             <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2 sm:gap-4">
                               {/* Local */}
                               <div className="flex flex-col sm:flex-row items-center sm:items-center gap-1.5 sm:gap-2 min-w-0">
-                                {team.logo_url && (
-                                  <img
-                                    src={team.logo_url}
-                                    alt={team.name}
-                                    className="w-9 h-9 sm:w-10 sm:h-10 object-contain flex-shrink-0"
-                                  />
-                                )}
+                                <TeamLogo
+                                  src={team.logo_url}
+                                  alt={team.name}
+                                  size="md"
+                                  className="w-9 h-9 sm:w-10 sm:h-10"
+                                />
                                 <span className="font-semibold text-xs sm:text-base text-center sm:text-left leading-tight break-words line-clamp-2 min-w-0">
                                   {team.name}
                                 </span>
@@ -992,13 +991,12 @@ export const TeamDetailPage = () => {
                                 <span className="font-semibold text-xs sm:text-base text-center sm:text-right leading-tight break-words line-clamp-2 min-w-0">
                                   {opponent?.name}
                                 </span>
-                                {opponent?.logo_url && (
-                                  <img
-                                    src={opponent.logo_url}
-                                    alt={opponent.name}
-                                    className="w-9 h-9 sm:w-10 sm:h-10 object-contain flex-shrink-0"
-                                  />
-                                )}
+                                <TeamLogo
+                                  src={opponent?.logo_url}
+                                  alt={opponent?.name}
+                                  size="md"
+                                  className="w-9 h-9 sm:w-10 sm:h-10"
+                                />
                               </div>
                             </div>
 
