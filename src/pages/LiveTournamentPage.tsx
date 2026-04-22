@@ -462,25 +462,25 @@ export const LiveTournamentPage = () => {
   return (
     <div className="min-h-screen bg-gradient-to-b from-muted/20 to-background pt-20">
       {/* Event Selector Bar */}
-      <div className="bg-muted/50 border-b py-4 px-4">
+      <div className="bg-muted/50 border-b py-3 sm:py-4 px-3 sm:px-4">
         <div className="container mx-auto">
-          <div className="flex items-center gap-3 flex-wrap">
-            <Radio className="w-5 h-5 text-primary flex-shrink-0" />
-            <span className="font-semibold text-sm whitespace-nowrap">Eventos en vivo:</span>
+          <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
+            <Radio className="w-4 h-4 sm:w-5 sm:h-5 text-primary flex-shrink-0" />
+            <span className="font-semibold text-xs sm:text-sm whitespace-nowrap">Eventos en vivo:</span>
             <Select
               value={selectedEventId || ''}
               onValueChange={(val) => setSelectedEventId(val)}
             >
-              <SelectTrigger className="w-full max-w-md bg-background">
-                <SelectValue placeholder="Selecciona un evento para visualizar" />
+              <SelectTrigger className="w-full sm:max-w-md bg-background h-9 sm:h-10 text-sm">
+                <SelectValue placeholder="Selecciona un evento" />
               </SelectTrigger>
               <SelectContent className="bg-background z-50">
                 {allEvents.map(ev => (
                   <SelectItem key={ev.id} value={ev.id}>
                     <div className="flex items-center gap-2">
                       {ev.hasLiveMatches && <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse-live flex-shrink-0" />}
-                      <span>{ev.title}</span>
-                      <span className="text-xs text-muted-foreground ml-1">
+                      <span className="truncate">{ev.title}</span>
+                      <span className="text-xs text-muted-foreground ml-1 hidden sm:inline">
                         ({new Date(ev.date).toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' })})
                       </span>
                     </div>
@@ -514,104 +514,111 @@ export const LiveTournamentPage = () => {
       ) : (
         <>
           {/* Hero Header */}
-          <div className={`${isLiveEvent ? 'bg-gradient-to-r from-red-600 via-orange-500 to-yellow-500' : 'bg-gradient-to-r from-primary via-primary/80 to-primary/60'} text-white py-8 px-4`}>
+          <div className={`${isLiveEvent ? 'bg-gradient-to-r from-red-600 via-orange-500 to-yellow-500' : 'bg-gradient-to-r from-primary via-primary/80 to-primary/60'} text-white py-5 sm:py-8 px-3 sm:px-4`}>
             <div className="container mx-auto">
-              <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center gap-3">
+              <div className="flex items-start justify-between gap-2 mb-2">
+                <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
                   {isLiveEvent ? (
                     <>
                       <div className="relative">
-                        <Radio className="w-8 h-8" />
-                        <span className="absolute -top-1 -right-1 w-3 h-3 bg-white rounded-full animate-pulse-live" />
+                        <Radio className="w-6 h-6 sm:w-8 sm:h-8" />
+                        <span className="absolute -top-1 -right-1 w-2.5 h-2.5 sm:w-3 sm:h-3 bg-white rounded-full animate-pulse-live" />
                       </div>
-                      <Badge className="bg-white/20 text-white border-white/30 text-lg px-4 py-1">EN VIVO</Badge>
+                      <Badge className="bg-white/20 text-white border-white/30 text-sm sm:text-lg px-2.5 sm:px-4 py-0.5 sm:py-1">EN VIVO</Badge>
                     </>
                   ) : (
                     <>
-                      <Calendar className="w-8 h-8" />
-                      <Badge className="bg-white/20 text-white border-white/30 text-lg px-4 py-1">EVENTO</Badge>
+                      <Calendar className="w-6 h-6 sm:w-8 sm:h-8" />
+                      <Badge className="bg-white/20 text-white border-white/30 text-sm sm:text-lg px-2.5 sm:px-4 py-0.5 sm:py-1">EVENTO</Badge>
                     </>
                   )}
                 </div>
                 {isLiveEvent && (
-                  <Button variant="ghost" size="sm" onClick={handleEnableNotifications} className={`text-white hover:bg-white/20 ${notificationsEnabled ? 'bg-white/20' : ''}`}>
-                    {notificationsEnabled ? (<><Bell className="w-4 h-4 mr-2" />Notificaciones activas</>) : (<><BellOff className="w-4 h-4 mr-2" />Activar notificaciones</>)}
+                  <Button variant="ghost" size="sm" onClick={handleEnableNotifications} className={`text-white hover:bg-white/20 px-2 sm:px-3 ${notificationsEnabled ? 'bg-white/20' : ''}`}>
+                    {notificationsEnabled ? (
+                      <><Bell className="w-4 h-4 sm:mr-2" /><span className="hidden sm:inline">Notificaciones activas</span></>
+                    ) : (
+                      <><BellOff className="w-4 h-4 sm:mr-2" /><span className="hidden sm:inline">Activar notificaciones</span></>
+                    )}
                   </Button>
                 )}
               </div>
-              <h1 className="text-3xl md:text-4xl font-bold">{activeEvent.title}</h1>
-              <p className="text-white/80 mt-2">{activeEvent.location}</p>
-              <p className="text-white/70 mt-1 flex items-center gap-2">
-                <Clock className="w-4 h-4" />
-                {new Date(activeEvent.date).toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
-                {activeEvent.end_date && activeEvent.end_date !== activeEvent.date && (
-                  <> – {new Date(activeEvent.end_date).toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' })}</>
-                )}
+              <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold leading-tight">{activeEvent.title}</h1>
+              {activeEvent.location && <p className="text-white/80 mt-1.5 sm:mt-2 text-sm sm:text-base">{activeEvent.location}</p>}
+              <p className="text-white/70 mt-1 flex items-center gap-1.5 text-xs sm:text-sm flex-wrap">
+                <Clock className="w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0" />
+                <span>
+                  {new Date(activeEvent.date).toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' })}
+                  {activeEvent.end_date && activeEvent.end_date !== activeEvent.date && (
+                    <> – {new Date(activeEvent.end_date).toLocaleDateString('es-ES', { day: 'numeric', month: 'long' })}</>
+                  )}
+                </span>
               </p>
             </div>
           </div>
 
-          <div className="container mx-auto px-4 py-8">
+          <div className="container mx-auto px-3 sm:px-4 py-5 sm:py-8">
             {/* Live Matches Section */}
             {liveMatches.length > 0 && (
-              <div className="mb-8">
-                <h2 className="text-2xl font-bold mb-4 flex items-center gap-2">
-                  <span className="w-3 h-3 bg-red-500 rounded-full animate-pulse-live" />
+              <div className="mb-6 sm:mb-8">
+                <h2 className="text-xl sm:text-2xl font-bold mb-3 sm:mb-4 flex items-center gap-2">
+                  <span className="w-2.5 h-2.5 sm:w-3 sm:h-3 bg-red-500 rounded-full animate-pulse-live" />
                   Partidos en Juego
                 </h2>
-                <div className="grid md:grid-cols-2 gap-4">
+                <div className="grid md:grid-cols-2 gap-3 sm:gap-4">
                   {liveMatches.map((match) => {
                     const venue = getMatchVenueInfo(match);
                     const catName = getMatchCategoryName(match);
                     return (
-                      <Card key={match.id} className="p-6 border-2 border-red-500/50 bg-gradient-to-br from-red-500/5 to-orange-500/5">
+                      <Card key={match.id} className="p-3 sm:p-6 border-2 border-red-500/50 bg-gradient-to-br from-red-500/5 to-orange-500/5">
                         <div className="flex flex-col gap-1 mb-2">
-                          <div className="flex items-center justify-between">
-                            <Badge className="bg-red-500 text-white animate-pulse-live">EN JUEGO</Badge>
-                            {catName && <Badge variant="secondary" className="text-xs">{catName}</Badge>}
+                          <div className="flex items-center justify-between gap-2 flex-wrap">
+                            <Badge className="bg-red-500 text-white animate-pulse-live text-[10px] sm:text-xs">EN JUEGO</Badge>
+                            {catName && <Badge variant="secondary" className="text-[10px] sm:text-xs">{catName}</Badge>}
                           </div>
-                          <p className="text-sm font-medium text-muted-foreground">
+                          <p className="text-xs sm:text-sm font-medium text-muted-foreground">
                             {getPhaseLabel(match.phase, match.group_name)}
                           </p>
                           {(venue.facility || venue.field) && (
-                            <p className="text-xs text-muted-foreground flex items-center gap-1">
-                              <Building2 className="w-3 h-3" />{venue.facility}{venue.field ? ` · ${venue.field}` : ''}
+                            <p className="text-[11px] sm:text-xs text-muted-foreground flex items-center gap-1">
+                              <Building2 className="w-3 h-3 flex-shrink-0" />
+                              <span className="truncate">{venue.facility}{venue.field ? ` · ${venue.field}` : ''}</span>
                             </p>
                           )}
                         </div>
 
                         <MatchTimer isLive={true} matchDurationMinutes={match.match_duration_minutes || 40} matchHalves={match.match_halves || 1} startedAt={match.started_at} readOnly={true} />
 
-                        <div className="grid grid-cols-3 items-center gap-4 mt-4">
-                          <div className="text-center">
-                            {getTeamLogo(match.home_team_id) && <img src={getTeamLogo(match.home_team_id)!} alt="" className="w-16 h-16 object-contain mx-auto mb-2" />}
-                            <p className="font-semibold text-sm">{getTeamName(match.home_team_id)}</p>
+                        <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2 sm:gap-4 mt-3 sm:mt-4">
+                          <div className="text-center min-w-0">
+                            {getTeamLogo(match.home_team_id) && <img src={getTeamLogo(match.home_team_id)!} alt="" className="w-12 h-12 sm:w-16 sm:h-16 object-contain mx-auto mb-1.5 sm:mb-2" />}
+                            <p className="font-semibold text-xs sm:text-sm line-clamp-2">{getTeamName(match.home_team_id)}</p>
                           </div>
                           <div className="text-center">
-                            <div className="text-4xl font-bold">
+                            <div className="text-3xl sm:text-4xl font-bold whitespace-nowrap">
                               <span className="text-primary">{match.home_score ?? 0}</span>
-                              <span className="text-muted-foreground mx-2">-</span>
+                              <span className="text-muted-foreground mx-1.5 sm:mx-2">-</span>
                               <span className="text-primary">{match.away_score ?? 0}</span>
                             </div>
                           </div>
-                          <div className="text-center">
-                            {getTeamLogo(match.away_team_id) && <img src={getTeamLogo(match.away_team_id)!} alt="" className="w-16 h-16 object-contain mx-auto mb-2" />}
-                            <p className="font-semibold text-sm">{getTeamName(match.away_team_id)}</p>
+                          <div className="text-center min-w-0">
+                            {getTeamLogo(match.away_team_id) && <img src={getTeamLogo(match.away_team_id)!} alt="" className="w-12 h-12 sm:w-16 sm:h-16 object-contain mx-auto mb-1.5 sm:mb-2" />}
+                            <p className="font-semibold text-xs sm:text-sm line-clamp-2">{getTeamName(match.away_team_id)}</p>
                           </div>
                         </div>
 
                         {matchGoals.get(match.id) && matchGoals.get(match.id)!.length > 0 && (
                           <div className="mt-3 grid grid-cols-2 gap-2 border-t pt-3">
-                            <div className="space-y-1">
+                            <div className="space-y-1 min-w-0">
                               {matchGoals.get(match.id)!.filter(g => g.team_id === match.home_team_id).sort((a, b) => (a.minute || 0) - (b.minute || 0)).map(g => {
                                 const p = g.player_id ? playerNames.get(g.player_id) : null;
-                                return <p key={g.id} className="text-xs text-muted-foreground">⚽ {p ? `${p.number ? `#${p.number} ` : ''}${p.name}` : 'Gol'}{g.minute ? ` (${g.minute}')` : ''}</p>;
+                                return <p key={g.id} className="text-[11px] sm:text-xs text-muted-foreground truncate">⚽ {p ? `${p.number ? `#${p.number} ` : ''}${p.name}` : 'Gol'}{g.minute ? ` (${g.minute}')` : ''}</p>;
                               })}
                             </div>
-                            <div className="space-y-1 text-right">
+                            <div className="space-y-1 text-right min-w-0">
                               {matchGoals.get(match.id)!.filter(g => g.team_id === match.away_team_id).sort((a, b) => (a.minute || 0) - (b.minute || 0)).map(g => {
                                 const p = g.player_id ? playerNames.get(g.player_id) : null;
-                                return <p key={g.id} className="text-xs text-muted-foreground">{p ? `${p.number ? `#${p.number} ` : ''}${p.name}` : 'Gol'}{g.minute ? ` (${g.minute}')` : ''} ⚽</p>;
+                                return <p key={g.id} className="text-[11px] sm:text-xs text-muted-foreground truncate">{p ? `${p.number ? `#${p.number} ` : ''}${p.name}` : 'Gol'}{g.minute ? ` (${g.minute}')` : ''} ⚽</p>;
                               })}
                             </div>
                           </div>
@@ -624,10 +631,10 @@ export const LiveTournamentPage = () => {
             )}
 
             <Tabs defaultValue="standings" className="w-full">
-              <TabsList className="grid w-full grid-cols-3 mb-6">
-                <TabsTrigger value="standings" className="flex items-center gap-2"><Trophy className="w-4 h-4" />Clasificación</TabsTrigger>
-                <TabsTrigger value="results" className="flex items-center gap-2"><Users className="w-4 h-4" />Resultados</TabsTrigger>
-                <TabsTrigger value="stats" className="flex items-center gap-2"><BarChart3 className="w-4 h-4" />Estadísticas</TabsTrigger>
+              <TabsList className="grid w-full grid-cols-3 mb-4 sm:mb-6 h-auto">
+                <TabsTrigger value="standings" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm py-2"><Trophy className="w-3.5 h-3.5 sm:w-4 sm:h-4" /><span className="hidden xs:inline">Clasificación</span><span className="xs:hidden">Clasif.</span></TabsTrigger>
+                <TabsTrigger value="results" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm py-2"><Users className="w-3.5 h-3.5 sm:w-4 sm:h-4" />Resultados</TabsTrigger>
+                <TabsTrigger value="stats" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm py-2"><BarChart3 className="w-3.5 h-3.5 sm:w-4 sm:h-4" /><span className="hidden xs:inline">Estadísticas</span><span className="xs:hidden">Stats</span></TabsTrigger>
               </TabsList>
 
               {/* Standings Tab */}
@@ -688,21 +695,21 @@ export const LiveTournamentPage = () => {
 
               {/* Results Tab - FULL INFO: date, time, venue, field + match sheet button */}
               <TabsContent value="results">
-                <div className="space-y-4">
+                <div className="space-y-3 sm:space-y-4">
                   {allMatches.filter(m => m.status === 'finished' || m.status === 'in_progress').map((match) => {
                     const venue = getMatchVenueInfo(match);
                     return (
-                      <Card key={match.id} className={`p-4 ${match.status === 'in_progress' ? 'border-2 border-red-500/50' : ''}`}>
+                      <Card key={match.id} className={`p-3 sm:p-4 ${match.status === 'in_progress' ? 'border-2 border-red-500/50' : ''}`}>
                         <div className="flex items-center justify-between mb-2 flex-wrap gap-1">
-                          <span className="text-sm text-muted-foreground">{getPhaseLabel(match.phase, match.group_name)}</span>
+                          <span className="text-xs sm:text-sm text-muted-foreground truncate flex-1 min-w-0">{getPhaseLabel(match.phase, match.group_name)}</span>
                           {match.status === 'in_progress' ? (
-                            <Badge className="bg-red-500 text-white animate-pulse-live">EN JUEGO</Badge>
+                            <Badge className="bg-red-500 text-white animate-pulse-live text-[10px] sm:text-xs">EN JUEGO</Badge>
                           ) : (
-                            <Badge variant="outline">Finalizado</Badge>
+                            <Badge variant="outline" className="text-[10px] sm:text-xs">Finalizado</Badge>
                           )}
                         </div>
                         {/* Date + Time + Venue */}
-                        <div className="flex flex-wrap gap-3 text-xs text-muted-foreground mb-3">
+                        <div className="flex flex-wrap gap-x-3 gap-y-1 text-[11px] sm:text-xs text-muted-foreground mb-3">
                           {match.match_date && (
                             <span className="flex items-center gap-1">
                               <Calendar className="w-3 h-3" />
@@ -716,33 +723,35 @@ export const LiveTournamentPage = () => {
                             </span>
                           )}
                           {venue.facility && (
-                            <span className="flex items-center gap-1">
-                              <Building2 className="w-3 h-3" />
-                              {venue.facility}
+                            <span className="flex items-center gap-1 min-w-0">
+                              <Building2 className="w-3 h-3 flex-shrink-0" />
+                              <span className="truncate">{venue.facility}</span>
                             </span>
                           )}
                           {venue.field && (
-                            <span className="flex items-center gap-1">
-                              <MapPin className="w-3 h-3" />
-                              {venue.field}
+                            <span className="flex items-center gap-1 min-w-0">
+                              <MapPin className="w-3 h-3 flex-shrink-0" />
+                              <span className="truncate">{venue.field}</span>
                             </span>
                           )}
                         </div>
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2 flex-1">
-                            {getTeamLogo(match.home_team_id) && <img src={getTeamLogo(match.home_team_id)!} alt="" className="w-8 h-8 object-contain" />}
-                            <span className={`font-medium ${match.home_team_id && liveTeamIds.has(match.home_team_id) ? 'text-red-600 dark:text-red-400' : ''}`}>{getTeamName(match.home_team_id)}</span>
+                        {/* Mobile: stacked teams + score row */}
+                        <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2 sm:gap-4">
+                          <div className="flex flex-col sm:flex-row items-center gap-1.5 sm:gap-2 min-w-0">
+                            {getTeamLogo(match.home_team_id) && <img src={getTeamLogo(match.home_team_id)!} alt="" className="w-9 h-9 sm:w-8 sm:h-8 object-contain flex-shrink-0" />}
+                            <span className={`font-medium text-[11px] sm:text-base text-center sm:text-left line-clamp-2 sm:truncate ${match.home_team_id && liveTeamIds.has(match.home_team_id) ? 'text-red-600 dark:text-red-400' : ''}`}>{getTeamName(match.home_team_id)}</span>
                           </div>
-                          <div className="text-2xl font-bold px-4">{match.home_score ?? 0} - {match.away_score ?? 0}</div>
-                          <div className="flex items-center gap-2 flex-1 justify-end">
-                            <span className={`font-medium ${match.away_team_id && liveTeamIds.has(match.away_team_id) ? 'text-red-600 dark:text-red-400' : ''}`}>{getTeamName(match.away_team_id)}</span>
-                            {getTeamLogo(match.away_team_id) && <img src={getTeamLogo(match.away_team_id)!} alt="" className="w-8 h-8 object-contain" />}
+                          <div className="text-xl sm:text-2xl font-bold px-1 sm:px-4 whitespace-nowrap">{match.home_score ?? 0} - {match.away_score ?? 0}</div>
+                          <div className="flex flex-col sm:flex-row items-center gap-1.5 sm:gap-2 min-w-0 sm:justify-end">
+                            {/* On mobile: logo on top + name below; on sm+: name then logo */}
+                            <span className={`font-medium text-[11px] sm:text-base text-center sm:text-right line-clamp-2 sm:truncate order-2 sm:order-1 ${match.away_team_id && liveTeamIds.has(match.away_team_id) ? 'text-red-600 dark:text-red-400' : ''}`}>{getTeamName(match.away_team_id)}</span>
+                            {getTeamLogo(match.away_team_id) && <img src={getTeamLogo(match.away_team_id)!} alt="" className="w-9 h-9 sm:w-8 sm:h-8 object-contain flex-shrink-0 order-1 sm:order-2" />}
                           </div>
                         </div>
                         {/* Match sheet button */}
                         <div className="mt-3 pt-2 border-t flex justify-center">
-                          <Button variant="ghost" size="sm" className="text-primary" onClick={() => openMatchDetail(match)}>
-                            <FileText className="w-4 h-4 mr-1" />
+                          <Button variant="ghost" size="sm" className="text-primary text-xs sm:text-sm h-8" onClick={() => openMatchDetail(match)}>
+                            <FileText className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1" />
                             Ver ficha del partido
                           </Button>
                         </div>
@@ -750,54 +759,54 @@ export const LiveTournamentPage = () => {
                     );
                   })}
                   {allMatches.filter(m => m.status === 'finished' || m.status === 'in_progress').length === 0 && (
-                    <Card className="p-8 text-center"><p className="text-muted-foreground">Aún no hay resultados disponibles</p></Card>
+                    <Card className="p-8 text-center"><p className="text-muted-foreground text-sm">Aún no hay resultados disponibles</p></Card>
                   )}
                 </div>
               </TabsContent>
 
               {/* Stats Tab */}
               <TabsContent value="stats">
-                <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-                  <Card className="p-6 text-center"><p className="text-sm text-muted-foreground mb-1">Partidos Jugados</p><p className="text-4xl font-bold text-primary">{finishedMatches}</p></Card>
-                  <Card className="p-6 text-center"><p className="text-sm text-muted-foreground mb-1">Goles Totales</p><p className="text-4xl font-bold text-primary">{totalGoals}</p></Card>
-                  <Card className="p-6 text-center"><p className="text-sm text-muted-foreground mb-1">Tarjetas Amarillas</p><p className="text-4xl font-bold text-yellow-500">🟨 {totalYellowCards}</p></Card>
-                  <Card className="p-6 text-center"><p className="text-sm text-muted-foreground mb-1">Tarjetas Rojas</p><p className="text-4xl font-bold text-red-500">🟥 {totalRedCards}</p></Card>
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4 mb-6 sm:mb-8">
+                  <Card className="p-3 sm:p-6 text-center"><p className="text-[11px] sm:text-sm text-muted-foreground mb-1">Partidos Jugados</p><p className="text-2xl sm:text-4xl font-bold text-primary">{finishedMatches}</p></Card>
+                  <Card className="p-3 sm:p-6 text-center"><p className="text-[11px] sm:text-sm text-muted-foreground mb-1">Goles Totales</p><p className="text-2xl sm:text-4xl font-bold text-primary">{totalGoals}</p></Card>
+                  <Card className="p-3 sm:p-6 text-center"><p className="text-[11px] sm:text-sm text-muted-foreground mb-1">T. Amarillas</p><p className="text-2xl sm:text-4xl font-bold text-yellow-500">🟨 {totalYellowCards}</p></Card>
+                  <Card className="p-3 sm:p-6 text-center"><p className="text-[11px] sm:text-sm text-muted-foreground mb-1">T. Rojas</p><p className="text-2xl sm:text-4xl font-bold text-red-500">🟥 {totalRedCards}</p></Card>
                 </div>
 
-                <div className="grid md:grid-cols-2 gap-6">
-                  <Card className="p-6">
-                    <h3 className="font-bold text-lg mb-4 flex items-center gap-2"><Goal className="w-5 h-5 text-primary" />Máximos Goleadores</h3>
-                    <div className="space-y-3">
+                <div className="grid md:grid-cols-2 gap-4 sm:gap-6">
+                  <Card className="p-3 sm:p-6">
+                    <h3 className="font-bold text-base sm:text-lg mb-3 sm:mb-4 flex items-center gap-2"><Goal className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />Máximos Goleadores</h3>
+                    <div className="space-y-2 sm:space-y-3">
                       {topScorers.length === 0 ? (
                         <p className="text-muted-foreground text-sm">Aún no hay goles registrados</p>
                       ) : (
                         topScorers.slice(0, 10).map((scorer, idx) => (
-                          <div key={scorer.player.id} className="flex items-center justify-between">
-                            <div className="flex items-center gap-3">
-                              <span className={`w-7 h-7 rounded-full flex items-center justify-center text-sm font-bold ${idx === 0 ? 'bg-yellow-400 text-yellow-900' : idx === 1 ? 'bg-gray-300 text-gray-700' : idx === 2 ? 'bg-amber-600 text-amber-100' : 'bg-primary/10'}`}>{idx + 1}</span>
-                              {scorer.player.photo_url && <img src={scorer.player.photo_url} alt="" className="w-8 h-8 rounded-full object-cover" />}
-                              <div>
-                                <p className="font-medium">{scorer.player.number && <span className="text-muted-foreground mr-1">#{scorer.player.number}</span>}{scorer.player.name}</p>
-                                {scorer.team && <p className="text-xs text-muted-foreground">{scorer.team.name}</p>}
+                          <div key={scorer.player.id} className="flex items-center justify-between gap-2">
+                            <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
+                              <span className={`w-6 h-6 sm:w-7 sm:h-7 rounded-full flex items-center justify-center text-xs sm:text-sm font-bold flex-shrink-0 ${idx === 0 ? 'bg-yellow-400 text-yellow-900' : idx === 1 ? 'bg-gray-300 text-gray-700' : idx === 2 ? 'bg-amber-600 text-amber-100' : 'bg-primary/10'}`}>{idx + 1}</span>
+                              {scorer.player.photo_url && <img src={scorer.player.photo_url} alt="" className="w-7 h-7 sm:w-8 sm:h-8 rounded-full object-cover flex-shrink-0" />}
+                              <div className="min-w-0">
+                                <p className="font-medium text-xs sm:text-base truncate">{scorer.player.number && <span className="text-muted-foreground mr-1">#{scorer.player.number}</span>}{scorer.player.name}</p>
+                                {scorer.team && <p className="text-[10px] sm:text-xs text-muted-foreground truncate">{scorer.team.name}</p>}
                               </div>
                             </div>
-                            <div className="flex items-center gap-1"><span className="text-2xl font-bold text-primary">{scorer.goals}</span><span className="text-sm text-muted-foreground">⚽</span></div>
+                            <div className="flex items-center gap-1 flex-shrink-0"><span className="text-xl sm:text-2xl font-bold text-primary">{scorer.goals}</span><span className="text-xs sm:text-sm text-muted-foreground">⚽</span></div>
                           </div>
                         ))
                       )}
                     </div>
                   </Card>
-                  <Card className="p-6">
-                    <h3 className="font-bold text-lg mb-4">Equipos Más Goleadores</h3>
-                    <div className="space-y-3">
+                  <Card className="p-3 sm:p-6">
+                    <h3 className="font-bold text-base sm:text-lg mb-3 sm:mb-4">Equipos Más Goleadores</h3>
+                    <div className="space-y-2 sm:space-y-3">
                       {[...eventTeams].sort((a, b) => (b.goals_for || 0) - (a.goals_for || 0)).slice(0, 5).map((et, idx) => (
-                        <div key={et.id} className="flex items-center justify-between">
-                          <div className="flex items-center gap-3">
-                            <span className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center text-sm font-bold">{idx + 1}</span>
-                            {getTeamLogo(et.team_id) && <img src={getTeamLogo(et.team_id)!} alt="" className="w-8 h-8 object-contain" />}
-                            <span className={liveTeamIds.has(et.team_id) ? 'text-red-600 dark:text-red-400 font-bold' : ''}>{getTeamName(et.team_id)}</span>
+                        <div key={et.id} className="flex items-center justify-between gap-2">
+                          <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
+                            <span className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center text-xs sm:text-sm font-bold flex-shrink-0">{idx + 1}</span>
+                            {getTeamLogo(et.team_id) && <img src={getTeamLogo(et.team_id)!} alt="" className="w-7 h-7 sm:w-8 sm:h-8 object-contain flex-shrink-0" />}
+                            <span className={`text-xs sm:text-base truncate ${liveTeamIds.has(et.team_id) ? 'text-red-600 dark:text-red-400 font-bold' : ''}`}>{getTeamName(et.team_id)}</span>
                           </div>
-                          <span className="font-bold text-primary">{et.goals_for || 0} goles</span>
+                          <span className="font-bold text-primary text-xs sm:text-base whitespace-nowrap flex-shrink-0">{et.goals_for || 0} goles</span>
                         </div>
                       ))}
                     </div>
@@ -809,23 +818,23 @@ export const LiveTournamentPage = () => {
 
           {/* Match Detail Dialog */}
           <Dialog open={matchDetailOpen} onOpenChange={setMatchDetailOpen}>
-            <DialogContent className="max-w-lg">
+            <DialogContent className="max-w-lg w-[calc(100vw-1.5rem)] max-h-[90vh] overflow-y-auto p-4 sm:p-6">
               <DialogHeader>
-                <DialogTitle className="flex items-center gap-2">
-                  <FileText className="w-5 h-5" />
+                <DialogTitle className="flex items-center gap-2 text-base sm:text-lg">
+                  <FileText className="w-4 h-4 sm:w-5 sm:h-5" />
                   Ficha del Partido
                 </DialogTitle>
               </DialogHeader>
               {selectedMatchDetail && (
-                <div className="space-y-4">
-                  <p className="text-sm text-muted-foreground text-center">{getPhaseLabel(selectedMatchDetail.phase, selectedMatchDetail.group_name)}</p>
+                <div className="space-y-3 sm:space-y-4">
+                  <p className="text-xs sm:text-sm text-muted-foreground text-center">{getPhaseLabel(selectedMatchDetail.phase, selectedMatchDetail.group_name)}</p>
                   {/* Date/venue */}
                   {(() => {
                     const v = getMatchVenueInfo(selectedMatchDetail);
                     return (
-                      <div className="flex flex-wrap justify-center gap-3 text-xs text-muted-foreground">
+                      <div className="flex flex-wrap justify-center gap-x-3 gap-y-1 text-[11px] sm:text-xs text-muted-foreground">
                         {selectedMatchDetail.match_date && (
-                          <span>{new Date(selectedMatchDetail.match_date).toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' })} – {new Date(selectedMatchDetail.match_date).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}</span>
+                          <span>{new Date(selectedMatchDetail.match_date).toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' })} – {new Date(selectedMatchDetail.match_date).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}</span>
                         )}
                         {v.facility && <span>{v.facility}</span>}
                         {v.field && <span>{v.field}</span>}
@@ -833,17 +842,17 @@ export const LiveTournamentPage = () => {
                     );
                   })()}
                   {/* Teams + score */}
-                  <div className="grid grid-cols-3 items-center gap-4">
-                    <div className="text-center">
-                      {getTeamLogo(selectedMatchDetail.home_team_id) && <img src={getTeamLogo(selectedMatchDetail.home_team_id)!} alt="" className="w-16 h-16 object-contain mx-auto mb-2" />}
-                      <p className="font-semibold text-sm">{getTeamName(selectedMatchDetail.home_team_id)}</p>
+                  <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2 sm:gap-4">
+                    <div className="text-center min-w-0">
+                      {getTeamLogo(selectedMatchDetail.home_team_id) && <img src={getTeamLogo(selectedMatchDetail.home_team_id)!} alt="" className="w-12 h-12 sm:w-16 sm:h-16 object-contain mx-auto mb-1.5 sm:mb-2" />}
+                      <p className="font-semibold text-xs sm:text-sm line-clamp-2">{getTeamName(selectedMatchDetail.home_team_id)}</p>
                     </div>
-                    <div className="text-center text-4xl font-bold">
+                    <div className="text-center text-2xl sm:text-4xl font-bold whitespace-nowrap">
                       {selectedMatchDetail.home_score ?? 0} - {selectedMatchDetail.away_score ?? 0}
                     </div>
-                    <div className="text-center">
-                      {getTeamLogo(selectedMatchDetail.away_team_id) && <img src={getTeamLogo(selectedMatchDetail.away_team_id)!} alt="" className="w-16 h-16 object-contain mx-auto mb-2" />}
-                      <p className="font-semibold text-sm">{getTeamName(selectedMatchDetail.away_team_id)}</p>
+                    <div className="text-center min-w-0">
+                      {getTeamLogo(selectedMatchDetail.away_team_id) && <img src={getTeamLogo(selectedMatchDetail.away_team_id)!} alt="" className="w-12 h-12 sm:w-16 sm:h-16 object-contain mx-auto mb-1.5 sm:mb-2" />}
+                      <p className="font-semibold text-xs sm:text-sm line-clamp-2">{getTeamName(selectedMatchDetail.away_team_id)}</p>
                     </div>
                   </div>
                   {/* Scorers */}
