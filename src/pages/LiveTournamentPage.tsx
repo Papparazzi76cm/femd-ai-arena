@@ -637,12 +637,18 @@ export const LiveTournamentPage = () => {
                     <Card key={groupName} className="overflow-hidden">
                       <div className="bg-primary/10 px-4 py-2 border-b"><h3 className="font-bold">{groupName}</h3></div>
                       <div className="overflow-x-auto">
-                        <table className="w-full text-sm">
+                        <table className="w-full text-xs sm:text-sm">
                           <thead>
                             <tr className="border-b bg-muted/50">
-                              <th className="text-left p-3">Equipo</th>
-                              <th className="text-center p-3">PJ</th><th className="text-center p-3">G</th><th className="text-center p-3">E</th><th className="text-center p-3">P</th>
-                              <th className="text-center p-3">GF</th><th className="text-center p-3">GC</th><th className="text-center p-3">DG</th><th className="text-center p-3 font-bold">Pts</th>
+                              <th className="text-left p-2 sm:p-3">Equipo</th>
+                              <th className="text-center p-1.5 sm:p-3">PJ</th>
+                              <th className="text-center p-1.5 sm:p-3">G</th>
+                              <th className="text-center p-1.5 sm:p-3 hidden sm:table-cell">E</th>
+                              <th className="text-center p-1.5 sm:p-3">P</th>
+                              <th className="text-center p-1.5 sm:p-3 hidden md:table-cell">GF</th>
+                              <th className="text-center p-1.5 sm:p-3 hidden md:table-cell">GC</th>
+                              <th className="text-center p-1.5 sm:p-3 hidden sm:table-cell">DG</th>
+                              <th className="text-center p-1.5 sm:p-3 font-bold">Pts</th>
                             </tr>
                           </thead>
                           <tbody>
