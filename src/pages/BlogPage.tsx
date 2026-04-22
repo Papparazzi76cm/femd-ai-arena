@@ -91,25 +91,25 @@ export const BlogPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-muted/20 to-background pt-24 pb-16">
-      <div className="container mx-auto px-4">
+    <div className="min-h-screen bg-gradient-to-b from-muted/20 to-background pt-20 sm:pt-24 pb-12 sm:pb-16">
+      <div className="container mx-auto px-3 sm:px-4">
         {/* Header Section */}
-        <div className="text-center mb-12 animate-fade-in">
-          <div className="flex items-center justify-center gap-3 mb-4">
-            <Newspaper className="w-12 h-12 text-primary" />
-            <h1 className="text-4xl md:text-5xl font-bold gradient-text">
+        <div className="text-center mb-8 sm:mb-12 animate-fade-in">
+          <div className="flex items-center justify-center gap-2 sm:gap-3 mb-3 sm:mb-4 flex-wrap">
+            <Newspaper className="w-8 h-8 sm:w-12 sm:h-12 text-primary" />
+            <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold gradient-text">
               Noticias FEMD
             </h1>
           </div>
-          <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+          <p className="text-sm sm:text-xl text-muted-foreground max-w-2xl mx-auto px-2">
             Mantente al día con todas las novedades de nuestros eventos
           </p>
         </div>
 
         {/* Search Bar */}
-        <div className="max-w-2xl mx-auto mb-12 animate-fade-in" style={{ animationDelay: '100ms' }}>
+        <div className="max-w-2xl mx-auto mb-8 sm:mb-12 animate-fade-in" style={{ animationDelay: '100ms' }}>
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-5 h-5" />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4 sm:w-5 sm:h-5" />
             <Input
               type="text"
               placeholder="Buscar noticias..."
@@ -118,58 +118,58 @@ export const BlogPage = () => {
                 setSearchTerm(e.target.value);
                 setCurrentPage(1);
               }}
-              className="pl-10 h-12"
+              className="pl-10 h-11 sm:h-12"
             />
           </div>
         </div>
 
         {/* Featured Article */}
         {featuredPost && !searchTerm && (
-          <div className="mb-16 animate-fade-in" style={{ animationDelay: '200ms' }}>
-            <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
-              <div className="w-1 h-8 bg-primary rounded"></div>
+          <div className="mb-10 sm:mb-16 animate-fade-in" style={{ animationDelay: '200ms' }}>
+            <h2 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6 flex items-center gap-2">
+              <div className="w-1 h-6 sm:h-8 bg-primary rounded"></div>
               Destacado
             </h2>
             <Link to={`/noticias/${featuredPost.id}`}>
               <Card className="overflow-hidden border-2 border-primary/20 hover:border-primary/50 transition-all duration-300 hover:shadow-2xl">
                 <div className="grid md:grid-cols-2 gap-0">
                   {featuredPost.image_url && (
-                    <div className="relative h-64 md:h-auto overflow-hidden">
+                    <div className="relative h-48 sm:h-64 md:h-auto overflow-hidden">
                       <img
                         src={featuredPost.image_url}
                         alt={featuredPost.title}
                         className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
                       />
-                      <div className="absolute top-4 left-4">
-                        <span className="px-3 py-1 bg-primary text-primary-foreground text-sm font-semibold rounded-full">
+                      <div className="absolute top-3 left-3 sm:top-4 sm:left-4">
+                        <span className="px-2.5 py-1 sm:px-3 bg-primary text-primary-foreground text-xs sm:text-sm font-semibold rounded-full">
                           Destacado
                         </span>
                       </div>
                     </div>
                   )}
-                  <div className="p-8 flex flex-col justify-center">
-                    <CardHeader className="p-0 mb-4">
-                      <CardTitle className="text-3xl mb-4 hover:text-primary transition-colors">
+                  <div className="p-5 sm:p-8 flex flex-col justify-center">
+                    <CardHeader className="p-0 mb-3 sm:mb-4">
+                      <CardTitle className="text-xl sm:text-3xl mb-3 sm:mb-4 hover:text-primary transition-colors line-clamp-3">
                         {featuredPost.title}
                       </CardTitle>
-                      <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                        <div className="flex items-center gap-2">
-                          <Calendar className="w-4 h-4" />
+                      <div className="flex items-center gap-3 sm:gap-4 text-xs sm:text-sm text-muted-foreground flex-wrap">
+                        <div className="flex items-center gap-1.5 sm:gap-2">
+                          <Calendar className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                           {formatDate(featuredPost.created_at)}
                         </div>
-                        <div className="flex items-center gap-2">
-                          <Clock className="w-4 h-4" />
+                        <div className="flex items-center gap-1.5 sm:gap-2">
+                          <Clock className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                           {Math.ceil((featuredPost.content?.length || 0) / 1000)} min lectura
                         </div>
                       </div>
                     </CardHeader>
                     <CardContent className="p-0">
                       {featuredPost.description && (
-                        <p className="text-muted-foreground mb-6 leading-relaxed">
+                        <p className="text-sm sm:text-base text-muted-foreground mb-4 sm:mb-6 leading-relaxed line-clamp-3 sm:line-clamp-none">
                           {featuredPost.description}
                         </p>
                       )}
-                      <Button className="gradient-gold">
+                      <Button className="gradient-gold w-full sm:w-auto">
                         Leer más
                       </Button>
                     </CardContent>
@@ -190,14 +190,14 @@ export const BlogPage = () => {
           </div>
         ) : (
           <>
-            <div className="mb-8">
-              <h2 className="text-2xl font-bold flex items-center gap-2">
-                <div className="w-1 h-8 bg-primary rounded"></div>
+            <div className="mb-6 sm:mb-8">
+              <h2 className="text-xl sm:text-2xl font-bold flex items-center gap-2">
+                <div className="w-1 h-6 sm:h-8 bg-primary rounded"></div>
                 {searchTerm ? 'Resultados de búsqueda' : 'Últimas Noticias'}
               </h2>
             </div>
 
-            <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3 mb-12">
+            <div className="grid gap-5 sm:gap-8 sm:grid-cols-2 lg:grid-cols-3 mb-10 sm:mb-12">
               {displayedPosts.map((post, index) => (
                 <Link to={`/noticias/${post.id}`} key={post.id}>
                   <Card
@@ -205,7 +205,7 @@ export const BlogPage = () => {
                     style={{ animationDelay: `${(index + 3) * 100}ms` }}
                   >
                     {post.image_url && (
-                      <div className="relative h-48 overflow-hidden">
+                      <div className="relative h-40 sm:h-48 overflow-hidden">
                         <img
                           src={post.image_url}
                           alt={post.title}
@@ -214,24 +214,24 @@ export const BlogPage = () => {
                         <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                       </div>
                     )}
-                    <CardHeader>
+                    <CardHeader className="pb-3">
                       <div className="flex items-center gap-2 text-xs text-muted-foreground mb-2">
-                        <Calendar className="w-4 h-4" />
+                        <Calendar className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                         {formatDate(post.created_at)}
                       </div>
-                      <CardTitle className="text-xl group-hover:text-primary transition-colors line-clamp-2">
+                      <CardTitle className="text-lg sm:text-xl group-hover:text-primary transition-colors line-clamp-2">
                         {post.title}
                       </CardTitle>
                     </CardHeader>
-                    <CardContent className="space-y-4">
+                    <CardContent className="space-y-3 sm:space-y-4">
                       {post.description && (
                         <p className="text-sm text-muted-foreground line-clamp-3 leading-relaxed">
                           {post.description}
                         </p>
                       )}
-                      <div className="flex items-center justify-between pt-4 border-t border-border">
+                      <div className="flex items-center justify-between pt-3 sm:pt-4 border-t border-border">
                         <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                          <Clock className="w-4 h-4" />
+                          <Clock className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                           {Math.ceil((post.content?.length || 0) / 1000)} min
                         </div>
                         <span className="text-primary font-medium text-sm">
@@ -246,24 +246,26 @@ export const BlogPage = () => {
 
             {/* Pagination */}
             {totalPages > 1 && (
-              <div className="flex justify-center items-center gap-4 animate-fade-in">
+              <div className="flex justify-center items-center gap-2 sm:gap-4 animate-fade-in flex-wrap">
                 <Button
                   variant="outline"
+                  size="sm"
                   onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
                   disabled={currentPage === 1}
-                  className="gap-2"
+                  className="gap-1 sm:gap-2"
                 >
                   <ChevronLeft className="w-4 h-4" />
-                  Anterior
+                  <span className="hidden xs:inline">Anterior</span>
                 </Button>
 
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1 sm:gap-2 flex-wrap justify-center">
                   {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
                     <Button
                       key={page}
                       variant={currentPage === page ? 'default' : 'outline'}
+                      size="sm"
                       onClick={() => setCurrentPage(page)}
-                      className={currentPage === page ? 'gradient-gold' : ''}
+                      className={`w-9 h-9 p-0 ${currentPage === page ? 'gradient-gold' : ''}`}
                     >
                       {page}
                     </Button>
@@ -272,11 +274,12 @@ export const BlogPage = () => {
 
                 <Button
                   variant="outline"
+                  size="sm"
                   onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
                   disabled={currentPage === totalPages}
-                  className="gap-2"
+                  className="gap-1 sm:gap-2"
                 >
-                  Siguiente
+                  <span className="hidden xs:inline">Siguiente</span>
                   <ChevronRight className="w-4 h-4" />
                 </Button>
               </div>

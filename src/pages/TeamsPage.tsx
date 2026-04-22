@@ -53,49 +53,49 @@ export const TeamsPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-muted/20 to-background py-16">
-      <div className="container mx-auto px-4">
+    <div className="min-h-screen bg-gradient-to-b from-muted/20 to-background pt-20 pb-12 sm:pb-16">
+      <div className="container mx-auto px-3 sm:px-4">
         {/* Header Section */}
-        <div className="text-center mb-12 animate-fade-in">
-          <div className="flex items-center justify-center gap-3 mb-4">
-            <Users className="w-12 h-12 text-emerald-600" />
-            <h1 className="text-4xl md:text-5xl font-bold gradient-text">
+        <div className="text-center mb-8 sm:mb-12 animate-fade-in">
+          <div className="flex items-center justify-center gap-2 sm:gap-3 mb-3 sm:mb-4 flex-wrap">
+            <Users className="w-8 h-8 sm:w-12 sm:h-12 text-emerald-600" />
+            <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold gradient-text">
               Nuestros Equipos
             </h1>
           </div>
-          <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+          <p className="text-sm sm:text-xl text-muted-foreground max-w-2xl mx-auto px-2">
             Conoce a todos los equipos que participan en los torneos de FEMD
           </p>
-          <div className="mt-4 flex items-center justify-center gap-2 text-sm text-muted-foreground">
-            <div className="h-px w-16 bg-gradient-to-r from-transparent to-primary"></div>
+          <div className="mt-3 sm:mt-4 flex items-center justify-center gap-2 text-xs sm:text-sm text-muted-foreground">
+            <div className="h-px w-10 sm:w-16 bg-gradient-to-r from-transparent to-primary"></div>
             <span>{teams.length} Clubes Registrados</span>
-            <div className="h-px w-16 bg-gradient-to-l from-transparent to-primary"></div>
+            <div className="h-px w-10 sm:w-16 bg-gradient-to-l from-transparent to-primary"></div>
           </div>
         </div>
 
         {/* Search Bar */}
-        <div className="max-w-md mx-auto mb-10">
+        <div className="max-w-md mx-auto mb-8 sm:mb-10">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-muted-foreground" />
             <Input
-              placeholder="Buscar por nombre o localidad..."
+              placeholder="Buscar por nombre..."
               value={search}
               onChange={e => setSearch(e.target.value)}
-              className="pl-10"
+              className="pl-10 h-11"
             />
           </div>
         </div>
 
         {/* Teams Grid */}
         {filteredTeams.length === 0 ? (
-          <div className="text-center py-16">
+          <div className="text-center py-12 sm:py-16">
             <Users className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
-            <p className="text-xl text-muted-foreground">
+            <p className="text-base sm:text-xl text-muted-foreground px-4">
               {search ? 'No se encontraron clubes con esa búsqueda' : 'No hay equipos registrados aún'}
             </p>
           </div>
         ) : (
-          <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-5 sm:gap-8 sm:grid-cols-2 lg:grid-cols-3">
             {filteredTeams.map((team, index) => (
               <Card 
                 key={team.id}
@@ -103,26 +103,26 @@ export const TeamsPage = () => {
                 style={{ animationDelay: `${index * 100}ms` }}
                 onClick={() => navigate(`/equipos/${team.id}`)}
               >
-                <CardHeader className="relative pb-0">
+                <CardHeader className="relative pb-0 pt-5 sm:pt-6">
                   {/* Team Logo */}
-                  <div className="flex justify-center mb-4">
+                  <div className="flex justify-center mb-3 sm:mb-4">
                     {team.logo_url ? (
-                      <div className="relative w-32 h-32 rounded-full bg-muted/50 flex items-center justify-center overflow-hidden ring-4 ring-background shadow-lg group-hover:ring-emerald-600/30 transition-all duration-300">
+                      <div className="relative w-24 h-24 sm:w-32 sm:h-32 rounded-full bg-muted/50 flex items-center justify-center overflow-hidden ring-4 ring-background shadow-lg group-hover:ring-emerald-600/30 transition-all duration-300">
                         <img 
                           src={team.logo_url} 
                           alt={team.name}
-                          className="w-full h-full object-contain p-4 group-hover:scale-110 transition-transform duration-300"
+                          className="w-full h-full object-contain p-3 sm:p-4 group-hover:scale-110 transition-transform duration-300"
                         />
                       </div>
                     ) : (
-                      <div className="w-32 h-32 rounded-full bg-gradient-to-br from-emerald-600/20 to-emerald-600/5 flex items-center justify-center ring-4 ring-background shadow-lg">
-                        <Users className="w-16 h-16 text-emerald-600" />
+                      <div className="w-24 h-24 sm:w-32 sm:h-32 rounded-full bg-gradient-to-br from-emerald-600/20 to-emerald-600/5 flex items-center justify-center ring-4 ring-background shadow-lg">
+                        <Users className="w-12 h-12 sm:w-16 sm:h-16 text-emerald-600" />
                       </div>
                     )}
                   </div>
 
                   {/* Team Name */}
-                  <CardTitle className="text-center text-2xl group-hover:text-emerald-600 transition-colors duration-300">
+                  <CardTitle className="text-center text-lg sm:text-2xl group-hover:text-emerald-600 transition-colors duration-300 px-2 line-clamp-2">
                     {team.name}
                   </CardTitle>
                 </CardHeader>
