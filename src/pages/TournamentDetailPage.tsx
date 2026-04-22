@@ -7,7 +7,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Calendar, MapPin, Trophy, ArrowLeft, Medal, Target, AlertTriangle, Users, ChevronDown, Crown, Star, Goal, Image as ImageIcon } from "lucide-react";
+import { Calendar, MapPin, Trophy, ArrowLeft, Medal, Target, AlertTriangle, Users, ChevronDown, Crown, Star, Goal, Image as ImageIcon, Clock, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
@@ -1257,8 +1257,10 @@ function isPlaceholder(match: Match, side: 'home' | 'away'): boolean {
   return !team;
 }
 
-// Result Row Component - New horizontal design
+// Result Row Component - Mobile-first: collapsed card on mobile (tap to expand),
+// horizontal row on md+. Expanded view shows phase/date/venue + button to open match sheet.
 function ResultRow({ match, onClick }: { match: Match; onClick?: () => void }) {
+  const [isExpanded, setIsExpanded] = useState(false);
   const isCompleted = isCompletedStatus(match.status);
   const hasHomeWon = isCompleted && match.home_score !== null && match.away_score !== null && match.home_score > match.away_score;
   const hasAwayWon = isCompleted && match.home_score !== null && match.away_score !== null && match.away_score > match.home_score;
@@ -1270,54 +1272,165 @@ function ResultRow({ match, onClick }: { match: Match; onClick?: () => void }) {
   const awayIsPlaceholder = isPlaceholder(match, 'away');
 
   const phaseLabel = getPhaseDisplayLabel(match.phase);
+  const facilityName = match.field?.facilities?.name || '';
+  const fieldName = match.field?.name || '';
+  const matchDate = match.match_date ? new Date(match.match_date) : null;
+
+  const ScoreDisplay = ({ size = 'md' }: { size?: 'sm' | 'md' | 'lg' }) => {
+    const sizeCls = size === 'lg' ? 'text-2xl' : size === 'sm' ? 'text-base' : 'text-xl';
+    if (isCompleted) {
+      return (
+        <span className={`${sizeCls} font-bold whitespace-nowrap`}>
+          <span className={hasHomeWon ? 'text-primary' : ''}>{match.home_score}</span>
+          <span className="mx-1.5 text-muted-foreground">-</span>
+          <span className={hasAwayWon ? 'text-primary' : ''}>{match.away_score}</span>
+        </span>
+      );
+    }
+    return <span className={`${sizeCls} font-bold text-muted-foreground whitespace-nowrap`}>vs</span>;
+  };
 
   return (
-    <div 
-      className={`flex items-center justify-between py-3 border-b last:border-b-0 hover:bg-accent/30 transition-colors px-2 rounded ${onClick ? 'cursor-pointer' : ''}`}
-      onClick={onClick}
-    >
-      {/* Home Team */}
-      <div className={`flex items-center gap-3 flex-1 justify-start ${hasHomeWon ? 'font-bold' : ''}`}>
-        {homeLogo && (
-          <img src={homeLogo} alt={homeName} className="h-8 w-8 object-contain" />
+    <div className="border-b last:border-b-0 rounded transition-colors hover:bg-accent/30">
+      {/* ===== MOBILE LAYOUT (< md): collapsed card with expand toggle ===== */}
+      <div className="md:hidden">
+        <button
+          type="button"
+          onClick={() => setIsExpanded((v) => !v)}
+          className="w-full flex items-center gap-2 py-3 px-2 text-left"
+          aria-expanded={isExpanded}
+        >
+          {/* Home */}
+          <div className="flex flex-col items-center gap-1 flex-1 min-w-0">
+            {homeLogo ? (
+              <img src={homeLogo} alt={homeName} className="h-9 w-9 object-contain" />
+            ) : (
+              <div className="h-9 w-9 rounded-full bg-muted" />
+            )}
+            <span
+              className={`text-[11px] leading-tight text-center line-clamp-2 break-words ${hasHomeWon ? 'font-bold text-primary' : ''} ${homeIsPlaceholder ? 'italic text-muted-foreground' : ''}`}
+            >
+              {homeName}
+            </span>
+          </div>
+
+          {/* Score + time */}
+          <div className="flex flex-col items-center justify-center px-1 shrink-0">
+            <ScoreDisplay size="md" />
+            {matchDate && (
+              <span className="text-[10px] text-muted-foreground mt-0.5 whitespace-nowrap">
+                {format(matchDate, "HH:mm", { locale: es })}
+              </span>
+            )}
+            <ChevronDown
+              className={`h-3 w-3 text-muted-foreground mt-0.5 transition-transform ${isExpanded ? 'rotate-180' : ''}`}
+            />
+          </div>
+
+          {/* Away */}
+          <div className="flex flex-col items-center gap-1 flex-1 min-w-0">
+            {awayLogo ? (
+              <img src={awayLogo} alt={awayName} className="h-9 w-9 object-contain" />
+            ) : (
+              <div className="h-9 w-9 rounded-full bg-muted" />
+            )}
+            <span
+              className={`text-[11px] leading-tight text-center line-clamp-2 break-words ${hasAwayWon ? 'font-bold text-primary' : ''} ${awayIsPlaceholder ? 'italic text-muted-foreground' : ''}`}
+            >
+              {awayName}
+            </span>
+          </div>
+        </button>
+
+        {/* Expanded detail */}
+        {isExpanded && (
+          <div className="px-3 pb-3 pt-1 space-y-2 text-xs animate-fade-in">
+            {phaseLabel && (
+              <div className="flex items-center gap-1.5">
+                <Trophy className="h-3.5 w-3.5 text-primary shrink-0" />
+                <span className="text-primary font-medium">{phaseLabel}</span>
+              </div>
+            )}
+            {matchDate && (
+              <div className="flex items-center gap-1.5 text-muted-foreground">
+                <Calendar className="h-3.5 w-3.5 shrink-0" />
+                <span>{format(matchDate, "dd MMM yyyy", { locale: es })}</span>
+                <Clock className="h-3.5 w-3.5 ml-2 shrink-0" />
+                <span>{format(matchDate, "HH:mm", { locale: es })}</span>
+              </div>
+            )}
+            {(facilityName || fieldName) && (
+              <div className="flex items-start gap-1.5 text-muted-foreground">
+                <MapPin className="h-3.5 w-3.5 shrink-0 mt-0.5" />
+                <span className="break-words">
+                  {facilityName}{facilityName && fieldName ? ' · ' : ''}{fieldName}
+                </span>
+              </div>
+            )}
+            {onClick && (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="w-full mt-2 min-h-[40px]"
+                onClick={(e) => { e.stopPropagation(); onClick(); }}
+              >
+                <FileText className="h-3.5 w-3.5 mr-1.5" />
+                Ficha del partido
+              </Button>
+            )}
+          </div>
         )}
-        <span className={`text-sm ${hasHomeWon ? 'text-primary' : ''} ${homeIsPlaceholder ? 'italic text-muted-foreground' : ''}`}>{homeName}</span>
       </div>
 
-      {/* Score, Phase and Date */}
-      <div className="flex flex-col items-center px-4 min-w-[200px]">
-        {isCompleted ? (
-          <span className="text-xl font-bold">
-            <span className={hasHomeWon ? 'text-primary' : ''}>{match.home_score}</span>
-            <span className="mx-2 text-muted-foreground">-</span>
-            <span className={hasAwayWon ? 'text-primary' : ''}>{match.away_score}</span>
-          </span>
-        ) : (
-          <span className="text-xl font-bold text-muted-foreground">- vs -</span>
-        )}
-        <div className="flex flex-wrap items-center gap-2 mt-1">
-          {phaseLabel && (
-            <span className="text-xs text-primary font-medium">{phaseLabel}</span>
+      {/* ===== DESKTOP LAYOUT (md+): original horizontal row ===== */}
+      <div
+        className={`hidden md:flex items-center justify-between py-3 px-2 ${onClick ? 'cursor-pointer' : ''}`}
+        onClick={onClick}
+      >
+        {/* Home Team */}
+        <div className={`flex items-center gap-3 flex-1 justify-start min-w-0 ${hasHomeWon ? 'font-bold' : ''}`}>
+          {homeLogo && (
+            <img src={homeLogo} alt={homeName} className="h-8 w-8 object-contain shrink-0" />
           )}
-          {match.match_date && (
-            <span className="text-xs text-muted-foreground">
-              {format(new Date(match.match_date), "dd.MM.yyyy HH:mm", { locale: es })}
+          <span className={`text-sm truncate ${hasHomeWon ? 'text-primary' : ''} ${homeIsPlaceholder ? 'italic text-muted-foreground' : ''}`}>{homeName}</span>
+        </div>
+
+        {/* Score, Phase and Date */}
+        <div className="flex flex-col items-center px-4 min-w-[220px] shrink-0">
+          {isCompleted ? (
+            <span className="text-xl font-bold">
+              <span className={hasHomeWon ? 'text-primary' : ''}>{match.home_score}</span>
+              <span className="mx-2 text-muted-foreground">-</span>
+              <span className={hasAwayWon ? 'text-primary' : ''}>{match.away_score}</span>
             </span>
+          ) : (
+            <span className="text-xl font-bold text-muted-foreground">- vs -</span>
           )}
-          {match.field && (
-            <span className="text-xs text-muted-foreground">
-              📍 {match.field.facilities?.name ? `${match.field.facilities.name} - ` : ''}{match.field.name}
-            </span>
+          <div className="flex flex-wrap items-center justify-center gap-2 mt-1">
+            {phaseLabel && (
+              <span className="text-xs text-primary font-medium">{phaseLabel}</span>
+            )}
+            {matchDate && (
+              <span className="text-xs text-muted-foreground">
+                {format(matchDate, "dd.MM.yyyy HH:mm", { locale: es })}
+              </span>
+            )}
+            {(facilityName || fieldName) && (
+              <span className="text-xs text-muted-foreground">
+                📍 {facilityName}{facilityName && fieldName ? ' - ' : ''}{fieldName}
+              </span>
+            )}
+          </div>
+        </div>
+
+        {/* Away Team */}
+        <div className={`flex items-center gap-3 flex-1 justify-end min-w-0 ${hasAwayWon ? 'font-bold' : ''}`}>
+          <span className={`text-sm truncate ${hasAwayWon ? 'text-primary' : ''} ${awayIsPlaceholder ? 'italic text-muted-foreground' : ''}`}>{awayName}</span>
+          {awayLogo && (
+            <img src={awayLogo} alt={awayName} className="h-8 w-8 object-contain shrink-0" />
           )}
         </div>
-      </div>
-
-      {/* Away Team */}
-      <div className={`flex items-center gap-3 flex-1 justify-end ${hasAwayWon ? 'font-bold' : ''}`}>
-        <span className={`text-sm ${hasAwayWon ? 'text-primary' : ''} ${awayIsPlaceholder ? 'italic text-muted-foreground' : ''}`}>{awayName}</span>
-        {awayLogo && (
-          <img src={awayLogo} alt={awayName} className="h-8 w-8 object-contain" />
-        )}
       </div>
     </div>
   );
