@@ -434,32 +434,32 @@ export const MatchCard = ({
 
         {/* Cards Statistics */}
         {(isEditing || isLive) && (
-          <div className="border-t pt-4">
-            <h4 className="font-semibold mb-4">Tarjetas</h4>
-            <div className="grid md:grid-cols-2 gap-6">
-              <div>
-                <Label className="text-sm font-medium mb-3 block">{homeTeamName}</Label>
-                <div className="grid grid-cols-2 gap-3">
+          <div className="border-t pt-3 sm:pt-4">
+            <h4 className="font-semibold mb-3 sm:mb-4 text-sm sm:text-base">Tarjetas</h4>
+            <div className="grid grid-cols-2 gap-3 sm:gap-6">
+              <div className="min-w-0">
+                <Label className="text-xs sm:text-sm font-medium mb-2 sm:mb-3 block truncate">{homeTeamName}</Label>
+                <div className="grid grid-cols-2 gap-2 sm:gap-3">
                   <div>
-                    <Label htmlFor="home-yellow" className="text-xs">🟨 Amarillas</Label>
-                    <Input id="home-yellow" type="number" min="0" value={homeYellow} onChange={(e) => setHomeYellow(Number(e.target.value))} className="mt-1" />
+                    <Label htmlFor="home-yellow" className="text-xs">🟨</Label>
+                    <Input id="home-yellow" type="number" min="0" inputMode="numeric" value={homeYellow} onChange={(e) => setHomeYellow(Number(e.target.value))} className="mt-1 h-10 text-center" />
                   </div>
                   <div>
-                    <Label htmlFor="home-red" className="text-xs">🟥 Rojas</Label>
-                    <Input id="home-red" type="number" min="0" value={homeRed} onChange={(e) => setHomeRed(Number(e.target.value))} className="mt-1" />
+                    <Label htmlFor="home-red" className="text-xs">🟥</Label>
+                    <Input id="home-red" type="number" min="0" inputMode="numeric" value={homeRed} onChange={(e) => setHomeRed(Number(e.target.value))} className="mt-1 h-10 text-center" />
                   </div>
                 </div>
               </div>
-              <div>
-                <Label className="text-sm font-medium mb-3 block">{awayTeamName}</Label>
-                <div className="grid grid-cols-2 gap-3">
+              <div className="min-w-0">
+                <Label className="text-xs sm:text-sm font-medium mb-2 sm:mb-3 block truncate">{awayTeamName}</Label>
+                <div className="grid grid-cols-2 gap-2 sm:gap-3">
                   <div>
-                    <Label htmlFor="away-yellow" className="text-xs">🟨 Amarillas</Label>
-                    <Input id="away-yellow" type="number" min="0" value={awayYellow} onChange={(e) => setAwayYellow(Number(e.target.value))} className="mt-1" />
+                    <Label htmlFor="away-yellow" className="text-xs">🟨</Label>
+                    <Input id="away-yellow" type="number" min="0" inputMode="numeric" value={awayYellow} onChange={(e) => setAwayYellow(Number(e.target.value))} className="mt-1 h-10 text-center" />
                   </div>
                   <div>
-                    <Label htmlFor="away-red" className="text-xs">🟥 Rojas</Label>
-                    <Input id="away-red" type="number" min="0" value={awayRed} onChange={(e) => setAwayRed(Number(e.target.value))} className="mt-1" />
+                    <Label htmlFor="away-red" className="text-xs">🟥</Label>
+                    <Input id="away-red" type="number" min="0" inputMode="numeric" value={awayRed} onChange={(e) => setAwayRed(Number(e.target.value))} className="mt-1 h-10 text-center" />
                   </div>
                 </div>
               </div>
