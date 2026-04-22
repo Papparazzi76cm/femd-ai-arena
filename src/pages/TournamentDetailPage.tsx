@@ -1004,20 +1004,20 @@ export function TournamentDetailPage() {
                         <div className="flex items-center gap-2 border-l-4 border-primary pl-3">
                           <h3 className="text-lg font-bold">GRUPO {groupName}</h3>
                         </div>
-                        <div className="overflow-x-auto">
+                        <div className="overflow-x-auto -mx-2 sm:mx-0">
                           <Table>
                             <TableHeader>
                               <TableRow className="bg-muted/50">
-                                <TableHead className="w-10"></TableHead>
-                                <TableHead className="font-bold">EQUIPOS</TableHead>
-                                <TableHead className="text-center font-bold">PTS</TableHead>
-                                <TableHead className="text-center">J</TableHead>
-                                <TableHead className="text-center">G</TableHead>
-                                <TableHead className="text-center">E</TableHead>
-                                <TableHead className="text-center">P</TableHead>
-                                <TableHead className="text-center">GF</TableHead>
-                                <TableHead className="text-center">GC</TableHead>
-                                <TableHead className="text-center">DG</TableHead>
+                                <TableHead className="w-8 px-1 sm:px-4 text-center">#</TableHead>
+                                <TableHead className="font-bold px-2 sm:px-4">EQUIPO</TableHead>
+                                <TableHead className="text-center font-bold px-1 sm:px-4">PTS</TableHead>
+                                <TableHead className="text-center px-1 sm:px-4">PJ</TableHead>
+                                <TableHead className="text-center px-1 sm:px-4">G</TableHead>
+                                <TableHead className="text-center px-1 sm:px-4 hidden sm:table-cell">E</TableHead>
+                                <TableHead className="text-center px-1 sm:px-4">P</TableHead>
+                                <TableHead className="text-center px-1 sm:px-4 hidden md:table-cell">GF</TableHead>
+                                <TableHead className="text-center px-1 sm:px-4 hidden md:table-cell">GC</TableHead>
+                                <TableHead className="text-center px-1 sm:px-4 hidden sm:table-cell">DG</TableHead>
                               </TableRow>
                             </TableHeader>
                             <TableBody>
