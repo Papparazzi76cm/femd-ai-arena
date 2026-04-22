@@ -557,67 +557,68 @@ export const LiveTournamentPage = () => {
             </div>
           </div>
 
-          <div className="container mx-auto px-4 py-8">
+          <div className="container mx-auto px-3 sm:px-4 py-5 sm:py-8">
             {/* Live Matches Section */}
             {liveMatches.length > 0 && (
-              <div className="mb-8">
-                <h2 className="text-2xl font-bold mb-4 flex items-center gap-2">
-                  <span className="w-3 h-3 bg-red-500 rounded-full animate-pulse-live" />
+              <div className="mb-6 sm:mb-8">
+                <h2 className="text-xl sm:text-2xl font-bold mb-3 sm:mb-4 flex items-center gap-2">
+                  <span className="w-2.5 h-2.5 sm:w-3 sm:h-3 bg-red-500 rounded-full animate-pulse-live" />
                   Partidos en Juego
                 </h2>
-                <div className="grid md:grid-cols-2 gap-4">
+                <div className="grid md:grid-cols-2 gap-3 sm:gap-4">
                   {liveMatches.map((match) => {
                     const venue = getMatchVenueInfo(match);
                     const catName = getMatchCategoryName(match);
                     return (
-                      <Card key={match.id} className="p-6 border-2 border-red-500/50 bg-gradient-to-br from-red-500/5 to-orange-500/5">
+                      <Card key={match.id} className="p-3 sm:p-6 border-2 border-red-500/50 bg-gradient-to-br from-red-500/5 to-orange-500/5">
                         <div className="flex flex-col gap-1 mb-2">
-                          <div className="flex items-center justify-between">
-                            <Badge className="bg-red-500 text-white animate-pulse-live">EN JUEGO</Badge>
-                            {catName && <Badge variant="secondary" className="text-xs">{catName}</Badge>}
+                          <div className="flex items-center justify-between gap-2 flex-wrap">
+                            <Badge className="bg-red-500 text-white animate-pulse-live text-[10px] sm:text-xs">EN JUEGO</Badge>
+                            {catName && <Badge variant="secondary" className="text-[10px] sm:text-xs">{catName}</Badge>}
                           </div>
-                          <p className="text-sm font-medium text-muted-foreground">
+                          <p className="text-xs sm:text-sm font-medium text-muted-foreground">
                             {getPhaseLabel(match.phase, match.group_name)}
                           </p>
                           {(venue.facility || venue.field) && (
-                            <p className="text-xs text-muted-foreground flex items-center gap-1">
-                              <Building2 className="w-3 h-3" />{venue.facility}{venue.field ? ` · ${venue.field}` : ''}
+                            <p className="text-[11px] sm:text-xs text-muted-foreground flex items-center gap-1">
+                              <Building2 className="w-3 h-3 flex-shrink-0" />
+                              <span className="truncate">{venue.facility}{venue.field ? ` · ${venue.field}` : ''}</span>
                             </p>
                           )}
                         </div>
 
                         <MatchTimer isLive={true} matchDurationMinutes={match.match_duration_minutes || 40} matchHalves={match.match_halves || 1} startedAt={match.started_at} readOnly={true} />
 
-                        <div className="grid grid-cols-3 items-center gap-4 mt-4">
-                          <div className="text-center">
-                            {getTeamLogo(match.home_team_id) && <img src={getTeamLogo(match.home_team_id)!} alt="" className="w-16 h-16 object-contain mx-auto mb-2" />}
-                            <p className="font-semibold text-sm">{getTeamName(match.home_team_id)}</p>
+                        <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2 sm:gap-4 mt-3 sm:mt-4">
+                          <div className="text-center min-w-0">
+                            {getTeamLogo(match.home_team_id) && <img src={getTeamLogo(match.home_team_id)!} alt="" className="w-12 h-12 sm:w-16 sm:h-16 object-contain mx-auto mb-1.5 sm:mb-2" />}
+                            <p className="font-semibold text-xs sm:text-sm line-clamp-2">{getTeamName(match.home_team_id)}</p>
                           </div>
                           <div className="text-center">
-                            <div className="text-4xl font-bold">
+                            <div className="text-3xl sm:text-4xl font-bold whitespace-nowrap">
                               <span className="text-primary">{match.home_score ?? 0}</span>
-                              <span className="text-muted-foreground mx-2">-</span>
+                              <span className="text-muted-foreground mx-1.5 sm:mx-2">-</span>
                               <span className="text-primary">{match.away_score ?? 0}</span>
                             </div>
                           </div>
-                          <div className="text-center">
-                            {getTeamLogo(match.away_team_id) && <img src={getTeamLogo(match.away_team_id)!} alt="" className="w-16 h-16 object-contain mx-auto mb-2" />}
-                            <p className="font-semibold text-sm">{getTeamName(match.away_team_id)}</p>
+                          <div className="text-center min-w-0">
+                            {getTeamLogo(match.away_team_id) && <img src={getTeamLogo(match.away_team_id)!} alt="" className="w-12 h-12 sm:w-16 sm:h-16 object-contain mx-auto mb-1.5 sm:mb-2" />}
+                            <p className="font-semibold text-xs sm:text-sm line-clamp-2">{getTeamName(match.away_team_id)}</p>
                           </div>
                         </div>
 
                         {matchGoals.get(match.id) && matchGoals.get(match.id)!.length > 0 && (
                           <div className="mt-3 grid grid-cols-2 gap-2 border-t pt-3">
-                            <div className="space-y-1">
+                            <div className="space-y-1 min-w-0">
                               {matchGoals.get(match.id)!.filter(g => g.team_id === match.home_team_id).sort((a, b) => (a.minute || 0) - (b.minute || 0)).map(g => {
                                 const p = g.player_id ? playerNames.get(g.player_id) : null;
-                                return <p key={g.id} className="text-xs text-muted-foreground">⚽ {p ? `${p.number ? `#${p.number} ` : ''}${p.name}` : 'Gol'}{g.minute ? ` (${g.minute}')` : ''}</p>;
+                                return <p key={g.id} className="text-[11px] sm:text-xs text-muted-foreground truncate">⚽ {p ? `${p.number ? `#${p.number} ` : ''}${p.name}` : 'Gol'}{g.minute ? ` (${g.minute}')` : ''}</p>;
                               })}
                             </div>
-                            <div className="space-y-1 text-right">
+                            <div className="space-y-1 text-right min-w-0">
                               {matchGoals.get(match.id)!.filter(g => g.team_id === match.away_team_id).sort((a, b) => (a.minute || 0) - (b.minute || 0)).map(g => {
                                 const p = g.player_id ? playerNames.get(g.player_id) : null;
-                                return <p key={g.id} className="text-xs text-muted-foreground">{p ? `${p.number ? `#${p.number} ` : ''}${p.name}` : 'Gol'}{g.minute ? ` (${g.minute}')` : ''} ⚽</p>;
+                                return <p key={g.id} className="text-[11px] sm:text-xs text-muted-foreground truncate">{p ? `${p.number ? `#${p.number} ` : ''}${p.name}` : 'Gol'}{g.minute ? ` (${g.minute}')` : ''} ⚽</p>;
                               })}
                             </div>
                           </div>
@@ -630,10 +631,10 @@ export const LiveTournamentPage = () => {
             )}
 
             <Tabs defaultValue="standings" className="w-full">
-              <TabsList className="grid w-full grid-cols-3 mb-6">
-                <TabsTrigger value="standings" className="flex items-center gap-2"><Trophy className="w-4 h-4" />Clasificación</TabsTrigger>
-                <TabsTrigger value="results" className="flex items-center gap-2"><Users className="w-4 h-4" />Resultados</TabsTrigger>
-                <TabsTrigger value="stats" className="flex items-center gap-2"><BarChart3 className="w-4 h-4" />Estadísticas</TabsTrigger>
+              <TabsList className="grid w-full grid-cols-3 mb-4 sm:mb-6 h-auto">
+                <TabsTrigger value="standings" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm py-2"><Trophy className="w-3.5 h-3.5 sm:w-4 sm:h-4" /><span className="hidden xs:inline">Clasificación</span><span className="xs:hidden">Clasif.</span></TabsTrigger>
+                <TabsTrigger value="results" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm py-2"><Users className="w-3.5 h-3.5 sm:w-4 sm:h-4" />Resultados</TabsTrigger>
+                <TabsTrigger value="stats" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm py-2"><BarChart3 className="w-3.5 h-3.5 sm:w-4 sm:h-4" /><span className="hidden xs:inline">Estadísticas</span><span className="xs:hidden">Stats</span></TabsTrigger>
               </TabsList>
 
               {/* Standings Tab */}
