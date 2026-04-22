@@ -271,31 +271,31 @@ export const ContactPage = () => {
           </div>
 
           {/* Contact Info & Social Media */}
-          <div className="space-y-8 animate-fade-in" style={{ animationDelay: '200ms' }}>
+          <div className="space-y-6 sm:space-y-8 animate-fade-in" style={{ animationDelay: '200ms' }}>
             {/* Contact Information */}
             <Card className="border-2 hover:border-emerald-600/30 transition-all duration-300">
-              <CardHeader>
-                <CardTitle className="text-xl">Información de Contacto</CardTitle>
+              <CardHeader className="p-4 sm:p-6">
+                <CardTitle className="text-lg sm:text-xl">Información de Contacto</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="space-y-3 sm:space-y-4 p-4 sm:p-6 pt-0">
                 {/* Phone contacts */}
-                <div className="p-4 rounded-lg bg-muted/50">
-                  <div className="flex items-center gap-3 mb-3">
-                    <div className="p-3 bg-primary/10 rounded-lg">
-                      <Phone className="w-5 h-5 text-primary" />
+                <div className="p-3 sm:p-4 rounded-lg bg-muted/50">
+                  <div className="flex items-center gap-2 sm:gap-3 mb-3">
+                    <div className="p-2 sm:p-3 bg-primary/10 rounded-lg flex-shrink-0">
+                      <Phone className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
                     </div>
                     <h3 className="font-semibold text-sm">Teléfonos</h3>
                   </div>
-                  <div className="space-y-2 ml-14">
+                  <div className="space-y-2 ml-0 sm:ml-14">
                     {phoneContacts.map((contact, i) => (
                       <a
                         key={i}
                         href={`tel:+34${contact.phone}`}
-                        className="flex items-center gap-2 text-sm hover:text-primary transition-colors"
+                        className="flex items-center gap-2 text-sm hover:text-primary transition-colors min-h-[36px]"
                       >
-                        <Phone className="w-3.5 h-3.5 text-primary" />
+                        <Phone className="w-3.5 h-3.5 text-primary flex-shrink-0" />
                         <span className="font-medium">{contact.phone}</span>
-                        <span className="text-muted-foreground">{contact.name}</span>
+                        <span className="text-muted-foreground text-xs sm:text-sm truncate">{contact.name}</span>
                       </a>
                     ))}
                   </div>
@@ -307,14 +307,14 @@ export const ContactPage = () => {
                     href={info.link}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-start gap-4 p-4 rounded-lg bg-muted/50 hover:bg-muted transition-all duration-300 hover:scale-105 group"
+                    className="flex items-start gap-3 sm:gap-4 p-3 sm:p-4 rounded-lg bg-muted/50 hover:bg-muted transition-all duration-300 active:scale-95 sm:hover:scale-105 group"
                   >
-                    <div className="p-3 bg-primary/10 rounded-lg group-hover:bg-primary/20 transition-colors">
-                      <info.icon className="w-5 h-5 text-primary" />
+                    <div className="p-2 sm:p-3 bg-primary/10 rounded-lg group-hover:bg-primary/20 transition-colors flex-shrink-0">
+                      <info.icon className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
                     </div>
-                    <div className="flex-1">
+                    <div className="flex-1 min-w-0">
                       <h3 className="font-semibold text-sm mb-1">{info.title}</h3>
-                      <p className="text-sm text-muted-foreground">{info.content}</p>
+                      <p className="text-xs sm:text-sm text-muted-foreground break-words">{info.content}</p>
                     </div>
                   </a>
                 ))}
@@ -323,24 +323,24 @@ export const ContactPage = () => {
 
             {/* Social Media Links */}
             <Card className="border-2 hover:border-emerald-600/30 transition-all duration-300">
-              <CardHeader>
-                <CardTitle className="text-xl">Síguenos</CardTitle>
-                <p className="text-sm text-muted-foreground">
+              <CardHeader className="p-4 sm:p-6">
+                <CardTitle className="text-lg sm:text-xl">Síguenos</CardTitle>
+                <p className="text-xs sm:text-sm text-muted-foreground">
                   Mantente conectado con nosotros en redes sociales
                 </p>
               </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-2 gap-4">
+              <CardContent className="p-4 sm:p-6 pt-0">
+                <div className="grid grid-cols-2 gap-3 sm:gap-4">
                   {socialLinks.map((social, index) => (
                     <a
                       key={index}
                       href={social.url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className={`flex flex-col items-center gap-3 p-6 rounded-lg bg-muted/50 hover:bg-muted transition-all duration-300 hover:scale-105 ${social.color}`}
+                      className={`flex flex-col items-center gap-2 sm:gap-3 p-4 sm:p-6 rounded-lg bg-muted/50 hover:bg-muted transition-all duration-300 active:scale-95 sm:hover:scale-105 ${social.color}`}
                     >
-                      <social.icon className="w-8 h-8" />
-                      <span className="text-sm font-medium">{social.name}</span>
+                      <social.icon className="w-6 h-6 sm:w-8 sm:h-8" />
+                      <span className="text-xs sm:text-sm font-medium">{social.name}</span>
                     </a>
                   ))}
                 </div>
@@ -349,21 +349,21 @@ export const ContactPage = () => {
 
             {/* Business Hours */}
             <Card className="border-2 hover:border-emerald-600/30 transition-all duration-300">
-              <CardHeader>
-                <CardTitle className="text-xl">Horario de Atención</CardTitle>
+              <CardHeader className="p-4 sm:p-6">
+                <CardTitle className="text-lg sm:text-xl">Horario de Atención</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-3">
+              <CardContent className="space-y-2 sm:space-y-3 p-4 sm:p-6 pt-0">
                 <div className="flex justify-between items-center py-2 border-b border-border">
-                  <span className="text-sm font-medium">Lunes - Viernes</span>
-                  <span className="text-sm text-muted-foreground">9:00 - 18:00</span>
+                  <span className="text-xs sm:text-sm font-medium">Lunes - Viernes</span>
+                  <span className="text-xs sm:text-sm text-muted-foreground">9:00 - 18:00</span>
                 </div>
                 <div className="flex justify-between items-center py-2 border-b border-border">
-                  <span className="text-sm font-medium">Sábado</span>
-                  <span className="text-sm text-muted-foreground">10:00 - 14:00</span>
+                  <span className="text-xs sm:text-sm font-medium">Sábado</span>
+                  <span className="text-xs sm:text-sm text-muted-foreground">10:00 - 14:00</span>
                 </div>
                 <div className="flex justify-between items-center py-2">
-                  <span className="text-sm font-medium">Domingo</span>
-                  <span className="text-sm text-muted-foreground">Cerrado</span>
+                  <span className="text-xs sm:text-sm font-medium">Domingo</span>
+                  <span className="text-xs sm:text-sm text-muted-foreground">Cerrado</span>
                 </div>
               </CardContent>
             </Card>
@@ -371,16 +371,16 @@ export const ContactPage = () => {
         </div>
 
         {/* Map Section */}
-        <div className="mt-12 animate-fade-in" style={{ animationDelay: '300ms' }}>
+        <div className="mt-8 sm:mt-12 animate-fade-in" style={{ animationDelay: '300ms' }}>
           <Card className="overflow-hidden border-2 hover:border-emerald-600/30 transition-all duration-300">
-            <CardHeader>
-              <CardTitle className="text-2xl flex items-center gap-2">
-                <MapPin className="w-6 h-6 text-emerald-600" />
+            <CardHeader className="p-4 sm:p-6">
+              <CardTitle className="text-xl sm:text-2xl flex items-center gap-2">
+                <MapPin className="w-5 h-5 sm:w-6 sm:h-6 text-emerald-600" />
                 Nuestra Ubicación
               </CardTitle>
             </CardHeader>
             <CardContent className="p-0">
-              <div className="w-full h-96 bg-muted relative overflow-hidden">
+              <div className="w-full h-64 sm:h-96 bg-muted relative overflow-hidden">
                 <iframe
                   src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2959.5!2d-4.7245!3d41.6520!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0xd475f8a!2sCalle+Toreros+6+Valladolid!5e0!3m2!1ses!2ses"
                   width="100%"
