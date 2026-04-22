@@ -462,25 +462,25 @@ export const LiveTournamentPage = () => {
   return (
     <div className="min-h-screen bg-gradient-to-b from-muted/20 to-background pt-20">
       {/* Event Selector Bar */}
-      <div className="bg-muted/50 border-b py-4 px-4">
+      <div className="bg-muted/50 border-b py-3 sm:py-4 px-3 sm:px-4">
         <div className="container mx-auto">
-          <div className="flex items-center gap-3 flex-wrap">
-            <Radio className="w-5 h-5 text-primary flex-shrink-0" />
-            <span className="font-semibold text-sm whitespace-nowrap">Eventos en vivo:</span>
+          <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
+            <Radio className="w-4 h-4 sm:w-5 sm:h-5 text-primary flex-shrink-0" />
+            <span className="font-semibold text-xs sm:text-sm whitespace-nowrap">Eventos en vivo:</span>
             <Select
               value={selectedEventId || ''}
               onValueChange={(val) => setSelectedEventId(val)}
             >
-              <SelectTrigger className="w-full max-w-md bg-background">
-                <SelectValue placeholder="Selecciona un evento para visualizar" />
+              <SelectTrigger className="w-full sm:max-w-md bg-background h-9 sm:h-10 text-sm">
+                <SelectValue placeholder="Selecciona un evento" />
               </SelectTrigger>
               <SelectContent className="bg-background z-50">
                 {allEvents.map(ev => (
                   <SelectItem key={ev.id} value={ev.id}>
                     <div className="flex items-center gap-2">
                       {ev.hasLiveMatches && <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse-live flex-shrink-0" />}
-                      <span>{ev.title}</span>
-                      <span className="text-xs text-muted-foreground ml-1">
+                      <span className="truncate">{ev.title}</span>
+                      <span className="text-xs text-muted-foreground ml-1 hidden sm:inline">
                         ({new Date(ev.date).toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' })})
                       </span>
                     </div>
