@@ -975,14 +975,14 @@ export function TournamentDetailPage() {
               </Card>
             ) : (
               <Card className="animate-fade-in">
-                <CardHeader className="flex flex-row items-center justify-between">
+                <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                   <CardTitle className="flex items-center gap-2">
                     <Trophy className="h-5 w-5 text-primary" />
                     CLASIFICACIÓN
                   </CardTitle>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 w-full sm:w-auto">
                     <Select value={selectedGroup} onValueChange={setSelectedGroup}>
-                      <SelectTrigger className="w-[180px] bg-background">
+                      <SelectTrigger className="w-full sm:w-[180px] bg-background">
                         <SelectValue placeholder="Seleccionar grupo" />
                       </SelectTrigger>
                       <SelectContent className="bg-background z-50">
@@ -996,7 +996,7 @@ export function TournamentDetailPage() {
                     </Select>
                   </div>
                 </CardHeader>
-                <CardContent className="space-y-6">
+                <CardContent className="space-y-6 px-2 sm:px-6">
                   {Object.entries(groupedCalculatedStandings)
                     .filter(([groupName]) => selectedGroup === "all" || groupName === selectedGroup)
                     .map(([groupName, teams]) => (
