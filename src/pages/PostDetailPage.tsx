@@ -58,10 +58,10 @@ export function PostDetailPage() {
   }
 
   return (
-    <div className="min-h-screen pt-20">
+    <div className="min-h-screen pt-16 sm:pt-20">
       {/* Hero Image */}
       {post.image_url && (
-        <div className="relative h-[40vh] md:h-[50vh] w-full">
+        <div className="relative h-[28vh] sm:h-[40vh] md:h-[50vh] w-full">
           <img
             src={post.image_url}
             alt={post.title}
@@ -71,44 +71,44 @@ export function PostDetailPage() {
         </div>
       )}
 
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-3 sm:px-4 py-6 sm:py-8">
         {/* Back Button */}
-        <Button variant="ghost" asChild className="mb-6">
+        <Button variant="ghost" size="sm" asChild className="mb-4 sm:mb-6 h-9">
           <Link to="/noticias" className="flex items-center gap-2">
             <ArrowLeft className="w-4 h-4" />
-            Volver a noticias
+            <span className="text-sm">Volver a noticias</span>
           </Link>
         </Button>
 
         <article className="max-w-4xl mx-auto">
           {/* Title */}
-          <h1 className="text-3xl md:text-5xl font-bold mb-6">{post.title}</h1>
+          <h1 className="text-2xl sm:text-3xl md:text-5xl font-bold mb-4 sm:mb-6 leading-tight">{post.title}</h1>
 
           {/* Meta */}
-          <div className="flex items-center gap-6 text-muted-foreground mb-8 pb-8 border-b border-border">
-            <div className="flex items-center gap-2">
-              <Calendar className="w-5 h-5" />
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-muted-foreground mb-6 sm:mb-8 pb-6 sm:pb-8 border-b border-border text-sm">
+            <div className="flex items-center gap-1.5 sm:gap-2">
+              <Calendar className="w-4 h-4 sm:w-5 sm:h-5" />
               {formatDate(post.created_at)}
             </div>
-            <div className="flex items-center gap-2">
-              <Clock className="w-5 h-5" />
+            <div className="flex items-center gap-1.5 sm:gap-2">
+              <Clock className="w-4 h-4 sm:w-5 sm:h-5" />
               {Math.ceil((post.content?.length || 0) / 1000)} min de lectura
             </div>
           </div>
 
           {/* Description */}
           {post.description && (
-            <p className="text-xl text-muted-foreground mb-8 leading-relaxed border-l-4 border-primary pl-6 italic">
+            <p className="text-base sm:text-xl text-muted-foreground mb-6 sm:mb-8 leading-relaxed border-l-4 border-primary pl-4 sm:pl-6 italic">
               {post.description}
             </p>
           )}
 
           {/* Content */}
           {post.content && (
-            <div className="prose prose-lg dark:prose-invert max-w-none">
+            <div className="prose prose-base sm:prose-lg dark:prose-invert max-w-none">
               {post.content.split('\n').map((paragraph, idx) => (
                 paragraph.trim() && (
-                  <p key={idx} className="mb-6 leading-relaxed text-foreground/90">
+                  <p key={idx} className="mb-4 sm:mb-6 leading-relaxed text-foreground/90 text-sm sm:text-base">
                     {paragraph}
                   </p>
                 )
@@ -117,9 +117,9 @@ export function PostDetailPage() {
           )}
 
           {/* Back to news */}
-          <div className="mt-12 pt-8 border-t border-border">
-            <Button asChild className="gradient-gold">
-              <Link to="/noticias" className="flex items-center gap-2">
+          <div className="mt-8 sm:mt-12 pt-6 sm:pt-8 border-t border-border">
+            <Button asChild className="gradient-gold w-full sm:w-auto">
+              <Link to="/noticias" className="flex items-center justify-center gap-2">
                 <ArrowLeft className="w-4 h-4" />
                 Ver más noticias
               </Link>

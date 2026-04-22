@@ -184,26 +184,27 @@ export const PlayerDetailPage = () => {
   const teamsCount = new Set([...history.map(h => h.team_id), player.team_id].filter(Boolean)).size;
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-muted/20 to-background py-16">
-      <div className="container mx-auto px-4">
+    <div className="min-h-screen bg-gradient-to-b from-muted/20 to-background py-8 sm:py-16">
+      <div className="container mx-auto px-3 sm:px-4">
         {/* Back Button */}
         <Button 
           variant="ghost" 
+          size="sm"
           onClick={() => navigate(-1)}
-          className="mb-6"
+          className="mb-4 sm:mb-6 h-9"
         >
           <ArrowLeft className="w-4 h-4 mr-2" />
-          Volver
+          <span className="text-sm">Volver</span>
         </Button>
 
         {/* Player Header */}
-        <Card className="mb-8 overflow-hidden border-2">
-          <CardHeader className="bg-gradient-to-r from-primary/10 to-primary/5">
-            <div className="flex flex-col md:flex-row items-center gap-6">
+        <Card className="mb-6 sm:mb-8 overflow-hidden border-2">
+          <CardHeader className="bg-gradient-to-r from-primary/10 to-primary/5 p-4 sm:p-6">
+            <div className="flex flex-col md:flex-row items-center gap-4 sm:gap-6">
               {/* Player Photo */}
               <div className="flex-shrink-0">
                 {player.photo_url ? (
-                  <div className="w-40 h-40 rounded-full bg-background flex items-center justify-center overflow-hidden ring-4 ring-background shadow-xl">
+                  <div className="w-28 h-28 sm:w-40 sm:h-40 rounded-full bg-background flex items-center justify-center overflow-hidden ring-4 ring-background shadow-xl">
                     <img 
                       src={player.photo_url} 
                       alt={player.name}
@@ -211,61 +212,61 @@ export const PlayerDetailPage = () => {
                     />
                   </div>
                 ) : (
-                  <div className="w-40 h-40 rounded-full bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center ring-4 ring-background shadow-xl">
-                    <User className="w-20 h-20 text-primary" />
+                  <div className="w-28 h-28 sm:w-40 sm:h-40 rounded-full bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center ring-4 ring-background shadow-xl">
+                    <User className="w-14 h-14 sm:w-20 sm:h-20 text-primary" />
                   </div>
                 )}
               </div>
 
               {/* Player Info */}
-              <div className="flex-1 text-center md:text-left">
-                <div className="flex items-center gap-3 justify-center md:justify-start mb-2">
+              <div className="flex-1 text-center md:text-left min-w-0 w-full">
+                <div className="flex items-center gap-2 sm:gap-3 justify-center md:justify-start mb-2 flex-wrap">
                   {player.number && (
-                    <span className="text-5xl font-bold text-primary">#{player.number}</span>
+                    <span className="text-3xl sm:text-5xl font-bold text-primary">#{player.number}</span>
                   )}
-                  <CardTitle className="text-4xl">{player.name}</CardTitle>
+                  <CardTitle className="text-xl sm:text-4xl break-words">{player.name}</CardTitle>
                 </div>
                 
-                <div className="flex flex-wrap gap-3 justify-center md:justify-start mb-4">
+                <div className="flex flex-wrap gap-2 sm:gap-3 justify-center md:justify-start mb-3 sm:mb-4">
                   {player.position && (
-                    <Badge variant="outline" className="text-sm px-3 py-1">
-                      <Shield className="w-4 h-4 mr-1" />
+                    <Badge variant="outline" className="text-xs sm:text-sm px-2 sm:px-3 py-1">
+                      <Shield className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
                       {player.position}
                     </Badge>
                   )}
                   {currentTeam && (
                     <Link to={`/equipos/${currentTeam.id}`}>
-                      <Badge className="bg-emerald-600 hover:bg-emerald-700 text-sm px-3 py-1">
-                        <Users className="w-4 h-4 mr-1" />
+                      <Badge className="bg-emerald-600 hover:bg-emerald-700 text-xs sm:text-sm px-2 sm:px-3 py-1">
+                        <Users className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
                         {currentTeam.name}
                       </Badge>
                     </Link>
                   )}
                   {player.age && (
-                    <Badge variant="secondary" className="text-sm px-3 py-1">
-                      <Calendar className="w-4 h-4 mr-1" />
+                    <Badge variant="secondary" className="text-xs sm:text-sm px-2 sm:px-3 py-1">
+                      <Calendar className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
                       {player.age} años
                     </Badge>
                   )}
                 </div>
 
                 {/* Quick Stats */}
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
-                  <div className="bg-background/50 rounded-lg p-3 text-center">
-                    <p className="text-2xl font-bold text-primary">{totalStats.matches_played}</p>
-                    <p className="text-xs text-muted-foreground">Partidos</p>
+                <div className="grid grid-cols-4 gap-2 sm:gap-4 mt-4">
+                  <div className="bg-background/50 rounded-lg p-2 sm:p-3 text-center">
+                    <p className="text-lg sm:text-2xl font-bold text-primary">{totalStats.matches_played}</p>
+                    <p className="text-[10px] sm:text-xs text-muted-foreground">Partidos</p>
                   </div>
-                  <div className="bg-background/50 rounded-lg p-3 text-center">
-                    <p className="text-2xl font-bold text-emerald-600">{totalStats.goals_scored}</p>
-                    <p className="text-xs text-muted-foreground">Goles</p>
+                  <div className="bg-background/50 rounded-lg p-2 sm:p-3 text-center">
+                    <p className="text-lg sm:text-2xl font-bold text-emerald-600">{totalStats.goals_scored}</p>
+                    <p className="text-[10px] sm:text-xs text-muted-foreground">Goles</p>
                   </div>
-                  <div className="bg-background/50 rounded-lg p-3 text-center">
-                    <p className="text-2xl font-bold text-yellow-500">{totalStats.yellow_cards}</p>
-                    <p className="text-xs text-muted-foreground">T. Amarillas</p>
+                  <div className="bg-background/50 rounded-lg p-2 sm:p-3 text-center">
+                    <p className="text-lg sm:text-2xl font-bold text-yellow-500">{totalStats.yellow_cards}</p>
+                    <p className="text-[10px] sm:text-xs text-muted-foreground">T. Amar.</p>
                   </div>
-                  <div className="bg-background/50 rounded-lg p-3 text-center">
-                    <p className="text-2xl font-bold text-red-500">{totalStats.red_cards}</p>
-                    <p className="text-xs text-muted-foreground">T. Rojas</p>
+                  <div className="bg-background/50 rounded-lg p-2 sm:p-3 text-center">
+                    <p className="text-lg sm:text-2xl font-bold text-red-500">{totalStats.red_cards}</p>
+                    <p className="text-[10px] sm:text-xs text-muted-foreground">T. Rojas</p>
                   </div>
                 </div>
               </div>
@@ -275,18 +276,18 @@ export const PlayerDetailPage = () => {
 
         {/* Tabs */}
         <Tabs defaultValue="trayectoria" className="w-full">
-          <TabsList className="grid w-full grid-cols-3 lg:w-auto mb-8">
-            <TabsTrigger value="trayectoria" className="flex items-center gap-2">
-              <History className="w-4 h-4" />
-              Trayectoria
+          <TabsList className="grid w-full grid-cols-3 gap-0.5 sm:gap-1 h-auto p-1 lg:w-auto mb-6 sm:mb-8">
+            <TabsTrigger value="trayectoria" className="flex-col sm:flex-row items-center gap-0.5 sm:gap-2 text-[11px] sm:text-sm py-2 px-1 sm:px-3 min-h-[48px]">
+              <History className="w-4 h-4 flex-shrink-0" />
+              <span className="truncate">Trayectoria</span>
             </TabsTrigger>
-            <TabsTrigger value="estadisticas" className="flex items-center gap-2">
-              <TrendingUp className="w-4 h-4" />
-              Estadísticas
+            <TabsTrigger value="estadisticas" className="flex-col sm:flex-row items-center gap-0.5 sm:gap-2 text-[11px] sm:text-sm py-2 px-1 sm:px-3 min-h-[48px]">
+              <TrendingUp className="w-4 h-4 flex-shrink-0" />
+              <span className="truncate">Stats</span>
             </TabsTrigger>
-            <TabsTrigger value="goles" className="flex items-center gap-2">
-              <Target className="w-4 h-4" />
-              Goles
+            <TabsTrigger value="goles" className="flex-col sm:flex-row items-center gap-0.5 sm:gap-2 text-[11px] sm:text-sm py-2 px-1 sm:px-3 min-h-[48px]">
+              <Target className="w-4 h-4 flex-shrink-0" />
+              <span className="truncate">Goles</span>
             </TabsTrigger>
           </TabsList>
 
