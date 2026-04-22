@@ -902,23 +902,23 @@ export const TeamDetailPage = () => {
           </TabsContent>
 
           {/* Historial de Partidos Tab */}
-          <TabsContent value="partidos" className="space-y-6">
+          <TabsContent value="partidos" className="space-y-4 sm:space-y-6">
             <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Trophy className="w-5 h-5 text-primary" />
+              <CardHeader className="p-4 sm:p-6">
+                <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
+                  <Trophy className="w-5 h-5 text-primary flex-shrink-0" />
                   Historial de Partidos
                 </CardTitle>
-                <CardDescription>
+                <CardDescription className="text-xs sm:text-sm">
                   Todos los partidos jugados por {team.name}
                 </CardDescription>
               </CardHeader>
-              <CardContent>
+              <CardContent className="p-3 sm:p-6 pt-0 sm:pt-0">
                 {matchEvents.length > 1 && (
-                  <div className="flex items-center gap-3 mb-4">
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 mb-4">
                     <span className="text-sm font-medium">Torneo:</span>
                     <Select value={matchFilter} onValueChange={setMatchFilter}>
-                      <SelectTrigger className="w-64">
+                      <SelectTrigger className="w-full sm:w-64 h-11">
                         <SelectValue placeholder="Todos" />
                       </SelectTrigger>
                       <SelectContent>
@@ -937,7 +937,7 @@ export const TeamDetailPage = () => {
                     <p className="text-muted-foreground">No hay partidos registrados</p>
                   </div>
                 ) : (
-                  <div className="space-y-4">
+                  <div className="space-y-3 sm:space-y-4">
                     {filteredMatches.map(match => {
                       const isHome = match.home_team_id === id;
                       const teamScore = isHome ? match.home_score : match.away_score;
@@ -953,74 +953,103 @@ export const TeamDetailPage = () => {
                               ? 'loss' 
                               : 'draw';
 
+                      const resultLabel = result === 'win' ? 'Victoria' : result === 'loss' ? 'Derrota' : result === 'draw' ? 'Empate' : 'Programado';
+                      const resultVariant = result === 'win' ? 'default' : result === 'loss' ? 'destructive' : result === 'draw' ? 'secondary' : 'outline';
+
                       return (
-                        <Card key={match.id} className="border-2">
-                          <CardContent className="pt-6">
-                            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                              <div className="flex items-center gap-4 flex-1">
-                                <div className="flex flex-col items-center gap-2">
-                                  {match.event?.title && (
-                                    <Badge variant="outline" className="text-xs">{match.event.title}</Badge>
-                                  )}
-                                  <Badge variant={
-                                    result === 'win' ? 'default' : result === 'loss' ? 'destructive' : result === 'draw' ? 'secondary' : 'outline'
-                                  }>
-                                    {result === 'win' ? 'Victoria' : result === 'loss' ? 'Derrota' : result === 'draw' ? 'Empate' : 'Programado'}
-                                  </Badge>
-                                </div>
-                                <div className="flex items-center gap-4 flex-1">
-                                  <div className="flex items-center gap-2 flex-1">
-                                    {team.logo_url && <img src={team.logo_url} alt={team.name} className="w-8 h-8 object-contain" />}
-                                    <span className="font-semibold">{team.name}</span>
-                                  </div>
-                                  <div className="text-center px-4">
-                                    {teamScore !== null && opponentScore !== null ? (
-                                      <span className="text-2xl font-bold">{teamScore} - {opponentScore}</span>
-                                    ) : (
-                                      <span className="text-xl text-muted-foreground">vs</span>
-                                    )}
-                                  </div>
-                                  <div className="flex items-center gap-2 flex-1 justify-end">
-                                    <span className="font-semibold">{opponent?.name}</span>
-                                    {opponent?.logo_url && <img src={opponent.logo_url} alt={opponent.name} className="w-8 h-8 object-contain" />}
-                                  </div>
-                                </div>
+                        <Card key={match.id} className="border-2 overflow-hidden">
+                          <CardContent className="p-3 sm:p-5 space-y-3">
+                            {/* Top: torneo + estado */}
+                            <div className="flex flex-wrap items-center gap-2">
+                              {match.event?.title && (
+                                <Badge variant="outline" className="text-[10px] sm:text-xs max-w-full truncate">
+                                  {match.event.title}
+                                </Badge>
+                              )}
+                              <Badge variant={resultVariant} className="text-[10px] sm:text-xs">
+                                {resultLabel}
+                              </Badge>
+                            </div>
+
+                            {/* Marcador / equipos: mobile-first stack horizontal compacto */}
+                            <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2 sm:gap-4">
+                              {/* Local */}
+                              <div className="flex flex-col sm:flex-row items-center sm:items-center gap-1.5 sm:gap-2 min-w-0">
+                                {team.logo_url && (
+                                  <img
+                                    src={team.logo_url}
+                                    alt={team.name}
+                                    className="w-9 h-9 sm:w-10 sm:h-10 object-contain flex-shrink-0"
+                                  />
+                                )}
+                                <span className="font-semibold text-xs sm:text-base text-center sm:text-left leading-tight break-words line-clamp-2 min-w-0">
+                                  {team.name}
+                                </span>
                               </div>
-                              <div className="flex flex-col items-end gap-1 text-sm text-muted-foreground min-w-[200px]">
-                                {match.match_date && (
-                                  <>
-                                    <div className="flex items-center gap-2">
-                                      <Calendar className="w-3.5 h-3.5" />
-                                      {new Date(match.match_date).toLocaleDateString('es-ES')}
-                                    </div>
-                                    <div className="flex items-center gap-2">
-                                      <Clock className="w-3.5 h-3.5" />
-                                      {new Date(match.match_date).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}
-                                    </div>
-                                  </>
+
+                              {/* Marcador */}
+                              <div className="flex flex-col items-center px-1 sm:px-3 flex-shrink-0">
+                                {teamScore !== null && opponentScore !== null ? (
+                                  <span className="text-xl sm:text-3xl font-bold tabular-nums">
+                                    {teamScore} <span className="text-muted-foreground">-</span> {opponentScore}
+                                  </span>
+                                ) : (
+                                  <span className="text-base sm:text-xl text-muted-foreground font-medium">vs</span>
                                 )}
-                                {match.field?.facility?.name && (
-                                  <div className="flex items-center gap-2">
-                                    <Building2 className="w-3.5 h-3.5" />
-                                    <span className="text-xs">{match.field.facility.name} — {match.field.name}</span>
-                                  </div>
+                              </div>
+
+                              {/* Visitante */}
+                              <div className="flex flex-col-reverse sm:flex-row items-center sm:items-center gap-1.5 sm:gap-2 min-w-0 sm:justify-end">
+                                <span className="font-semibold text-xs sm:text-base text-center sm:text-right leading-tight break-words line-clamp-2 min-w-0">
+                                  {opponent?.name}
+                                </span>
+                                {opponent?.logo_url && (
+                                  <img
+                                    src={opponent.logo_url}
+                                    alt={opponent.name}
+                                    className="w-9 h-9 sm:w-10 sm:h-10 object-contain flex-shrink-0"
+                                  />
                                 )}
-                                <Sheet>
-                                  <SheetTrigger asChild>
-                                    <Button variant="outline" size="sm" className="mt-1">
-                                      <FileText className="w-3.5 h-3.5 mr-1" />
-                                      Ficha del partido
-                                    </Button>
-                                  </SheetTrigger>
-                                  <SheetContent className="overflow-y-auto">
-                                    <SheetHeader>
-                                      <SheetTitle>Ficha del Partido</SheetTitle>
-                                    </SheetHeader>
-                                    {renderMatchSheet(match)}
-                                  </SheetContent>
-                                </Sheet>
                               </div>
                             </div>
+
+                            {/* Meta: fecha, hora, sede */}
+                            <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs text-muted-foreground border-t pt-3">
+                              {match.match_date && (
+                                <>
+                                  <div className="flex items-center gap-1.5">
+                                    <Calendar className="w-3.5 h-3.5 flex-shrink-0" />
+                                    <span>{new Date(match.match_date).toLocaleDateString('es-ES')}</span>
+                                  </div>
+                                  <div className="flex items-center gap-1.5">
+                                    <Clock className="w-3.5 h-3.5 flex-shrink-0" />
+                                    <span>{new Date(match.match_date).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}</span>
+                                  </div>
+                                </>
+                              )}
+                              {match.field?.facility?.name && (
+                                <div className="flex items-start gap-1.5 w-full sm:w-auto">
+                                  <Building2 className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" />
+                                  <span className="break-words">{match.field.facility.name} — {match.field.name}</span>
+                                </div>
+                              )}
+                            </div>
+
+                            {/* CTA full width en mobile */}
+                            <Sheet>
+                              <SheetTrigger asChild>
+                                <Button variant="outline" size="sm" className="w-full sm:w-auto sm:ml-auto sm:flex h-10">
+                                  <FileText className="w-3.5 h-3.5 mr-1.5" />
+                                  Ficha del partido
+                                </Button>
+                              </SheetTrigger>
+                              <SheetContent className="overflow-y-auto w-full sm:max-w-lg">
+                                <SheetHeader>
+                                  <SheetTitle>Ficha del Partido</SheetTitle>
+                                </SheetHeader>
+                                {renderMatchSheet(match)}
+                              </SheetContent>
+                            </Sheet>
                           </CardContent>
                         </Card>
                       );
