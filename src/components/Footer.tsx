@@ -9,15 +9,15 @@ export function Footer() {
 
   return (
     <footer className="bg-card border-t border-border">
-      <div className="container mx-auto px-4 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+      <div className="container mx-auto px-4 py-8 sm:py-12">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 sm:gap-8">
           {/* Brand */}
-          <div className="space-y-4">
+          <div className="space-y-3 sm:space-y-4 sm:col-span-2 md:col-span-1">
             <div className="flex items-center space-x-2">
               <img 
                 src={theme === "dark" ? logoBlanco : logoNegro} 
                 alt="FEMD Torneos" 
-                className="h-10 w-auto"
+                className="h-9 sm:h-10 w-auto"
               />
             </div>
             <p className="text-sm text-muted-foreground">
