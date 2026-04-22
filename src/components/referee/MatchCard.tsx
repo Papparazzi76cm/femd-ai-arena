@@ -487,12 +487,12 @@ export const MatchCard = ({
 
         {/* Actions */}
         {canEdit && (
-          <div className="flex gap-2 justify-end border-t pt-4 flex-wrap">
+          <div className="grid grid-cols-2 sm:flex sm:justify-end gap-2 border-t pt-3 sm:pt-4 sm:flex-wrap">
             {match.status === 'scheduled' && (
               <Button 
                 onClick={handleStartMatch} 
                 disabled={saving}
-                className="bg-green-600 hover:bg-green-700 text-white"
+                className="bg-green-600 hover:bg-green-700 text-white col-span-2 h-11"
               >
                 <Play className="w-4 h-4 mr-2" />
                 {saving ? 'Iniciando...' : 'Iniciar Partido'}
@@ -504,7 +504,7 @@ export const MatchCard = ({
                 <Button 
                   variant="outline" 
                   onClick={() => setShowGoalScorers(true)}
-                  className="border-yellow-500 text-yellow-600 hover:bg-yellow-50 dark:hover:bg-yellow-900/20"
+                  className="border-yellow-500 text-yellow-600 hover:bg-yellow-50 dark:hover:bg-yellow-900/20 h-11"
                 >
                   <Goal className="w-4 h-4 mr-2" />
                   Goleadores
@@ -512,43 +512,44 @@ export const MatchCard = ({
                 <Button 
                   variant="outline" 
                   onClick={() => setShowCards(true)}
+                  className="h-11"
                 >
                   <CreditCard className="w-4 h-4 mr-2" />
                   Tarjetas
                 </Button>
-                <Button variant="outline" onClick={handleSaveLive} disabled={saving}>
+                <Button variant="outline" onClick={handleSaveLive} disabled={saving} className="h-11">
                   <Save className="w-4 h-4 mr-2" />
-                  {saving ? 'Guardando...' : 'Guardar Cambios'}
+                  {saving ? 'Guardando...' : 'Guardar'}
                 </Button>
                 <Button 
                   onClick={handleEndMatch} 
                   disabled={saving}
-                  className="bg-red-600 hover:bg-red-700 text-white"
+                  className="bg-red-600 hover:bg-red-700 text-white h-11"
                 >
                   <Square className="w-4 h-4 mr-2" />
-                  {saving ? 'Finalizando...' : 'Finalizar Partido'}
+                  {saving ? 'Finalizando...' : 'Finalizar'}
                 </Button>
               </>
             )}
 
             {isFinished && !isEditing && (
               <>
-                <Button variant="outline" size="sm" onClick={handleResumeMatch} disabled={saving}>
+                <Button variant="outline" size="sm" onClick={handleResumeMatch} disabled={saving} className="h-10">
                   <Play className="w-4 h-4 mr-1" />
                   Reanudar
                 </Button>
-                <Button variant="outline" size="sm" onClick={handleRestartMatch} disabled={saving}>
+                <Button variant="outline" size="sm" onClick={handleRestartMatch} disabled={saving} className="h-10">
                   <RotateCcw className="w-4 h-4 mr-1" />
                   Reiniciar
                 </Button>
-                <Button variant="outline" size="sm" onClick={() => setIsEditing(true)}>
-                  Editar Resultado
+                <Button variant="outline" size="sm" onClick={() => setIsEditing(true)} className="h-10">
+                  Editar
                 </Button>
-                <Button variant="outline" size="sm" onClick={() => setShowGoalScorers(true)}>
+                <Button variant="outline" size="sm" onClick={() => setShowGoalScorers(true)} className="h-10">
                   <Goal className="w-4 h-4 mr-1" />
-                  Goleadores
+                  Goles
                 </Button>
-                <Button variant="outline" size="sm" onClick={() => setShowCards(true)}>
+                <Button variant="outline" size="sm" onClick={() => setShowCards(true)} className="h-10">
                   <CreditCard className="w-4 h-4 mr-1" />
                   Tarjetas
                 </Button>
@@ -556,6 +557,7 @@ export const MatchCard = ({
                   variant="outline" 
                   size="sm" 
                   onClick={() => { loadMvpData(); setMvpOpen(true); }}
+                  className="h-10"
                 >
                   <Star className="w-4 h-4 mr-1" />
                   MVP
@@ -565,10 +567,10 @@ export const MatchCard = ({
 
             {isFinished && isEditing && (
               <>
-                <Button variant="outline" onClick={handleCancel} disabled={saving}>
+                <Button variant="outline" onClick={handleCancel} disabled={saving} className="h-11">
                   Cancelar
                 </Button>
-                <Button onClick={handleSaveFinishedEdit} disabled={saving}>
+                <Button onClick={handleSaveFinishedEdit} disabled={saving} className="h-11">
                   <Save className="w-4 h-4 mr-2" />
                   {saving ? 'Guardando...' : 'Guardar'}
                 </Button>
