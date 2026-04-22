@@ -17,6 +17,7 @@ import { useToast } from '@/hooks/use-toast';
 import { ArrowLeft, Users, Trophy, Calendar, Palette, Loader2, Image, TrendingUp, Target, Shield, MapPin, ChevronDown, Clock, Building2, FileText } from 'lucide-react';
 import { BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { FEMDTournamentHistory } from '@/components/FEMDTournamentHistory';
+import { TeamLogo } from '@/components/TeamLogo';
 
 interface TournamentRoster {
   eventId: string;
@@ -355,7 +356,7 @@ export const TeamDetailPage = () => {
         {/* Teams & Score */}
         <div className="flex items-center justify-between gap-4">
           <div className="flex flex-col items-center gap-2 flex-1">
-            {match.home_team?.logo_url && <img src={match.home_team.logo_url} alt="" className="w-16 h-16 object-contain" />}
+            <TeamLogo src={match.home_team?.logo_url} alt={match.home_team?.name} size="xl" />
             <p className="font-semibold text-sm text-center">{match.home_team?.name || match.home_placeholder || '?'}</p>
           </div>
           <div className="text-center px-4">
@@ -367,7 +368,7 @@ export const TeamDetailPage = () => {
             </Badge>
           </div>
           <div className="flex flex-col items-center gap-2 flex-1">
-            {match.away_team?.logo_url && <img src={match.away_team.logo_url} alt="" className="w-16 h-16 object-contain" />}
+            <TeamLogo src={match.away_team?.logo_url} alt={match.away_team?.name} size="xl" />
             <p className="font-semibold text-sm text-center">{match.away_team?.name || match.away_placeholder || '?'}</p>
           </div>
         </div>
@@ -471,7 +472,7 @@ export const TeamDetailPage = () => {
               <div className="flex-shrink-0">
                 {team.logo_url ? (
                   <div className="w-24 h-24 sm:w-32 sm:h-32 rounded-full bg-background flex items-center justify-center overflow-hidden ring-4 ring-background shadow-xl">
-                    <img src={team.logo_url} alt={team.name} className="w-full h-full object-contain p-3 sm:p-4" />
+                    <TeamLogo src={team.logo_url} alt={team.name} size="2xl" rounded className="w-full h-full p-3 sm:p-4" />
                   </div>
                 ) : (
                   <div className="w-24 h-24 sm:w-32 sm:h-32 rounded-full bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center ring-4 ring-background shadow-xl">
@@ -559,13 +560,7 @@ export const TeamDetailPage = () => {
                   <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                     <Card className="border-2 border-primary/30 bg-primary/5">
                       <CardContent className="flex items-center gap-4 p-4">
-                        {team.logo_url ? (
-                          <img src={team.logo_url} alt={team.name} className="w-16 h-16 object-contain" />
-                        ) : (
-                          <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center">
-                            <Shield className="w-8 h-8 text-primary" />
-                          </div>
-                        )}
+                        <TeamLogo src={team.logo_url} alt={team.name} size="xl" />
                         <div>
                           <p className="font-semibold text-lg">{team.name}</p>
                           <Badge variant="default">Equipo Principal</Badge>
@@ -575,13 +570,7 @@ export const TeamDetailPage = () => {
                     {childTeams.map((child) => (
                       <Card key={child.id} className="hover:border-primary/30 transition-colors cursor-pointer" onClick={() => navigate(`/equipos/${child.id}`)}>
                         <CardContent className="flex items-center gap-4 p-4">
-                          {child.logo_url || team.logo_url ? (
-                            <img src={child.logo_url || team.logo_url} alt={child.name} className="w-16 h-16 object-contain" />
-                          ) : (
-                            <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center">
-                              <Shield className="w-8 h-8 text-muted-foreground" />
-                            </div>
-                          )}
+                          <TeamLogo src={child.logo_url || team.logo_url} alt={child.name} size="xl" />
                           <div>
                             <p className="font-semibold text-lg">{child.name}</p>
                             <Badge variant="outline">Filial</Badge>
@@ -975,13 +964,12 @@ export const TeamDetailPage = () => {
                             <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2 sm:gap-4">
                               {/* Local */}
                               <div className="flex flex-col sm:flex-row items-center sm:items-center gap-1.5 sm:gap-2 min-w-0">
-                                {team.logo_url && (
-                                  <img
-                                    src={team.logo_url}
-                                    alt={team.name}
-                                    className="w-9 h-9 sm:w-10 sm:h-10 object-contain flex-shrink-0"
-                                  />
-                                )}
+                                <TeamLogo
+                                  src={team.logo_url}
+                                  alt={team.name}
+                                  size="md"
+                                  className="w-9 h-9 sm:w-10 sm:h-10"
+                                />
                                 <span className="font-semibold text-xs sm:text-base text-center sm:text-left leading-tight break-words line-clamp-2 min-w-0">
                                   {team.name}
                                 </span>
@@ -1003,13 +991,12 @@ export const TeamDetailPage = () => {
                                 <span className="font-semibold text-xs sm:text-base text-center sm:text-right leading-tight break-words line-clamp-2 min-w-0">
                                   {opponent?.name}
                                 </span>
-                                {opponent?.logo_url && (
-                                  <img
-                                    src={opponent.logo_url}
-                                    alt={opponent.name}
-                                    className="w-9 h-9 sm:w-10 sm:h-10 object-contain flex-shrink-0"
-                                  />
-                                )}
+                                <TeamLogo
+                                  src={opponent?.logo_url}
+                                  alt={opponent?.name}
+                                  size="md"
+                                  className="w-9 h-9 sm:w-10 sm:h-10"
+                                />
                               </div>
                             </div>
 

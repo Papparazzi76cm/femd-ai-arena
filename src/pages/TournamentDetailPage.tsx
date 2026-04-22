@@ -14,6 +14,7 @@ import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { TournamentGalleryDisplay } from "@/components/TournamentGalleryDisplay";
 import { TournamentGalleryManager } from "@/components/admin/TournamentGalleryManager";
+import { TeamLogo } from "@/components/TeamLogo";
 
 interface EventTeam {
   id: string;
@@ -587,13 +588,12 @@ export function TournamentDetailPage() {
                 <div className="text-center sm:text-left">
                   <p className="text-xs sm:text-sm text-muted-foreground">Campeón del Torneo</p>
                   <div className="flex items-center gap-2 sm:gap-3 mt-1 justify-center sm:justify-start">
-                    {tournamentWinner.logo_url && (
-                      <img
-                        src={tournamentWinner.logo_url}
-                        alt={tournamentWinner.name}
-                        className="h-9 w-9 sm:h-12 sm:w-12 object-contain"
-                      />
-                    )}
+                    <TeamLogo
+                      src={tournamentWinner.logo_url}
+                      alt={tournamentWinner.name}
+                      size="lg"
+                      className="sm:w-12 sm:h-12"
+                    />
                     <h2 className="text-lg sm:text-2xl font-bold text-foreground">{tournamentWinner.name}</h2>
                   </div>
                 </div>
@@ -938,17 +938,12 @@ export function TournamentDetailPage() {
                       className="flex flex-col items-center p-4 rounded-lg border bg-card hover:bg-accent/50 hover:border-primary/50 transition-all group"
                     >
                       <div className="w-16 h-16 mb-3 flex items-center justify-center">
-                        {eventTeam.teams.logo_url ? (
-                          <img
-                            src={eventTeam.teams.logo_url}
-                            alt={eventTeam.teams.name}
-                            className="w-full h-full object-contain group-hover:scale-110 transition-transform"
-                          />
-                        ) : (
-                          <div className="w-full h-full rounded-full bg-muted flex items-center justify-center">
-                            <Users className="h-8 w-8 text-muted-foreground" />
-                          </div>
-                        )}
+                        <TeamLogo
+                          src={eventTeam.teams.logo_url}
+                          alt={eventTeam.teams.name}
+                          size="xl"
+                          className="group-hover:scale-110 transition-transform"
+                        />
                       </div>
                       <span className="text-sm font-medium text-center line-clamp-2 group-hover:text-primary transition-colors">
                         {eventTeam.teams.name}
@@ -1031,13 +1026,12 @@ export function TournamentDetailPage() {
                                   </TableCell>
                                   <TableCell className="px-2 sm:px-4 max-w-[140px] sm:max-w-none">
                                     <Link to={`/equipos/${team.team_id}`} className="flex items-center gap-2 hover:text-primary transition-colors min-w-0">
-                                      {team.teams.logo_url && (
-                                        <img
-                                          src={team.teams.logo_url}
-                                          alt={team.teams.name}
-                                          className="h-5 w-5 sm:h-6 sm:w-6 object-contain shrink-0"
-                                        />
-                                      )}
+                                      <TeamLogo
+                                        src={team.teams.logo_url}
+                                        alt={team.teams.name}
+                                        size="sm"
+                                        className="h-5 w-5 sm:h-6 sm:w-6"
+                                      />
                                       <span className="font-medium text-xs sm:text-sm truncate">{team.teams.name}</span>
                                     </Link>
                                   </TableCell>
@@ -1093,9 +1087,7 @@ export function TournamentDetailPage() {
                           <div key={index} className="flex items-center justify-between p-3 rounded-lg bg-accent/50">
                             <div className="flex items-center gap-3">
                               <span className="text-lg font-bold text-primary">{index + 1}</span>
-                              {scorer.logo && (
-                                <img src={scorer.logo} alt={scorer.team} className="h-6 w-6 object-contain" />
-                              )}
+                              <TeamLogo src={scorer.logo} alt={scorer.team} size="sm" />
                               <span className="font-medium">{scorer.team}</span>
                             </div>
                             <Badge variant="secondary">
@@ -1126,9 +1118,7 @@ export function TournamentDetailPage() {
                         <div key={index} className="flex items-center justify-between p-3 rounded-lg bg-accent/50">
                           <div className="flex items-center gap-3">
                             <span className="text-lg font-bold text-primary">{index + 1}</span>
-                            {scorer.teamLogo && (
-                              <img src={scorer.teamLogo} alt={scorer.team} className="h-6 w-6 object-contain" />
-                            )}
+                            <TeamLogo src={scorer.teamLogo} alt={scorer.team} size="sm" />
                             <div>
                               <span className="font-medium">{scorer.name}</span>
                               <p className="text-xs text-muted-foreground">{scorer.team}</p>
@@ -1162,9 +1152,7 @@ export function TournamentDetailPage() {
                       <div key={index} className="flex items-center justify-between p-3 rounded-lg bg-accent/50">
                         <div className="flex items-center gap-3">
                           <span className="text-lg font-bold text-primary">{index + 1}</span>
-                          {mvp.teamLogo && (
-                            <img src={mvp.teamLogo} alt={mvp.team} className="h-6 w-6 object-contain" />
-                          )}
+                          <TeamLogo src={mvp.teamLogo} alt={mvp.team} size="sm" />
                           <div>
                             <span className="font-medium">{mvp.name}</span>
                             <p className="text-xs text-muted-foreground">{mvp.team}</p>
@@ -1305,11 +1293,7 @@ function ResultRow({ match, onClick }: { match: Match; onClick?: () => void }) {
         >
           {/* Home */}
           <div className="flex flex-col items-center gap-1 flex-1 min-w-0">
-            {homeLogo ? (
-              <img src={homeLogo} alt={homeName} className="h-9 w-9 object-contain" />
-            ) : (
-              <div className="h-9 w-9 rounded-full bg-muted" />
-            )}
+            <TeamLogo src={homeLogo} alt={homeName} size="md" rounded />
             <span
               className={`text-[11px] leading-tight text-center line-clamp-2 break-words ${hasHomeWon ? 'font-bold text-primary' : ''} ${homeIsPlaceholder ? 'italic text-muted-foreground' : ''}`}
             >
@@ -1332,11 +1316,7 @@ function ResultRow({ match, onClick }: { match: Match; onClick?: () => void }) {
 
           {/* Away */}
           <div className="flex flex-col items-center gap-1 flex-1 min-w-0">
-            {awayLogo ? (
-              <img src={awayLogo} alt={awayName} className="h-9 w-9 object-contain" />
-            ) : (
-              <div className="h-9 w-9 rounded-full bg-muted" />
-            )}
+            <TeamLogo src={awayLogo} alt={awayName} size="md" rounded />
             <span
               className={`text-[11px] leading-tight text-center line-clamp-2 break-words ${hasAwayWon ? 'font-bold text-primary' : ''} ${awayIsPlaceholder ? 'italic text-muted-foreground' : ''}`}
             >
@@ -1393,9 +1373,7 @@ function ResultRow({ match, onClick }: { match: Match; onClick?: () => void }) {
       >
         {/* Home Team */}
         <div className={`flex items-center gap-3 flex-1 justify-start min-w-0 ${hasHomeWon ? 'font-bold' : ''}`}>
-          {homeLogo && (
-            <img src={homeLogo} alt={homeName} className="h-8 w-8 object-contain shrink-0" />
-          )}
+          <TeamLogo src={homeLogo} alt={homeName} size="sm" />
           <span className={`text-sm truncate ${hasHomeWon ? 'text-primary' : ''} ${homeIsPlaceholder ? 'italic text-muted-foreground' : ''}`}>{homeName}</span>
         </div>
 
@@ -1430,9 +1408,7 @@ function ResultRow({ match, onClick }: { match: Match; onClick?: () => void }) {
         {/* Away Team */}
         <div className={`flex items-center gap-3 flex-1 justify-end min-w-0 ${hasAwayWon ? 'font-bold' : ''}`}>
           <span className={`text-sm truncate ${hasAwayWon ? 'text-primary' : ''} ${awayIsPlaceholder ? 'italic text-muted-foreground' : ''}`}>{awayName}</span>
-          {awayLogo && (
-            <img src={awayLogo} alt={awayName} className="h-8 w-8 object-contain shrink-0" />
-          )}
+          <TeamLogo src={awayLogo} alt={awayName} size="sm" />
         </div>
       </div>
     </div>
@@ -1487,7 +1463,7 @@ function MatchDetailDialog({ match, onClose }: { match: Match | null; onClose: (
             {/* Score header */}
             <div className="grid grid-cols-3 items-center text-center">
               <div className="flex flex-col items-center">
-                {homeLogo && <img src={homeLogo} alt={homeName} className="h-12 w-12 object-contain mb-1" />}
+                <TeamLogo src={homeLogo} alt={homeName} size="lg" className="mb-1" />
                 <span className="font-bold text-sm">{homeName}</span>
               </div>
               <div>
@@ -1508,7 +1484,7 @@ function MatchDetailDialog({ match, onClose }: { match: Match | null; onClose: (
                 )}
               </div>
               <div className="flex flex-col items-center">
-                {awayLogo && <img src={awayLogo} alt={awayName} className="h-12 w-12 object-contain mb-1" />}
+                <TeamLogo src={awayLogo} alt={awayName} size="lg" className="mb-1" />
                 <span className="font-bold text-sm">{awayName}</span>
               </div>
             </div>
@@ -1599,9 +1575,7 @@ function MatchCard({ match, isFinal = false }: { match: Match; isFinal?: boolean
         {/* Home Team */}
         <div className="flex items-center justify-between mb-2">
           <div className={`flex items-center gap-3 flex-1 ${hasHomeWon ? 'font-bold' : ''}`}>
-            {homeLogo && (
-              <img src={homeLogo} alt={homeName} className="h-8 w-8 object-contain" />
-            )}
+            <TeamLogo src={homeLogo} alt={homeName} size="sm" />
             <span className={`${hasHomeWon ? 'text-primary' : ''} ${homeIsPlaceholder ? 'italic text-muted-foreground' : ''}`}>{homeName}</span>
             {hasHomeWon && isFinal && <Crown className="h-4 w-4 text-yellow-500" />}
           </div>
@@ -1616,9 +1590,7 @@ function MatchCard({ match, isFinal = false }: { match: Match; isFinal?: boolean
         {/* Away Team */}
         <div className="flex items-center justify-between">
           <div className={`flex items-center gap-3 flex-1 ${hasAwayWon ? 'font-bold' : ''}`}>
-            {awayLogo && (
-              <img src={awayLogo} alt={awayName} className="h-8 w-8 object-contain" />
-            )}
+            <TeamLogo src={awayLogo} alt={awayName} size="sm" />
             <span className={`${hasAwayWon ? 'text-primary' : ''} ${awayIsPlaceholder ? 'italic text-muted-foreground' : ''}`}>{awayName}</span>
             {hasAwayWon && isFinal && <Crown className="h-4 w-4 text-yellow-500" />}
           </div>
