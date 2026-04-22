@@ -472,7 +472,7 @@ export const TeamDetailPage = () => {
               <div className="flex-shrink-0">
                 {team.logo_url ? (
                   <div className="w-24 h-24 sm:w-32 sm:h-32 rounded-full bg-background flex items-center justify-center overflow-hidden ring-4 ring-background shadow-xl">
-                    <img src={team.logo_url} alt={team.name} className="w-full h-full object-contain p-3 sm:p-4" />
+                    <TeamLogo src={team.logo_url} alt={team.name} size="2xl" rounded className="w-full h-full p-3 sm:p-4" />
                   </div>
                 ) : (
                   <div className="w-24 h-24 sm:w-32 sm:h-32 rounded-full bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center ring-4 ring-background shadow-xl">
