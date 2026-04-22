@@ -118,7 +118,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 required={!isLogin}
-                className="mt-1"
+                className="mt-1 h-11"
               />
             </div>
           )}
@@ -132,7 +132,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="mt-1"
+              className="mt-1 h-11"
             />
           </div>
 
@@ -146,7 +146,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
               onChange={(e) => setPassword(e.target.value)}
               required
               minLength={6}
-              className="mt-1"
+              className="mt-1 h-11"
             />
             {!isLogin && (
               <p className="text-xs text-muted-foreground mt-1">
@@ -157,7 +157,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
 
           <Button
             type="submit"
-            className="w-full gradient-emerald text-white"
+            className="w-full gradient-emerald text-white h-11"
             disabled={loading}
           >
             {loading
@@ -168,7 +168,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
           </Button>
         </form>
 
-        <div className="mt-6 text-center">
+        <div className="mt-5 sm:mt-6 text-center">
           <button
             onClick={() => setIsLogin(!isLogin)}
             className="text-sm text-primary hover:underline"
