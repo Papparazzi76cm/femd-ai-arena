@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { Users, Calendar, Palette, Loader2, Search, MapPin } from 'lucide-react';
+import { TeamLogo } from '@/components/TeamLogo';
 
 export const TeamsPage = () => {
   const navigate = useNavigate();

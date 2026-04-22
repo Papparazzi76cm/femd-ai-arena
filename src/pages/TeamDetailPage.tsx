@@ -17,6 +17,7 @@ import { useToast } from '@/hooks/use-toast';
 import { ArrowLeft, Users, Trophy, Calendar, Palette, Loader2, Image, TrendingUp, Target, Shield, MapPin, ChevronDown, Clock, Building2, FileText } from 'lucide-react';
 import { BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { FEMDTournamentHistory } from '@/components/FEMDTournamentHistory';
+import { TeamLogo } from '@/components/TeamLogo';
 
 interface TournamentRoster {
   eventId: string;
