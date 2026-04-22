@@ -568,45 +568,45 @@ export function TournamentDetailPage() {
 
 
   return (
-    <div className="min-h-screen py-20">
-      <div className="container mx-auto px-4">
+    <div className="min-h-screen py-12 sm:py-20">
+      <div className="container mx-auto px-3 sm:px-4">
         {/* Back Button */}
         <Link to="/torneos">
-          <Button variant="ghost" className="mb-6">
+          <Button variant="ghost" size="sm" className="mb-4 sm:mb-6 h-9">
             <ArrowLeft className="h-4 w-4 mr-2" />
-            Volver a Torneos
+            <span className="text-sm">Volver a Torneos</span>
           </Button>
         </Link>
 
         {/* Tournament Winner Banner */}
         {tournamentWinner && (
-          <Card className="mb-8 bg-gradient-to-r from-yellow-500/20 via-yellow-400/10 to-yellow-500/20 border-yellow-500/50 animate-fade-in">
-            <CardContent className="py-6">
-              <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-                <Crown className="h-10 w-10 text-yellow-500" />
+          <Card className="mb-6 sm:mb-8 bg-gradient-to-r from-yellow-500/20 via-yellow-400/10 to-yellow-500/20 border-yellow-500/50 animate-fade-in">
+            <CardContent className="py-4 sm:py-6 px-3 sm:px-6">
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4">
+                <Crown className="h-7 w-7 sm:h-10 sm:w-10 text-yellow-500 flex-shrink-0" />
                 <div className="text-center sm:text-left">
-                  <p className="text-sm text-muted-foreground">Campeón del Torneo</p>
-                  <div className="flex items-center gap-3 mt-1">
+                  <p className="text-xs sm:text-sm text-muted-foreground">Campeón del Torneo</p>
+                  <div className="flex items-center gap-2 sm:gap-3 mt-1 justify-center sm:justify-start">
                     {tournamentWinner.logo_url && (
                       <img
                         src={tournamentWinner.logo_url}
                         alt={tournamentWinner.name}
-                        className="h-12 w-12 object-contain"
+                        className="h-9 w-9 sm:h-12 sm:w-12 object-contain"
                       />
                     )}
-                    <h2 className="text-2xl font-bold text-foreground">{tournamentWinner.name}</h2>
+                    <h2 className="text-lg sm:text-2xl font-bold text-foreground">{tournamentWinner.name}</h2>
                   </div>
                 </div>
-                <Crown className="h-10 w-10 text-yellow-500" />
+                <Crown className="hidden sm:block h-10 w-10 text-yellow-500" />
               </div>
             </CardContent>
           </Card>
         )}
 
         {/* Hero Section */}
-        <div className="mb-12 animate-fade-in">
+        <div className="mb-8 sm:mb-12 animate-fade-in">
           {event.poster_url && (
-            <div className="mb-6 rounded-lg overflow-hidden max-w-3xl mx-auto">
+            <div className="mb-4 sm:mb-6 rounded-lg overflow-hidden max-w-3xl mx-auto">
               <img
                 src={event.poster_url}
                 alt={event.title}
@@ -619,27 +619,27 @@ export function TournamentDetailPage() {
           )}
           
           <div className="text-center">
-            <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-4">
+            <h1 className="text-2xl sm:text-4xl md:text-5xl font-bold text-foreground mb-3 sm:mb-4 leading-tight">
               {event.title}
             </h1>
             
-            <div className="flex flex-wrap items-center justify-center gap-4 text-muted-foreground mb-4">
-              <div className="flex items-center gap-2">
-                <Calendar className="h-5 w-5 text-primary" />
+            <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-muted-foreground mb-3 sm:mb-4 text-sm sm:text-base">
+              <div className="flex items-center gap-1.5 sm:gap-2">
+                <Calendar className="h-4 w-4 sm:h-5 sm:w-5 text-primary flex-shrink-0" />
                 <span>
                   {format(new Date(event.date), "d 'de' MMMM, yyyy", { locale: es })}
                 </span>
               </div>
               {event.location && (
-                <div className="flex items-center gap-2">
-                  <MapPin className="h-5 w-5 text-primary" />
-                  <span>{event.location}</span>
+                <div className="flex items-center gap-1.5 sm:gap-2">
+                  <MapPin className="h-4 w-4 sm:h-5 sm:w-5 text-primary flex-shrink-0" />
+                  <span className="text-center">{event.location}</span>
                 </div>
               )}
             </div>
 
             {event.description && (
-              <p className="text-lg text-muted-foreground max-w-3xl mx-auto">
+              <p className="text-sm sm:text-lg text-muted-foreground max-w-3xl mx-auto px-2">
                 {event.description}
               </p>
             )}
@@ -648,25 +648,25 @@ export function TournamentDetailPage() {
 
         {/* Tabs */}
         <Tabs defaultValue="bracket" className="w-full">
-          <TabsList className="grid w-full grid-cols-3 md:grid-cols-5 gap-1 h-auto p-1 mb-8">
-            <TabsTrigger value="bracket" className="text-xs sm:text-sm py-2 px-2 sm:px-4">
-              <Trophy className="h-4 w-4 mr-1 sm:mr-2 flex-shrink-0" />
+          <TabsList className="grid w-full grid-cols-5 gap-0.5 sm:gap-1 h-auto p-1 mb-6 sm:mb-8">
+            <TabsTrigger value="bracket" className="flex-col sm:flex-row text-[10px] sm:text-sm py-2 px-1 sm:px-4 gap-0.5 sm:gap-0 min-h-[48px]">
+              <Trophy className="h-4 w-4 sm:mr-2 flex-shrink-0" />
               <span className="truncate">Cuadro</span>
             </TabsTrigger>
-            <TabsTrigger value="teams" className="text-xs sm:text-sm py-2 px-2 sm:px-4">
-              <Users className="h-4 w-4 mr-1 sm:mr-2 flex-shrink-0" />
+            <TabsTrigger value="teams" className="flex-col sm:flex-row text-[10px] sm:text-sm py-2 px-1 sm:px-4 gap-0.5 sm:gap-0 min-h-[48px]">
+              <Users className="h-4 w-4 sm:mr-2 flex-shrink-0" />
               <span className="truncate">Equipos</span>
             </TabsTrigger>
-            <TabsTrigger value="standings" className="text-xs sm:text-sm py-2 px-2 sm:px-4">
-              <Target className="h-4 w-4 mr-1 sm:mr-2 flex-shrink-0" />
-              <span className="truncate">Clasificación</span>
+            <TabsTrigger value="standings" className="flex-col sm:flex-row text-[10px] sm:text-sm py-2 px-1 sm:px-4 gap-0.5 sm:gap-0 min-h-[48px]">
+              <Target className="h-4 w-4 sm:mr-2 flex-shrink-0" />
+              <span className="truncate">Clasif.</span>
             </TabsTrigger>
-            <TabsTrigger value="stats" className="text-xs sm:text-sm py-2 px-2 sm:px-4">
-              <Medal className="h-4 w-4 mr-1 sm:mr-2 flex-shrink-0" />
-              <span className="truncate">Estadísticas</span>
+            <TabsTrigger value="stats" className="flex-col sm:flex-row text-[10px] sm:text-sm py-2 px-1 sm:px-4 gap-0.5 sm:gap-0 min-h-[48px]">
+              <Medal className="h-4 w-4 sm:mr-2 flex-shrink-0" />
+              <span className="truncate">Stats</span>
             </TabsTrigger>
-            <TabsTrigger value="gallery" className="text-xs sm:text-sm py-2 px-2 sm:px-4">
-              <ImageIcon className="h-4 w-4 mr-1 sm:mr-2 flex-shrink-0" />
+            <TabsTrigger value="gallery" className="flex-col sm:flex-row text-[10px] sm:text-sm py-2 px-1 sm:px-4 gap-0.5 sm:gap-0 min-h-[48px]">
+              <ImageIcon className="h-4 w-4 sm:mr-2 flex-shrink-0" />
               <span className="truncate">Galería</span>
             </TabsTrigger>
           </TabsList>

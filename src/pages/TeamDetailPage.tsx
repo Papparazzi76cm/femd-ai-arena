@@ -448,59 +448,59 @@ export const TeamDetailPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-muted/20 to-background py-16">
-      <div className="container mx-auto px-4">
+    <div className="min-h-screen bg-gradient-to-b from-muted/20 to-background py-8 sm:py-16">
+      <div className="container mx-auto px-3 sm:px-4">
         {/* Back Button */}
-        <div className="flex gap-2 mb-6">
-          <Button variant="ghost" onClick={() => navigate('/equipos')}>
+        <div className="flex flex-wrap gap-2 mb-4 sm:mb-6">
+          <Button variant="ghost" size="sm" onClick={() => navigate('/equipos')} className="h-9">
             <ArrowLeft className="w-4 h-4 mr-2" />
-            Volver a clubes
+            <span className="text-sm">Volver a clubes</span>
           </Button>
           {team.parent_team_id && (
-            <Button variant="outline" onClick={() => navigate(`/equipos/${team.parent_team_id}`)}>
+            <Button variant="outline" size="sm" onClick={() => navigate(`/equipos/${team.parent_team_id}`)} className="h-9">
               <Shield className="w-4 h-4 mr-2" />
-              Ver club principal
+              <span className="text-sm">Ver club principal</span>
             </Button>
           )}
         </div>
 
         {/* Team Header */}
-        <Card className="mb-8 overflow-hidden border-2">
-          <CardHeader className="bg-gradient-to-r from-primary/10 to-primary/5">
-            <div className="flex flex-col md:flex-row items-center gap-6">
+        <Card className="mb-6 sm:mb-8 overflow-hidden border-2">
+          <CardHeader className="bg-gradient-to-r from-primary/10 to-primary/5 p-4 sm:p-6">
+            <div className="flex flex-col md:flex-row items-center gap-4 sm:gap-6">
               <div className="flex-shrink-0">
                 {team.logo_url ? (
-                  <div className="w-32 h-32 rounded-full bg-background flex items-center justify-center overflow-hidden ring-4 ring-background shadow-xl">
-                    <img src={team.logo_url} alt={team.name} className="w-full h-full object-contain p-4" />
+                  <div className="w-24 h-24 sm:w-32 sm:h-32 rounded-full bg-background flex items-center justify-center overflow-hidden ring-4 ring-background shadow-xl">
+                    <img src={team.logo_url} alt={team.name} className="w-full h-full object-contain p-3 sm:p-4" />
                   </div>
                 ) : (
-                  <div className="w-32 h-32 rounded-full bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center ring-4 ring-background shadow-xl">
-                    <Users className="w-16 h-16 text-primary" />
+                  <div className="w-24 h-24 sm:w-32 sm:h-32 rounded-full bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center ring-4 ring-background shadow-xl">
+                    <Users className="w-12 h-12 sm:w-16 sm:h-16 text-primary" />
                   </div>
                 )}
               </div>
-              <div className="flex-1 text-center md:text-left">
-                <CardTitle className="text-4xl mb-1">{team.name}</CardTitle>
+              <div className="flex-1 text-center md:text-left min-w-0">
+                <CardTitle className="text-2xl sm:text-4xl mb-1 break-words">{team.name}</CardTitle>
                 {location && (
-                  <p className="text-muted-foreground text-sm mb-3 flex items-center gap-1 justify-center md:justify-start">
-                    <MapPin className="w-3.5 h-3.5" />
-                    {location}
+                  <p className="text-muted-foreground text-xs sm:text-sm mb-2 sm:mb-3 flex items-center gap-1 justify-center md:justify-start">
+                    <MapPin className="w-3.5 h-3.5 flex-shrink-0" />
+                    <span className="truncate">{location}</span>
                   </p>
                 )}
                 {team.description && (
-                  <p className="text-muted-foreground text-lg mb-4">{team.description}</p>
+                  <p className="text-muted-foreground text-sm sm:text-lg mb-3 sm:mb-4">{team.description}</p>
                 )}
-                <div className="flex flex-wrap gap-4 justify-center md:justify-start">
+                <div className="flex flex-wrap gap-3 sm:gap-4 justify-center md:justify-start">
                   {team.founded_year && (
                     <div className="flex items-center gap-2">
                       <Calendar className="w-4 h-4 text-muted-foreground" />
-                      <span className="text-sm">Fundado en {team.founded_year}</span>
+                      <span className="text-xs sm:text-sm">Fundado en {team.founded_year}</span>
                     </div>
                   )}
                   {team.colors && (
                     <div className="flex items-center gap-2">
                       <Palette className="w-4 h-4 text-muted-foreground" />
-                      <span className="text-sm">Colores: {team.colors}</span>
+                      <span className="text-xs sm:text-sm">Colores: {team.colors}</span>
                     </div>
                   )}
                 </div>
@@ -511,7 +511,7 @@ export const TeamDetailPage = () => {
 
         {/* FEMD Tournament History - now uses event_teams-based events */}
         {events.length > 0 && (
-          <div className="mb-8">
+          <div className="mb-6 sm:mb-8">
             <FEMDTournamentHistory
               events={events.map(e => ({ id: e.id, title: e.title, date: e.date }))}
               title="Participación en Torneos FEMD"
@@ -522,28 +522,28 @@ export const TeamDetailPage = () => {
 
         {/* Tabs */}
         <Tabs defaultValue={childTeams.length > 0 ? "equipos" : "estadisticas"} className="w-full">
-          <TabsList className={`grid w-full ${childTeams.length > 0 ? 'grid-cols-5' : 'grid-cols-4'} lg:w-auto mb-8`}>
+          <TabsList className={`grid w-full ${childTeams.length > 0 ? 'grid-cols-5' : 'grid-cols-4'} gap-0.5 sm:gap-1 h-auto p-1 lg:w-auto mb-6 sm:mb-8`}>
             {childTeams.length > 0 && (
-              <TabsTrigger value="equipos" className="flex items-center gap-2">
-                <Shield className="w-4 h-4" />
-                Equipos
+              <TabsTrigger value="equipos" className="flex-col sm:flex-row items-center gap-0.5 sm:gap-2 text-[10px] sm:text-sm py-2 px-1 sm:px-3 min-h-[48px]">
+                <Shield className="w-4 h-4 flex-shrink-0" />
+                <span className="truncate">Equipos</span>
               </TabsTrigger>
             )}
-            <TabsTrigger value="estadisticas" className="flex items-center gap-2">
-              <TrendingUp className="w-4 h-4" />
-              Estadísticas
+            <TabsTrigger value="estadisticas" className="flex-col sm:flex-row items-center gap-0.5 sm:gap-2 text-[10px] sm:text-sm py-2 px-1 sm:px-3 min-h-[48px]">
+              <TrendingUp className="w-4 h-4 flex-shrink-0" />
+              <span className="truncate">Stats</span>
             </TabsTrigger>
-            <TabsTrigger value="partidos" className="flex items-center gap-2">
-              <Trophy className="w-4 h-4" />
-              Partidos
+            <TabsTrigger value="partidos" className="flex-col sm:flex-row items-center gap-0.5 sm:gap-2 text-[10px] sm:text-sm py-2 px-1 sm:px-3 min-h-[48px]">
+              <Trophy className="w-4 h-4 flex-shrink-0" />
+              <span className="truncate">Partidos</span>
             </TabsTrigger>
-            <TabsTrigger value="plantillas" className="flex items-center gap-2">
-              <Users className="w-4 h-4" />
-              Plantillas
+            <TabsTrigger value="plantillas" className="flex-col sm:flex-row items-center gap-0.5 sm:gap-2 text-[10px] sm:text-sm py-2 px-1 sm:px-3 min-h-[48px]">
+              <Users className="w-4 h-4 flex-shrink-0" />
+              <span className="truncate">Plantilla</span>
             </TabsTrigger>
-            <TabsTrigger value="galeria" className="flex items-center gap-2">
-              <Image className="w-4 h-4" />
-              Galería
+            <TabsTrigger value="galeria" className="flex-col sm:flex-row items-center gap-0.5 sm:gap-2 text-[10px] sm:text-sm py-2 px-1 sm:px-3 min-h-[48px]">
+              <Image className="w-4 h-4 flex-shrink-0" />
+              <span className="truncate">Galería</span>
             </TabsTrigger>
           </TabsList>
 
