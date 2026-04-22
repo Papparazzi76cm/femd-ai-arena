@@ -70,15 +70,15 @@ export function Header() {
             : "bg-transparent"
         }`}
       >
-        <div className="container mx-auto px-4">
-          <div className="flex items-center justify-between h-20">
+        <div className="container mx-auto px-3 sm:px-4">
+          <div className="flex items-center justify-between h-16 sm:h-20">
             {/* Logo */}
           <div className="flex items-center space-x-2">
             <Link to="/" className="flex items-center space-x-3">
               <img 
                 src={isOverHero || theme === "dark" ? logoBlanco : logoNegro} 
                 alt="FEMD Eventos" 
-                className="h-12 w-auto"
+                className="h-9 sm:h-12 w-auto"
               />
             </Link>
           </div>
@@ -150,14 +150,14 @@ export function Header() {
 
         {/* Mobile Menu */}
         {isMobileMenuOpen && (
-          <div className="md:hidden fixed inset-0 top-20 bg-background z-40 animate-fade-in opacity-100">
-            <nav className="flex flex-col p-6 space-y-6 bg-background">
+          <div className="md:hidden fixed inset-0 top-16 bg-background z-40 animate-fade-in opacity-100 overflow-y-auto">
+            <nav className="flex flex-col p-5 space-y-4 bg-background pb-10">
               {navLinks.map((link) => (
                 <NavLink
                   key={link.name}
                   to={link.href}
                   onClick={() => setIsMobileMenuOpen(false)}
-                  className={`text-lg transition-colors flex items-center gap-2 ${
+                  className={`text-base transition-colors flex items-center gap-2 py-2 ${
                     (link as any).isLive 
                       ? 'text-red-600 hover:text-red-700 dark:text-red-500' 
                       : 'text-foreground hover:text-primary'
@@ -177,14 +177,14 @@ export function Header() {
                 <NavLink
                   to={adminLink.href}
                   onClick={() => setIsMobileMenuOpen(false)}
-                  className="text-lg text-emerald-600 hover:text-emerald-700 transition-colors font-semibold"
+                  className="text-base text-emerald-600 hover:text-emerald-700 transition-colors font-semibold py-2"
                   activeClassName="text-emerald-700 font-bold"
                 >
                   {adminLink.name}
                 </NavLink>
               )}
-              <div className="pt-4 border-t border-border">
-                <div className="flex items-center justify-between mb-4">
+              <div className="pt-3 border-t border-border">
+                <div className="flex items-center justify-between mb-3">
                   <span className="text-sm text-muted-foreground">Tema</span>
                   <ThemeToggle />
                 </div>

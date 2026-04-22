@@ -173,14 +173,15 @@ export function TournamentsPage() {
   // Vista de detalle de un torneo específico
   if (selectedBrand) {
     return (
-      <div className="min-h-screen py-20">
-        <div className="container mx-auto px-4">
+      <div className="min-h-screen pt-20 pb-12 sm:pb-20">
+        <div className="container mx-auto px-3 sm:px-4">
           {/* Header con botón de volver */}
-          <div className="mb-8">
+          <div className="mb-6 sm:mb-8">
             <Button
               variant="ghost"
+              size="sm"
               onClick={() => setSearchParams({})}
-              className="mb-4"
+              className="mb-2 sm:mb-4"
             >
               <ArrowLeft className="mr-2 h-4 w-4" />
               Volver a Torneos
@@ -188,36 +189,36 @@ export function TournamentsPage() {
           </div>
 
           {/* Torneo Header */}
-          <div className="text-center mb-12 animate-fade-in">
-            <div className="w-48 h-48 mx-auto mb-6 bg-card rounded-2xl p-4 shadow-lg flex items-center justify-center">
+          <div className="text-center mb-8 sm:mb-12 animate-fade-in">
+            <div className="w-32 h-32 sm:w-48 sm:h-48 mx-auto mb-4 sm:mb-6 bg-card rounded-2xl p-3 sm:p-4 shadow-lg flex items-center justify-center">
               <img
                 src={selectedBrand.logoUrl}
                 alt={selectedBrand.name}
                 className="max-w-full max-h-full object-contain"
               />
             </div>
-            <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-4">
+            <h1 className="text-2xl sm:text-4xl md:text-5xl font-bold text-foreground mb-3 sm:mb-4 px-2">
               {selectedBrand.name}
             </h1>
-            <p className="text-xl text-muted-foreground">
+            <p className="text-sm sm:text-xl text-muted-foreground px-2">
               Selecciona una edición para ver los detalles del torneo
             </p>
           </div>
 
           {/* Ediciones por temporada */}
           {seasonGroups.length > 0 ? (
-            <div className="space-y-12">
+            <div className="space-y-8 sm:space-y-12">
               {seasonGroups.map(({ season, events }) => (
                 <section key={season} className="animate-fade-in">
-                  <div className="flex items-center gap-3 mb-6">
-                    <Trophy className="h-6 w-6 text-primary" />
-                    <h2 className="text-2xl font-bold text-foreground">
+                  <div className="flex items-center gap-2 sm:gap-3 mb-4 sm:mb-6 flex-wrap">
+                    <Trophy className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
+                    <h2 className="text-xl sm:text-2xl font-bold text-foreground">
                       Temporada {season}
                     </h2>
-                    <Badge variant="secondary">{events.length} categorías</Badge>
+                    <Badge variant="secondary" className="text-xs">{events.length} categorías</Badge>
                   </div>
 
-                  <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
                     {events.map((event, index) => {
                       const isPast = new Date(event.date) < new Date();
                       return (
@@ -231,34 +232,34 @@ export function TournamentsPage() {
                             {!isPast && <div className="h-1 gradient-gold" />}
                             <div className="flex">
                               {/* Miniatura del cartel */}
-                              <div className="w-16 h-20 flex-shrink-0 overflow-hidden">
+                              <div className="w-16 h-20 sm:w-20 sm:h-24 flex-shrink-0 overflow-hidden">
                                 <TournamentThumbnail src={event.poster_url} alt={event.title} />
                               </div>
                               
                               {/* Contenido */}
-                              <div className="flex-1">
+                              <div className="flex-1 min-w-0">
                                 <CardHeader className="pb-2 pt-3 px-3">
                                   <div className="flex items-start justify-between gap-2">
-                                    <CardTitle className="text-base line-clamp-2">
+                                    <CardTitle className="text-sm sm:text-base line-clamp-2">
                                       {event.title.replace(selectedBrand.name, "").trim()}
                                     </CardTitle>
-                                    <Badge variant={isPast ? "outline" : "default"} className="shrink-0 text-xs">
+                                    <Badge variant={isPast ? "outline" : "default"} className="shrink-0 text-[10px] sm:text-xs">
                                       {isPast ? "Finalizado" : "Próximo"}
                                     </Badge>
                                   </div>
                                 </CardHeader>
                                 <CardContent className="space-y-1 pt-0 px-3 pb-3">
-                                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                                    <Calendar className="h-3 w-3 text-primary" />
-                                    <span>
+                                  <div className="flex items-center gap-2 text-[11px] sm:text-xs text-muted-foreground">
+                                    <Calendar className="h-3 w-3 text-primary flex-shrink-0" />
+                                    <span className="truncate">
                                       {format(new Date(event.date), "d 'de' MMMM, yyyy", {
                                         locale: es,
                                       })}
                                     </span>
                                   </div>
                                   {event.location && (
-                                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                                      <MapPin className="h-3 w-3 text-primary" />
+                                    <div className="flex items-center gap-2 text-[11px] sm:text-xs text-muted-foreground">
+                                      <MapPin className="h-3 w-3 text-primary flex-shrink-0" />
                                       <span className="line-clamp-1">{event.location}</span>
                                     </div>
                                   )}
@@ -288,25 +289,25 @@ export function TournamentsPage() {
 
   // Vista principal - Carrusel de torneos
   return (
-    <div className="min-h-screen py-20">
-      <div className="container mx-auto px-4">
+    <div className="min-h-screen pt-20 pb-12 sm:pb-20">
+      <div className="container mx-auto px-3 sm:px-4">
         {/* Hero Section */}
-        <div className="text-center mb-16 animate-fade-in">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full gradient-gold mb-6">
-            <Trophy className="h-8 w-8 text-white" />
+        <div className="text-center mb-10 sm:mb-16 animate-fade-in">
+          <div className="inline-flex items-center justify-center w-12 h-12 sm:w-16 sm:h-16 rounded-full gradient-gold mb-4 sm:mb-6">
+            <Trophy className="h-6 w-6 sm:h-8 sm:w-8 text-white" />
           </div>
-          <h1 className="text-5xl font-bold text-foreground mb-6">
+          <h1 className="text-3xl sm:text-5xl font-bold text-foreground mb-4 sm:mb-6">
             Nuestros Torneos
           </h1>
-          <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
+          <p className="text-sm sm:text-xl text-muted-foreground max-w-3xl mx-auto px-2">
             Descubre todos los torneos y eventos de fútbol que organizamos.
             Haz clic en un torneo para ver todas sus ediciones.
           </p>
         </div>
 
         {/* Tournament Brands Carousel */}
-        <section className="mb-20">
-          <div className="relative h-[400px] md:h-[450px] flex items-center justify-center">
+        <section className="mb-12 sm:mb-20">
+          <div className="relative h-[320px] sm:h-[400px] md:h-[450px] flex items-center justify-center">
             <div className="relative w-full h-full flex items-center justify-center perspective-container">
               {tournamentBrands.map((brand, index) => {
                 const position = getSlidePosition(index);
@@ -320,7 +321,7 @@ export function TournamentsPage() {
                     className="carousel-slide absolute transition-all duration-700 ease-out cursor-pointer"
                     style={{
                       transform: `
-                        translateX(${position * 280}px)
+                        translateX(${position * 200}px)
                         translateZ(${isCenter ? 0 : -200 - absPosition * 50}px)
                         rotateY(${position * -25}deg)
                         scale(${isCenter ? 1 : 0.8 - absPosition * 0.1})
@@ -331,10 +332,10 @@ export function TournamentsPage() {
                     }}
                   >
                     <div className={`
-                      w-[280px] md:w-[320px] h-[280px] md:h-[320px] 
+                      w-[200px] h-[200px] sm:w-[280px] sm:h-[280px] md:w-[320px] md:h-[320px] 
                       rounded-2xl overflow-hidden bg-card
                       ${isCenter ? "shadow-2xl ring-4 ring-primary/30 hover:ring-primary/60" : "shadow-lg"}
-                      transition-all duration-300 flex items-center justify-center p-8
+                      transition-all duration-300 flex items-center justify-center p-5 sm:p-8
                       group
                     `}>
                       <img
@@ -344,7 +345,7 @@ export function TournamentsPage() {
                       />
                     </div>
                     {isCenter && (
-                      <p className="text-center mt-4 text-lg font-semibold text-foreground max-w-[280px] mx-auto">
+                      <p className="text-center mt-3 sm:mt-4 text-sm sm:text-lg font-semibold text-foreground max-w-[200px] sm:max-w-[280px] mx-auto px-2">
                         {brand.name}
                       </p>
                     )}
@@ -357,24 +358,24 @@ export function TournamentsPage() {
             <Button
               variant="ghost"
               size="icon"
-              className="absolute left-4 md:left-8 z-50 w-12 h-12 rounded-full bg-background/80 backdrop-blur-sm hover:bg-primary hover:text-primary-foreground shadow-lg"
+              className="absolute left-1 sm:left-4 md:left-8 z-50 w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-background/80 backdrop-blur-sm hover:bg-primary hover:text-primary-foreground shadow-lg"
               onClick={prevBrand}
             >
-              <ChevronLeft className="h-6 w-6" />
+              <ChevronLeft className="h-5 w-5 sm:h-6 sm:w-6" />
             </Button>
             
             <Button
               variant="ghost"
               size="icon"
-              className="absolute right-4 md:right-8 z-50 w-12 h-12 rounded-full bg-background/80 backdrop-blur-sm hover:bg-primary hover:text-primary-foreground shadow-lg"
+              className="absolute right-1 sm:right-4 md:right-8 z-50 w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-background/80 backdrop-blur-sm hover:bg-primary hover:text-primary-foreground shadow-lg"
               onClick={nextBrand}
             >
-              <ChevronRight className="h-6 w-6" />
+              <ChevronRight className="h-5 w-5 sm:h-6 sm:w-6" />
             </Button>
           </div>
 
           {/* Dots Indicator */}
-          <div className="flex justify-center gap-2 mt-6">
+          <div className="flex justify-center gap-2 mt-4 sm:mt-6">
             {tournamentBrands.map((_, index) => (
               <button
                 key={index}
