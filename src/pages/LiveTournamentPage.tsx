@@ -12,6 +12,7 @@ import { MatchTimer } from '@/components/referee/MatchTimer';
 import { Team, Participant } from '@/types/database';
 import { useMatchNotifications } from '@/hooks/useMatchNotifications';
 import { useGoalSound } from '@/hooks/useGoalSound';
+import { TeamLogo } from '@/components/TeamLogo';
 
 interface EventTeam {
   id: string;
