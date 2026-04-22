@@ -491,19 +491,19 @@ export const MesaMatchPanel = () => {
   // Pending: show accept/reject
   if (isPending) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-muted/30 to-background flex items-center justify-center p-4">
-        <Card className="max-w-lg w-full p-6 space-y-6">
+      <div className="min-h-screen bg-gradient-to-b from-muted/30 to-background flex items-center justify-center p-3 sm:p-4">
+        <Card className="max-w-lg w-full p-4 sm:p-6 space-y-4 sm:space-y-6">
           <div className="text-center">
-            <Trophy className="w-12 h-12 text-primary mx-auto mb-3" />
-            <h1 className="text-2xl font-bold">Asignación de Mesa</h1>
-            <p className="text-muted-foreground mt-1">Hola {assignment.mesa_name}, se te ha asignado un partido</p>
+            <Trophy className="w-10 h-10 sm:w-12 sm:h-12 text-primary mx-auto mb-3" />
+            <h1 className="text-xl sm:text-2xl font-bold">Asignación de Mesa</h1>
+            <p className="text-sm sm:text-base text-muted-foreground mt-1">Hola {assignment.mesa_name}, se te ha asignado un partido</p>
           </div>
 
-          <div className="space-y-3 bg-muted/50 rounded-lg p-4">
+          <div className="space-y-3 bg-muted/50 rounded-lg p-3 sm:p-4 text-sm">
             {event && (
               <div className="flex items-center gap-2">
                 <Trophy className="w-4 h-4 text-primary shrink-0" />
-                <span className="font-semibold">{event.title}</span>
+                <span className="font-semibold break-words">{event.title}</span>
               </div>
             )}
             {category && (
@@ -512,26 +512,28 @@ export const MesaMatchPanel = () => {
               </div>
             )}
             <div className="text-center py-3">
-              <span className="font-bold text-lg">{homeTeam?.name || '?'}</span>
-              <span className="mx-3 text-muted-foreground">vs</span>
-              <span className="font-bold text-lg">{awayTeam?.name || '?'}</span>
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-3">
+                <span className="font-bold text-base sm:text-lg break-words">{homeTeam?.name || '?'}</span>
+                <span className="text-muted-foreground text-sm">vs</span>
+                <span className="font-bold text-base sm:text-lg break-words">{awayTeam?.name || '?'}</span>
+              </div>
             </div>
             {facility && (
-              <div className="flex items-center gap-2">
-                <Building2 className="w-4 h-4 text-muted-foreground shrink-0" />
-                <span>{facility.name}{field ? ` - ${field.name}` : ''}</span>
+              <div className="flex items-start gap-2">
+                <Building2 className="w-4 h-4 text-muted-foreground shrink-0 mt-0.5" />
+                <span className="break-words">{facility.name}{field ? ` - ${field.name}` : ''}</span>
               </div>
             )}
             {facility?.city && (
-              <div className="flex items-center gap-2">
-                <MapPin className="w-4 h-4 text-muted-foreground shrink-0" />
-                <span>{facility.address ? `${facility.address}, ` : ''}{facility.city}</span>
+              <div className="flex items-start gap-2">
+                <MapPin className="w-4 h-4 text-muted-foreground shrink-0 mt-0.5" />
+                <span className="break-words">{facility.address ? `${facility.address}, ` : ''}{facility.city}</span>
               </div>
             )}
             {match.match_date && (
               <div className="flex items-center gap-2">
                 <Calendar className="w-4 h-4 text-muted-foreground shrink-0" />
-                <span>
+                <span className="text-xs sm:text-sm">
                   {new Date(match.match_date).toLocaleDateString('es-ES', {
                     weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
                   })}
@@ -549,15 +551,15 @@ export const MesaMatchPanel = () => {
               </div>
             )}
             <div className="flex items-center gap-2">
-              <span className="text-sm text-muted-foreground">Duración: {match.match_duration_minutes} min</span>
+              <span className="text-xs sm:text-sm text-muted-foreground">Duración: {match.match_duration_minutes} min</span>
             </div>
           </div>
 
-          <div className="flex gap-3">
+          <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
             <Button
               onClick={handleReject}
               variant="outline"
-              className="flex-1"
+              className="flex-1 h-11"
               disabled={saving}
             >
               <XCircle className="w-4 h-4 mr-2" />
@@ -565,7 +567,7 @@ export const MesaMatchPanel = () => {
             </Button>
             <Button
               onClick={handleAccept}
-              className="flex-1 bg-emerald-600 hover:bg-emerald-700"
+              className="flex-1 h-11 bg-emerald-600 hover:bg-emerald-700"
               disabled={saving}
             >
               <CheckCircle className="w-4 h-4 mr-2" />
