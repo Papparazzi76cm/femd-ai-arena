@@ -14,6 +14,7 @@ import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { TournamentGalleryDisplay } from "@/components/TournamentGalleryDisplay";
 import { TournamentGalleryManager } from "@/components/admin/TournamentGalleryManager";
+import { TeamLogo } from "@/components/TeamLogo";
 
 interface EventTeam {
   id: string;
