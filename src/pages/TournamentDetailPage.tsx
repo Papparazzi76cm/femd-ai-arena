@@ -1026,29 +1026,29 @@ export function TournamentDetailPage() {
                                   key={team.team_id}
                                   className={index === 0 ? "border-l-4 border-l-primary bg-primary/5" : ""}
                                 >
-                                  <TableCell className="font-bold text-muted-foreground">
-                                    {String(index + 1).padStart(2, '0')}
+                                  <TableCell className="font-bold text-muted-foreground px-1 sm:px-4 text-center text-xs sm:text-sm">
+                                    {index + 1}
                                   </TableCell>
-                                  <TableCell>
-                                    <Link to={`/equipos/${team.team_id}`} className="flex items-center gap-2 hover:text-primary transition-colors">
+                                  <TableCell className="px-2 sm:px-4 max-w-[140px] sm:max-w-none">
+                                    <Link to={`/equipos/${team.team_id}`} className="flex items-center gap-2 hover:text-primary transition-colors min-w-0">
                                       {team.teams.logo_url && (
                                         <img
                                           src={team.teams.logo_url}
                                           alt={team.teams.name}
-                                          className="h-6 w-6 object-contain"
+                                          className="h-5 w-5 sm:h-6 sm:w-6 object-contain shrink-0"
                                         />
                                       )}
-                                      <span className="font-medium">{team.teams.name}</span>
+                                      <span className="font-medium text-xs sm:text-sm truncate">{team.teams.name}</span>
                                     </Link>
                                   </TableCell>
-                                  <TableCell className="text-center font-bold">{team.points}</TableCell>
-                                  <TableCell className="text-center">{team.matches_played}</TableCell>
-                                  <TableCell className="text-center">{team.wins}</TableCell>
-                                  <TableCell className="text-center text-muted-foreground">{team.draws}</TableCell>
-                                  <TableCell className="text-center text-destructive">{team.losses}</TableCell>
-                                  <TableCell className="text-center text-primary">{team.goals_for}</TableCell>
-                                  <TableCell className="text-center text-destructive">{team.goals_against}</TableCell>
-                                  <TableCell className={`text-center font-medium ${team.goal_difference > 0 ? 'text-green-600' : team.goal_difference < 0 ? 'text-red-600' : ''}`}>
+                                  <TableCell className="text-center font-bold px-1 sm:px-4">{team.points}</TableCell>
+                                  <TableCell className="text-center px-1 sm:px-4">{team.matches_played}</TableCell>
+                                  <TableCell className="text-center px-1 sm:px-4">{team.wins}</TableCell>
+                                  <TableCell className="text-center text-muted-foreground px-1 sm:px-4 hidden sm:table-cell">{team.draws}</TableCell>
+                                  <TableCell className="text-center text-destructive px-1 sm:px-4">{team.losses}</TableCell>
+                                  <TableCell className="text-center text-primary px-1 sm:px-4 hidden md:table-cell">{team.goals_for}</TableCell>
+                                  <TableCell className="text-center text-destructive px-1 sm:px-4 hidden md:table-cell">{team.goals_against}</TableCell>
+                                  <TableCell className={`text-center font-medium px-1 sm:px-4 hidden sm:table-cell ${team.goal_difference > 0 ? 'text-green-600' : team.goal_difference < 0 ? 'text-red-600' : ''}`}>
                                     {team.goal_difference > 0 ? `+${team.goal_difference}` : team.goal_difference}
                                   </TableCell>
                                 </TableRow>
@@ -1056,6 +1056,9 @@ export function TournamentDetailPage() {
                             </TableBody>
                           </Table>
                         </div>
+                        <p className="text-[10px] text-muted-foreground sm:hidden px-2">
+                          Vista reducida. Gira el dispositivo para ver E, GF, GC y DG.
+                        </p>
                       </div>
                     ))}
                 </CardContent>
