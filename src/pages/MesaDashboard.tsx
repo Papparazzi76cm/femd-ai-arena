@@ -321,7 +321,7 @@ export const MesaDashboard = () => {
                 placeholder="Buscar equipo..."
                 value={searchText}
                 onChange={e => setSearchText(e.target.value)}
-                className="pl-9"
+                className="pl-9 h-11"
               />
             </div>
           </div>
@@ -329,12 +329,12 @@ export const MesaDashboard = () => {
 
         {/* Matches */}
         {filteredMatches.length === 0 ? (
-          <Card className="p-12 text-center">
-            <AlertCircle className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-            <h3 className="text-xl font-semibold mb-2">
+          <Card className="p-6 sm:p-12 text-center">
+            <AlertCircle className="w-10 h-10 sm:w-12 sm:h-12 text-muted-foreground mx-auto mb-4" />
+            <h3 className="text-lg sm:text-xl font-semibold mb-2">
               {hasActiveFilters ? 'No hay partidos con estos filtros' : 'No hay partidos disponibles'}
             </h3>
-            <p className="text-muted-foreground">
+            <p className="text-sm sm:text-base text-muted-foreground">
               {hasActiveFilters
                 ? 'Prueba a cambiar los filtros para ver otros partidos.'
                 : isAdmin
@@ -346,14 +346,14 @@ export const MesaDashboard = () => {
             )}
           </Card>
         ) : (
-          <div className="space-y-8">
+          <div className="space-y-6 sm:space-y-8">
             {liveMatches.length > 0 && (
               <div>
-                <h2 className="text-2xl font-bold mb-4 flex items-center gap-2 text-red-600">
-                  <span className="w-3 h-3 bg-red-500 rounded-full animate-pulse" />
+                <h2 className="text-lg sm:text-2xl font-bold mb-3 sm:mb-4 flex items-center gap-2 text-red-600">
+                  <span className="w-2.5 h-2.5 sm:w-3 sm:h-3 bg-red-500 rounded-full animate-pulse" />
                   Partidos en Juego
                 </h2>
-                <div className="grid gap-4">
+                <div className="grid gap-3 sm:gap-4">
                   {liveMatches.map(match => (
                     <MatchCard key={match.id} match={match} homeTeamName={getTeamName(match.home_team_id)} awayTeamName={getTeamName(match.away_team_id)} homeTeamId={match.home_team_id} awayTeamId={match.away_team_id} onUpdate={handleMatchUpdate} />
                   ))}
@@ -363,8 +363,8 @@ export const MesaDashboard = () => {
 
             {upcomingMatches.length > 0 && (
               <div>
-                <h2 className="text-2xl font-bold mb-4">Partidos Pendientes</h2>
-                <div className="grid gap-4">
+                <h2 className="text-lg sm:text-2xl font-bold mb-3 sm:mb-4">Partidos Pendientes</h2>
+                <div className="grid gap-3 sm:gap-4">
                   {upcomingMatches.map(match => (
                     <MatchCard key={match.id} match={match} homeTeamName={getTeamName(match.home_team_id)} awayTeamName={getTeamName(match.away_team_id)} homeTeamId={match.home_team_id} awayTeamId={match.away_team_id} onUpdate={handleMatchUpdate} />
                   ))}
@@ -374,8 +374,8 @@ export const MesaDashboard = () => {
 
             {completedMatches.length > 0 && (
               <div>
-                <h2 className="text-2xl font-bold mb-4">Partidos Completados</h2>
-                <div className="grid gap-4">
+                <h2 className="text-lg sm:text-2xl font-bold mb-3 sm:mb-4">Partidos Completados</h2>
+                <div className="grid gap-3 sm:gap-4">
                   {completedMatches.map(match => (
                     <MatchCard key={match.id} match={match} homeTeamName={getTeamName(match.home_team_id)} awayTeamName={getTeamName(match.away_team_id)} homeTeamId={match.home_team_id} awayTeamId={match.away_team_id} onUpdate={handleMatchUpdate} readOnly={!isAdmin} />
                   ))}
