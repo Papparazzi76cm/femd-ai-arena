@@ -49,8 +49,8 @@ export function Footer() {
             <h3 className="font-semibold text-foreground mb-4">Contacto</h3>
             <ul className="space-y-3">
               <li className="flex items-center space-x-2 text-sm text-muted-foreground">
-                <Mail className="h-4 w-4 text-primary" />
-                <span>info@femdeventos.com</span>
+                <Mail className="h-4 w-4 text-primary flex-shrink-0" />
+                <span className="break-all">info@femdeventos.com</span>
               </li>
               <li className="flex items-center space-x-2 text-sm text-muted-foreground">
                 <Phone className="h-4 w-4 text-primary" />
