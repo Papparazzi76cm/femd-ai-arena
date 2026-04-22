@@ -159,21 +159,21 @@ export const ChatBot = () => {
       {/* Floating Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="fixed bottom-6 right-6 z-50 bg-emerald-600 hover:bg-emerald-700 text-white rounded-full p-4 shadow-lg transition-all duration-300 hover:scale-110"
+        className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-50 bg-emerald-600 hover:bg-emerald-700 text-white rounded-full p-3 sm:p-4 shadow-lg transition-all duration-300 hover:scale-110"
         aria-label="Chat"
       >
-        {isOpen ? <X size={24} /> : <MessageCircle size={24} />}
+        {isOpen ? <X size={22} /> : <MessageCircle size={22} />}
       </button>
 
       {/* Chat Window */}
       {isOpen && (
-        <div className="fixed bottom-24 right-6 z-50 w-96 h-[500px] bg-background border border-border rounded-lg shadow-2xl flex flex-col overflow-hidden animate-in fade-in slide-in-from-bottom-5 duration-300">
+        <div className="fixed bottom-20 right-3 left-3 sm:bottom-24 sm:right-6 sm:left-auto z-50 sm:w-96 h-[70vh] max-h-[500px] sm:h-[500px] bg-background border border-border rounded-lg shadow-2xl flex flex-col overflow-hidden animate-in fade-in slide-in-from-bottom-5 duration-300">
           {/* Header */}
-          <div className="bg-emerald-600 text-white p-4 flex items-center gap-3">
-            <MessageCircle size={24} />
-            <div>
-              <h3 className="font-semibold">Asistente FEMD</h3>
-              <p className="text-xs text-emerald-100">Siempre aquí para ayudarte</p>
+          <div className="bg-emerald-600 text-white p-3 sm:p-4 flex items-center gap-3">
+            <MessageCircle size={22} className="flex-shrink-0" />
+            <div className="min-w-0">
+              <h3 className="font-semibold text-sm sm:text-base truncate">Asistente FEMD</h3>
+              <p className="text-xs text-emerald-100 truncate">Siempre aquí para ayudarte</p>
             </div>
           </div>
 
@@ -209,7 +209,7 @@ export const ChatBot = () => {
           </div>
 
           {/* Input */}
-          <div className="p-4 border-t border-border bg-background">
+          <div className="p-3 sm:p-4 border-t border-border bg-background">
             <div className="flex gap-2">
               <input
                 type="text"
@@ -217,16 +217,16 @@ export const ChatBot = () => {
                 onChange={(e) => setInput(e.target.value)}
                 onKeyPress={handleKeyPress}
                 placeholder="Escribe tu mensaje..."
-                className="flex-1 px-3 py-2 border border-border rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-emerald-600 text-sm"
+                className="flex-1 px-3 h-10 sm:h-11 border border-border rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-emerald-600 text-sm min-w-0"
                 disabled={isLoading}
               />
               <button
                 onClick={sendMessage}
                 disabled={!input.trim() || isLoading}
-                className="bg-emerald-600 hover:bg-emerald-700 disabled:bg-muted disabled:cursor-not-allowed text-white p-2 rounded-lg transition-colors"
+                className="bg-emerald-600 hover:bg-emerald-700 disabled:bg-muted disabled:cursor-not-allowed text-white p-2 rounded-lg transition-colors flex-shrink-0 w-10 sm:w-11 flex items-center justify-center"
                 aria-label="Enviar mensaje"
               >
-                <Send size={20} />
+                <Send size={18} />
               </button>
             </div>
           </div>

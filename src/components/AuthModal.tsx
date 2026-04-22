@@ -79,27 +79,28 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-fade-in">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 animate-fade-in">
       <div
         className="absolute inset-0 bg-black/50 backdrop-blur-sm"
         onClick={onClose}
       />
-      <div className="relative bg-card rounded-2xl shadow-2xl max-w-md w-full p-8 animate-scale-in">
+      <div className="relative bg-card rounded-2xl shadow-2xl w-full max-w-md p-6 sm:p-8 animate-scale-in max-h-[92vh] overflow-y-auto">
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 text-muted-foreground hover:text-foreground"
+          className="absolute top-3 right-3 sm:top-4 sm:right-4 text-muted-foreground hover:text-foreground p-1"
+          aria-label="Cerrar"
         >
           <X className="h-5 w-5" />
         </button>
 
-        <div className="text-center mb-8">
-          <div className="w-16 h-16 gradient-emerald rounded-xl flex items-center justify-center mx-auto mb-4">
-            <span className="text-3xl font-bold text-white">F</span>
+        <div className="text-center mb-6 sm:mb-8">
+          <div className="w-14 h-14 sm:w-16 sm:h-16 gradient-emerald rounded-xl flex items-center justify-center mx-auto mb-3 sm:mb-4">
+            <span className="text-2xl sm:text-3xl font-bold text-white">F</span>
           </div>
-          <h2 className="text-2xl font-bold text-foreground">
+          <h2 className="text-xl sm:text-2xl font-bold text-foreground">
             {isLogin ? "Iniciar Sesión" : "Crear Cuenta"}
           </h2>
-          <p className="text-sm text-muted-foreground mt-2">
+          <p className="text-xs sm:text-sm text-muted-foreground mt-2">
             {isLogin
               ? "Accede a tu cuenta de FEMD TORNEOS"
               : "Regístrate para participar en nuestros torneos"}
@@ -117,7 +118,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 required={!isLogin}
-                className="mt-1"
+                className="mt-1 h-11"
               />
             </div>
           )}
@@ -131,7 +132,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="mt-1"
+              className="mt-1 h-11"
             />
           </div>
 
@@ -145,7 +146,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
               onChange={(e) => setPassword(e.target.value)}
               required
               minLength={6}
-              className="mt-1"
+              className="mt-1 h-11"
             />
             {!isLogin && (
               <p className="text-xs text-muted-foreground mt-1">
@@ -156,7 +157,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
 
           <Button
             type="submit"
-            className="w-full gradient-emerald text-white"
+            className="w-full gradient-emerald text-white h-11"
             disabled={loading}
           >
             {loading
@@ -167,7 +168,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
           </Button>
         </form>
 
-        <div className="mt-6 text-center">
+        <div className="mt-5 sm:mt-6 text-center">
           <button
             onClick={() => setIsLogin(!isLogin)}
             className="text-sm text-primary hover:underline"
