@@ -107,19 +107,15 @@ export const TeamsPage = () => {
                 <CardHeader className="relative pb-0 pt-5 sm:pt-6">
                   {/* Team Logo */}
                   <div className="flex justify-center mb-3 sm:mb-4">
-                    {team.logo_url ? (
-                      <div className="relative w-24 h-24 sm:w-32 sm:h-32 rounded-full bg-muted/50 flex items-center justify-center overflow-hidden ring-4 ring-background shadow-lg group-hover:ring-emerald-600/30 transition-all duration-300">
-                        <img 
-                          src={team.logo_url} 
-                          alt={team.name}
-                          className="w-full h-full object-contain p-3 sm:p-4 group-hover:scale-110 transition-transform duration-300"
-                        />
-                      </div>
-                    ) : (
-                      <div className="w-24 h-24 sm:w-32 sm:h-32 rounded-full bg-gradient-to-br from-emerald-600/20 to-emerald-600/5 flex items-center justify-center ring-4 ring-background shadow-lg">
-                        <Users className="w-12 h-12 sm:w-16 sm:h-16 text-emerald-600" />
-                      </div>
-                    )}
+                    <div className="relative w-24 h-24 sm:w-32 sm:h-32 rounded-full bg-muted/50 flex items-center justify-center overflow-hidden ring-4 ring-background shadow-lg group-hover:ring-emerald-600/30 transition-all duration-300">
+                      <TeamLogo
+                        src={team.logo_url}
+                        alt={team.name}
+                        size="2xl"
+                        rounded
+                        className="w-full h-full p-3 sm:p-4 group-hover:scale-110 transition-transform duration-300"
+                      />
+                    </div>
                   </div>
 
                   {/* Team Name */}
