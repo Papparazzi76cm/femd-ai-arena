@@ -1293,11 +1293,7 @@ function ResultRow({ match, onClick }: { match: Match; onClick?: () => void }) {
         >
           {/* Home */}
           <div className="flex flex-col items-center gap-1 flex-1 min-w-0">
-            {homeLogo ? (
-              <img src={homeLogo} alt={homeName} className="h-9 w-9 object-contain" />
-            ) : (
-              <div className="h-9 w-9 rounded-full bg-muted" />
-            )}
+            <TeamLogo src={homeLogo} alt={homeName} size="md" rounded />
             <span
               className={`text-[11px] leading-tight text-center line-clamp-2 break-words ${hasHomeWon ? 'font-bold text-primary' : ''} ${homeIsPlaceholder ? 'italic text-muted-foreground' : ''}`}
             >
@@ -1320,11 +1316,7 @@ function ResultRow({ match, onClick }: { match: Match; onClick?: () => void }) {
 
           {/* Away */}
           <div className="flex flex-col items-center gap-1 flex-1 min-w-0">
-            {awayLogo ? (
-              <img src={awayLogo} alt={awayName} className="h-9 w-9 object-contain" />
-            ) : (
-              <div className="h-9 w-9 rounded-full bg-muted" />
-            )}
+            <TeamLogo src={awayLogo} alt={awayName} size="md" rounded />
             <span
               className={`text-[11px] leading-tight text-center line-clamp-2 break-words ${hasAwayWon ? 'font-bold text-primary' : ''} ${awayIsPlaceholder ? 'italic text-muted-foreground' : ''}`}
             >
@@ -1381,9 +1373,7 @@ function ResultRow({ match, onClick }: { match: Match; onClick?: () => void }) {
       >
         {/* Home Team */}
         <div className={`flex items-center gap-3 flex-1 justify-start min-w-0 ${hasHomeWon ? 'font-bold' : ''}`}>
-          {homeLogo && (
-            <img src={homeLogo} alt={homeName} className="h-8 w-8 object-contain shrink-0" />
-          )}
+          <TeamLogo src={homeLogo} alt={homeName} size="sm" />
           <span className={`text-sm truncate ${hasHomeWon ? 'text-primary' : ''} ${homeIsPlaceholder ? 'italic text-muted-foreground' : ''}`}>{homeName}</span>
         </div>
 
@@ -1418,9 +1408,7 @@ function ResultRow({ match, onClick }: { match: Match; onClick?: () => void }) {
         {/* Away Team */}
         <div className={`flex items-center gap-3 flex-1 justify-end min-w-0 ${hasAwayWon ? 'font-bold' : ''}`}>
           <span className={`text-sm truncate ${hasAwayWon ? 'text-primary' : ''} ${awayIsPlaceholder ? 'italic text-muted-foreground' : ''}`}>{awayName}</span>
-          {awayLogo && (
-            <img src={awayLogo} alt={awayName} className="h-8 w-8 object-contain shrink-0" />
-          )}
+          <TeamLogo src={awayLogo} alt={awayName} size="sm" />
         </div>
       </div>
     </div>
@@ -1475,7 +1463,7 @@ function MatchDetailDialog({ match, onClose }: { match: Match | null; onClose: (
             {/* Score header */}
             <div className="grid grid-cols-3 items-center text-center">
               <div className="flex flex-col items-center">
-                {homeLogo && <img src={homeLogo} alt={homeName} className="h-12 w-12 object-contain mb-1" />}
+                <TeamLogo src={homeLogo} alt={homeName} size="lg" className="mb-1" />
                 <span className="font-bold text-sm">{homeName}</span>
               </div>
               <div>
@@ -1496,7 +1484,7 @@ function MatchDetailDialog({ match, onClose }: { match: Match | null; onClose: (
                 )}
               </div>
               <div className="flex flex-col items-center">
-                {awayLogo && <img src={awayLogo} alt={awayName} className="h-12 w-12 object-contain mb-1" />}
+                <TeamLogo src={awayLogo} alt={awayName} size="lg" className="mb-1" />
                 <span className="font-bold text-sm">{awayName}</span>
               </div>
             </div>
@@ -1587,9 +1575,7 @@ function MatchCard({ match, isFinal = false }: { match: Match; isFinal?: boolean
         {/* Home Team */}
         <div className="flex items-center justify-between mb-2">
           <div className={`flex items-center gap-3 flex-1 ${hasHomeWon ? 'font-bold' : ''}`}>
-            {homeLogo && (
-              <img src={homeLogo} alt={homeName} className="h-8 w-8 object-contain" />
-            )}
+            <TeamLogo src={homeLogo} alt={homeName} size="sm" />
             <span className={`${hasHomeWon ? 'text-primary' : ''} ${homeIsPlaceholder ? 'italic text-muted-foreground' : ''}`}>{homeName}</span>
             {hasHomeWon && isFinal && <Crown className="h-4 w-4 text-yellow-500" />}
           </div>
@@ -1604,9 +1590,7 @@ function MatchCard({ match, isFinal = false }: { match: Match; isFinal?: boolean
         {/* Away Team */}
         <div className="flex items-center justify-between">
           <div className={`flex items-center gap-3 flex-1 ${hasAwayWon ? 'font-bold' : ''}`}>
-            {awayLogo && (
-              <img src={awayLogo} alt={awayName} className="h-8 w-8 object-contain" />
-            )}
+            <TeamLogo src={awayLogo} alt={awayName} size="sm" />
             <span className={`${hasAwayWon ? 'text-primary' : ''} ${awayIsPlaceholder ? 'italic text-muted-foreground' : ''}`}>{awayName}</span>
             {hasAwayWon && isFinal && <Crown className="h-4 w-4 text-yellow-500" />}
           </div>
