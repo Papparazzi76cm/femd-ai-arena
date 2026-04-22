@@ -592,7 +592,7 @@ export const LiveTournamentPage = () => {
 
                         <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2 sm:gap-4 mt-3 sm:mt-4">
                           <div className="text-center min-w-0">
-                            {getTeamLogo(match.home_team_id) && <img src={getTeamLogo(match.home_team_id)!} alt="" className="w-12 h-12 sm:w-16 sm:h-16 object-contain mx-auto mb-1.5 sm:mb-2" />}
+                            <TeamLogo src={getTeamLogo(match.home_team_id)} size="lg" className="sm:w-16 sm:h-16 mx-auto mb-1.5 sm:mb-2" />
                             <p className="font-semibold text-xs sm:text-sm line-clamp-2">{getTeamName(match.home_team_id)}</p>
                           </div>
                           <div className="text-center">
@@ -603,7 +603,7 @@ export const LiveTournamentPage = () => {
                             </div>
                           </div>
                           <div className="text-center min-w-0">
-                            {getTeamLogo(match.away_team_id) && <img src={getTeamLogo(match.away_team_id)!} alt="" className="w-12 h-12 sm:w-16 sm:h-16 object-contain mx-auto mb-1.5 sm:mb-2" />}
+                            <TeamLogo src={getTeamLogo(match.away_team_id)} size="lg" className="sm:w-16 sm:h-16 mx-auto mb-1.5 sm:mb-2" />
                             <p className="font-semibold text-xs sm:text-sm line-clamp-2">{getTeamName(match.away_team_id)}</p>
                           </div>
                         </div>
@@ -667,7 +667,7 @@ export const LiveTournamentPage = () => {
                                   <td className="p-2 sm:p-3 max-w-[150px] sm:max-w-none">
                                     <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
                                       <span className={`w-5 h-5 sm:w-6 sm:h-6 rounded-full flex items-center justify-center text-[10px] sm:text-xs font-bold shrink-0 ${idx < 2 ? 'bg-primary text-primary-foreground' : 'bg-muted'}`}>{idx + 1}</span>
-                                      {getTeamLogo(et.team_id) && <img src={getTeamLogo(et.team_id)!} alt="" className="w-5 h-5 sm:w-6 sm:h-6 object-contain shrink-0" />}
+                                      <TeamLogo src={getTeamLogo(et.team_id)} size="xs" className="sm:w-6 sm:h-6" />
                                       <span className={`font-medium truncate ${isLive ? 'text-red-600 dark:text-red-400 font-bold' : ''}`}>{getTeamName(et.team_id)}</span>
                                       {isLive && <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse-live shrink-0" />}
                                     </div>
@@ -739,14 +739,14 @@ export const LiveTournamentPage = () => {
                         {/* Mobile: stacked teams + score row */}
                         <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2 sm:gap-4">
                           <div className="flex flex-col sm:flex-row items-center gap-1.5 sm:gap-2 min-w-0">
-                            {getTeamLogo(match.home_team_id) && <img src={getTeamLogo(match.home_team_id)!} alt="" className="w-9 h-9 sm:w-8 sm:h-8 object-contain flex-shrink-0" />}
+                            <TeamLogo src={getTeamLogo(match.home_team_id)} size="md" className="sm:w-8 sm:h-8" />
                             <span className={`font-medium text-[11px] sm:text-base text-center sm:text-left line-clamp-2 sm:truncate ${match.home_team_id && liveTeamIds.has(match.home_team_id) ? 'text-red-600 dark:text-red-400' : ''}`}>{getTeamName(match.home_team_id)}</span>
                           </div>
                           <div className="text-xl sm:text-2xl font-bold px-1 sm:px-4 whitespace-nowrap">{match.home_score ?? 0} - {match.away_score ?? 0}</div>
                           <div className="flex flex-col sm:flex-row items-center gap-1.5 sm:gap-2 min-w-0 sm:justify-end">
                             {/* On mobile: logo on top + name below; on sm+: name then logo */}
                             <span className={`font-medium text-[11px] sm:text-base text-center sm:text-right line-clamp-2 sm:truncate order-2 sm:order-1 ${match.away_team_id && liveTeamIds.has(match.away_team_id) ? 'text-red-600 dark:text-red-400' : ''}`}>{getTeamName(match.away_team_id)}</span>
-                            {getTeamLogo(match.away_team_id) && <img src={getTeamLogo(match.away_team_id)!} alt="" className="w-9 h-9 sm:w-8 sm:h-8 object-contain flex-shrink-0 order-1 sm:order-2" />}
+                            <TeamLogo src={getTeamLogo(match.away_team_id)} size="md" className="sm:w-8 sm:h-8 order-1 sm:order-2" />
                           </div>
                         </div>
                         {/* Match sheet button */}
@@ -804,7 +804,7 @@ export const LiveTournamentPage = () => {
                         <div key={et.id} className="flex items-center justify-between gap-2">
                           <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
                             <span className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center text-xs sm:text-sm font-bold flex-shrink-0">{idx + 1}</span>
-                            {getTeamLogo(et.team_id) && <img src={getTeamLogo(et.team_id)!} alt="" className="w-7 h-7 sm:w-8 sm:h-8 object-contain flex-shrink-0" />}
+                            <TeamLogo src={getTeamLogo(et.team_id)} size="sm" className="sm:w-8 sm:h-8" />
                             <span className={`text-xs sm:text-base truncate ${liveTeamIds.has(et.team_id) ? 'text-red-600 dark:text-red-400 font-bold' : ''}`}>{getTeamName(et.team_id)}</span>
                           </div>
                           <span className="font-bold text-primary text-xs sm:text-base whitespace-nowrap flex-shrink-0">{et.goals_for || 0} goles</span>
@@ -845,14 +845,14 @@ export const LiveTournamentPage = () => {
                   {/* Teams + score */}
                   <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2 sm:gap-4">
                     <div className="text-center min-w-0">
-                      {getTeamLogo(selectedMatchDetail.home_team_id) && <img src={getTeamLogo(selectedMatchDetail.home_team_id)!} alt="" className="w-12 h-12 sm:w-16 sm:h-16 object-contain mx-auto mb-1.5 sm:mb-2" />}
+                      <TeamLogo src={getTeamLogo(selectedMatchDetail.home_team_id)} size="lg" className="sm:w-16 sm:h-16 mx-auto mb-1.5 sm:mb-2" />
                       <p className="font-semibold text-xs sm:text-sm line-clamp-2">{getTeamName(selectedMatchDetail.home_team_id)}</p>
                     </div>
                     <div className="text-center text-2xl sm:text-4xl font-bold whitespace-nowrap">
                       {selectedMatchDetail.home_score ?? 0} - {selectedMatchDetail.away_score ?? 0}
                     </div>
                     <div className="text-center min-w-0">
-                      {getTeamLogo(selectedMatchDetail.away_team_id) && <img src={getTeamLogo(selectedMatchDetail.away_team_id)!} alt="" className="w-12 h-12 sm:w-16 sm:h-16 object-contain mx-auto mb-1.5 sm:mb-2" />}
+                      <TeamLogo src={getTeamLogo(selectedMatchDetail.away_team_id)} size="lg" className="sm:w-16 sm:h-16 mx-auto mb-1.5 sm:mb-2" />
                       <p className="font-semibold text-xs sm:text-sm line-clamp-2">{getTeamName(selectedMatchDetail.away_team_id)}</p>
                     </div>
                   </div>
