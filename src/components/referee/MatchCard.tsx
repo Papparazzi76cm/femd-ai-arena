@@ -337,31 +337,33 @@ export const MatchCard = ({
   const canEdit = !readOnly;
 
   return (
-    <Card className={`p-6 ${isLive ? 'border-2 border-red-500 animate-heartbeat' : ''}`}>
-      <div className="space-y-4">
+    <Card className={`p-3 sm:p-6 ${isLive ? 'border-2 border-red-500 animate-heartbeat' : ''}`}>
+      <div className="space-y-3 sm:space-y-4">
         {/* Header */}
-        <div className="flex items-center justify-between flex-wrap gap-2">
-          <div className="space-y-1">
-            <h3 className="font-semibold text-lg">{getPhaseLabel(match.phase)}</h3>
+        <div className="flex items-start justify-between flex-wrap gap-2">
+          <div className="space-y-1 min-w-0 flex-1">
+            <h3 className="font-semibold text-base sm:text-lg break-words">{getPhaseLabel(match.phase)}</h3>
             {match.group_name && (
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <MapPin className="w-4 h-4" />
+              <div className="flex items-center gap-2 text-xs sm:text-sm text-muted-foreground">
+                <MapPin className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
                 {match.group_name}
               </div>
             )}
             {match.match_date && (
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <Calendar className="w-4 h-4" />
-                {new Date(match.match_date).toLocaleDateString('es-ES', {
-                  weekday: 'long',
-                  year: 'numeric',
-                  month: 'long',
-                  day: 'numeric',
-                })}
+              <div className="flex items-center gap-2 text-xs sm:text-sm text-muted-foreground">
+                <Calendar className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
+                <span className="break-words">
+                  {new Date(match.match_date).toLocaleDateString('es-ES', {
+                    weekday: 'short',
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric',
+                  })}
+                </span>
               </div>
             )}
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 shrink-0">
             {getStatusBadge()}
           </div>
         </div>
@@ -379,22 +381,23 @@ export const MatchCard = ({
         )}
 
         {/* Teams and Scores */}
-        <div className="grid grid-cols-3 gap-4 items-center">
+        <div className="grid grid-cols-3 gap-2 sm:gap-4 items-center">
           {/* Home Team */}
-          <div className="text-right">
-            <div className={`font-bold text-xl mb-2 ${isLive ? 'text-red-600 dark:text-red-400' : ''}`}>
+          <div className="text-right min-w-0">
+            <div className={`font-bold text-sm sm:text-xl mb-2 break-words leading-tight ${isLive ? 'text-red-600 dark:text-red-400' : ''}`}>
               {homeTeamName}
             </div>
             {isEditing || isLive ? (
               <Input
                 type="number"
                 min="0"
+                inputMode="numeric"
                 value={homeScore}
                 onChange={(e) => handleScoreChange('home', Number(e.target.value))}
-                className="w-20 ml-auto text-center text-2xl font-bold"
+                className="w-16 sm:w-20 ml-auto text-center text-xl sm:text-2xl font-bold h-11"
               />
             ) : (
-              <div className="text-4xl font-bold text-primary">
+              <div className="text-3xl sm:text-4xl font-bold text-primary">
                 {match.home_score ?? '-'}
               </div>
             )}
@@ -402,26 +405,27 @@ export const MatchCard = ({
 
           {/* VS */}
           <div className="text-center">
-            <div className={`text-2xl font-bold ${isLive ? 'text-red-500 animate-pulse-live' : 'text-muted-foreground'}`}>
+            <div className={`text-sm sm:text-2xl font-bold ${isLive ? 'text-red-500 animate-pulse-live' : 'text-muted-foreground'}`}>
               {isLive ? 'EN VIVO' : 'VS'}
             </div>
           </div>
 
           {/* Away Team */}
-          <div className="text-left">
-            <div className={`font-bold text-xl mb-2 ${isLive ? 'text-red-600 dark:text-red-400' : ''}`}>
+          <div className="text-left min-w-0">
+            <div className={`font-bold text-sm sm:text-xl mb-2 break-words leading-tight ${isLive ? 'text-red-600 dark:text-red-400' : ''}`}>
               {awayTeamName}
             </div>
             {isEditing || isLive ? (
               <Input
                 type="number"
                 min="0"
+                inputMode="numeric"
                 value={awayScore}
                 onChange={(e) => handleScoreChange('away', Number(e.target.value))}
-                className="w-20 text-center text-2xl font-bold"
+                className="w-16 sm:w-20 text-center text-xl sm:text-2xl font-bold h-11"
               />
             ) : (
-              <div className="text-4xl font-bold text-primary">
+              <div className="text-3xl sm:text-4xl font-bold text-primary">
                 {match.away_score ?? '-'}
               </div>
             )}
