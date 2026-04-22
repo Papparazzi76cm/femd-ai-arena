@@ -514,39 +514,45 @@ export const LiveTournamentPage = () => {
       ) : (
         <>
           {/* Hero Header */}
-          <div className={`${isLiveEvent ? 'bg-gradient-to-r from-red-600 via-orange-500 to-yellow-500' : 'bg-gradient-to-r from-primary via-primary/80 to-primary/60'} text-white py-8 px-4`}>
+          <div className={`${isLiveEvent ? 'bg-gradient-to-r from-red-600 via-orange-500 to-yellow-500' : 'bg-gradient-to-r from-primary via-primary/80 to-primary/60'} text-white py-5 sm:py-8 px-3 sm:px-4`}>
             <div className="container mx-auto">
-              <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center gap-3">
+              <div className="flex items-start justify-between gap-2 mb-2">
+                <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
                   {isLiveEvent ? (
                     <>
                       <div className="relative">
-                        <Radio className="w-8 h-8" />
-                        <span className="absolute -top-1 -right-1 w-3 h-3 bg-white rounded-full animate-pulse-live" />
+                        <Radio className="w-6 h-6 sm:w-8 sm:h-8" />
+                        <span className="absolute -top-1 -right-1 w-2.5 h-2.5 sm:w-3 sm:h-3 bg-white rounded-full animate-pulse-live" />
                       </div>
-                      <Badge className="bg-white/20 text-white border-white/30 text-lg px-4 py-1">EN VIVO</Badge>
+                      <Badge className="bg-white/20 text-white border-white/30 text-sm sm:text-lg px-2.5 sm:px-4 py-0.5 sm:py-1">EN VIVO</Badge>
                     </>
                   ) : (
                     <>
-                      <Calendar className="w-8 h-8" />
-                      <Badge className="bg-white/20 text-white border-white/30 text-lg px-4 py-1">EVENTO</Badge>
+                      <Calendar className="w-6 h-6 sm:w-8 sm:h-8" />
+                      <Badge className="bg-white/20 text-white border-white/30 text-sm sm:text-lg px-2.5 sm:px-4 py-0.5 sm:py-1">EVENTO</Badge>
                     </>
                   )}
                 </div>
                 {isLiveEvent && (
-                  <Button variant="ghost" size="sm" onClick={handleEnableNotifications} className={`text-white hover:bg-white/20 ${notificationsEnabled ? 'bg-white/20' : ''}`}>
-                    {notificationsEnabled ? (<><Bell className="w-4 h-4 mr-2" />Notificaciones activas</>) : (<><BellOff className="w-4 h-4 mr-2" />Activar notificaciones</>)}
+                  <Button variant="ghost" size="sm" onClick={handleEnableNotifications} className={`text-white hover:bg-white/20 px-2 sm:px-3 ${notificationsEnabled ? 'bg-white/20' : ''}`}>
+                    {notificationsEnabled ? (
+                      <><Bell className="w-4 h-4 sm:mr-2" /><span className="hidden sm:inline">Notificaciones activas</span></>
+                    ) : (
+                      <><BellOff className="w-4 h-4 sm:mr-2" /><span className="hidden sm:inline">Activar notificaciones</span></>
+                    )}
                   </Button>
                 )}
               </div>
-              <h1 className="text-3xl md:text-4xl font-bold">{activeEvent.title}</h1>
-              <p className="text-white/80 mt-2">{activeEvent.location}</p>
-              <p className="text-white/70 mt-1 flex items-center gap-2">
-                <Clock className="w-4 h-4" />
-                {new Date(activeEvent.date).toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
-                {activeEvent.end_date && activeEvent.end_date !== activeEvent.date && (
-                  <> – {new Date(activeEvent.end_date).toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' })}</>
-                )}
+              <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold leading-tight">{activeEvent.title}</h1>
+              {activeEvent.location && <p className="text-white/80 mt-1.5 sm:mt-2 text-sm sm:text-base">{activeEvent.location}</p>}
+              <p className="text-white/70 mt-1 flex items-center gap-1.5 text-xs sm:text-sm flex-wrap">
+                <Clock className="w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0" />
+                <span>
+                  {new Date(activeEvent.date).toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' })}
+                  {activeEvent.end_date && activeEvent.end_date !== activeEvent.date && (
+                    <> – {new Date(activeEvent.end_date).toLocaleDateString('es-ES', { day: 'numeric', month: 'long' })}</>
+                  )}
+                </span>
               </p>
             </div>
           </div>
