@@ -818,23 +818,23 @@ export const LiveTournamentPage = () => {
 
           {/* Match Detail Dialog */}
           <Dialog open={matchDetailOpen} onOpenChange={setMatchDetailOpen}>
-            <DialogContent className="max-w-lg">
+            <DialogContent className="max-w-lg w-[calc(100vw-1.5rem)] max-h-[90vh] overflow-y-auto p-4 sm:p-6">
               <DialogHeader>
-                <DialogTitle className="flex items-center gap-2">
-                  <FileText className="w-5 h-5" />
+                <DialogTitle className="flex items-center gap-2 text-base sm:text-lg">
+                  <FileText className="w-4 h-4 sm:w-5 sm:h-5" />
                   Ficha del Partido
                 </DialogTitle>
               </DialogHeader>
               {selectedMatchDetail && (
-                <div className="space-y-4">
-                  <p className="text-sm text-muted-foreground text-center">{getPhaseLabel(selectedMatchDetail.phase, selectedMatchDetail.group_name)}</p>
+                <div className="space-y-3 sm:space-y-4">
+                  <p className="text-xs sm:text-sm text-muted-foreground text-center">{getPhaseLabel(selectedMatchDetail.phase, selectedMatchDetail.group_name)}</p>
                   {/* Date/venue */}
                   {(() => {
                     const v = getMatchVenueInfo(selectedMatchDetail);
                     return (
-                      <div className="flex flex-wrap justify-center gap-3 text-xs text-muted-foreground">
+                      <div className="flex flex-wrap justify-center gap-x-3 gap-y-1 text-[11px] sm:text-xs text-muted-foreground">
                         {selectedMatchDetail.match_date && (
-                          <span>{new Date(selectedMatchDetail.match_date).toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' })} – {new Date(selectedMatchDetail.match_date).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}</span>
+                          <span>{new Date(selectedMatchDetail.match_date).toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' })} – {new Date(selectedMatchDetail.match_date).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}</span>
                         )}
                         {v.facility && <span>{v.facility}</span>}
                         {v.field && <span>{v.field}</span>}
@@ -842,17 +842,17 @@ export const LiveTournamentPage = () => {
                     );
                   })()}
                   {/* Teams + score */}
-                  <div className="grid grid-cols-3 items-center gap-4">
-                    <div className="text-center">
-                      {getTeamLogo(selectedMatchDetail.home_team_id) && <img src={getTeamLogo(selectedMatchDetail.home_team_id)!} alt="" className="w-16 h-16 object-contain mx-auto mb-2" />}
-                      <p className="font-semibold text-sm">{getTeamName(selectedMatchDetail.home_team_id)}</p>
+                  <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2 sm:gap-4">
+                    <div className="text-center min-w-0">
+                      {getTeamLogo(selectedMatchDetail.home_team_id) && <img src={getTeamLogo(selectedMatchDetail.home_team_id)!} alt="" className="w-12 h-12 sm:w-16 sm:h-16 object-contain mx-auto mb-1.5 sm:mb-2" />}
+                      <p className="font-semibold text-xs sm:text-sm line-clamp-2">{getTeamName(selectedMatchDetail.home_team_id)}</p>
                     </div>
-                    <div className="text-center text-4xl font-bold">
+                    <div className="text-center text-2xl sm:text-4xl font-bold whitespace-nowrap">
                       {selectedMatchDetail.home_score ?? 0} - {selectedMatchDetail.away_score ?? 0}
                     </div>
-                    <div className="text-center">
-                      {getTeamLogo(selectedMatchDetail.away_team_id) && <img src={getTeamLogo(selectedMatchDetail.away_team_id)!} alt="" className="w-16 h-16 object-contain mx-auto mb-2" />}
-                      <p className="font-semibold text-sm">{getTeamName(selectedMatchDetail.away_team_id)}</p>
+                    <div className="text-center min-w-0">
+                      {getTeamLogo(selectedMatchDetail.away_team_id) && <img src={getTeamLogo(selectedMatchDetail.away_team_id)!} alt="" className="w-12 h-12 sm:w-16 sm:h-16 object-contain mx-auto mb-1.5 sm:mb-2" />}
+                      <p className="font-semibold text-xs sm:text-sm line-clamp-2">{getTeamName(selectedMatchDetail.away_team_id)}</p>
                     </div>
                   </div>
                   {/* Scorers */}
