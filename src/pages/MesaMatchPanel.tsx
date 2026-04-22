@@ -757,34 +757,34 @@ export const MesaMatchPanel = () => {
         )}
 
         {isFinished && (
-          <Card className="p-6 bg-emerald-50 dark:bg-emerald-950/20 border-emerald-200 space-y-4">
+          <Card className="p-4 sm:p-6 bg-emerald-50 dark:bg-emerald-950/20 border-emerald-200 space-y-4">
             <div className="text-center">
-              <CheckCircle className="w-10 h-10 text-emerald-600 mx-auto mb-2" />
-              <p className="font-semibold text-emerald-700 dark:text-emerald-400">Partido finalizado</p>
-              <p className="text-sm text-muted-foreground mt-1">
+              <CheckCircle className="w-9 h-9 sm:w-10 sm:h-10 text-emerald-600 mx-auto mb-2" />
+              <p className="font-semibold text-emerald-700 dark:text-emerald-400 text-sm sm:text-base">Partido finalizado</p>
+              <p className="text-xs sm:text-sm text-muted-foreground mt-1 break-words">
                 {homeTeam?.name} {match.home_score} - {match.away_score} {awayTeam?.name}
               </p>
             </div>
-            <div className="flex gap-2 justify-center flex-wrap">
-              <Button variant="outline" size="sm" onClick={handleResumeMatch} disabled={saving}>
+            <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-2 sm:justify-center">
+              <Button variant="outline" size="sm" onClick={handleResumeMatch} disabled={saving} className="h-10">
                 <Play className="w-4 h-4 mr-1" />
                 Reanudar
               </Button>
-              <Button variant="outline" size="sm" onClick={handleRestartMatch} disabled={saving}>
+              <Button variant="outline" size="sm" onClick={handleRestartMatch} disabled={saving} className="h-10">
                 <RotateCcw className="w-4 h-4 mr-1" />
                 Reiniciar
               </Button>
-              <Button variant="outline" size="sm" onClick={() => setEditFinishedOpen(true)}>
+              <Button variant="outline" size="sm" onClick={() => setEditFinishedOpen(true)} className="h-10 col-span-2 sm:col-span-1">
                 <Edit2 className="w-4 h-4 mr-1" />
                 Editar resultado
               </Button>
               {homeTeam && awayTeam && (
-                <Button variant="outline" size="sm" onClick={() => setGoalScorersOpen(true)}>
+                <Button variant="outline" size="sm" onClick={() => setGoalScorersOpen(true)} className="h-10">
                   <Goal className="w-4 h-4 mr-1" />
                   Goleadores
                 </Button>
               )}
-              <Button variant="outline" size="sm" onClick={() => { loadMvpData(); setMvpOpen(true); }}>
+              <Button variant="outline" size="sm" onClick={() => { loadMvpData(); setMvpOpen(true); }} className="h-10">
                 <Star className="w-4 h-4 mr-1" />
                 MVP
               </Button>
