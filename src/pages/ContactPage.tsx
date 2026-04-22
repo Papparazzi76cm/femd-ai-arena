@@ -140,37 +140,37 @@ export const ContactPage = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-muted/20 to-background py-16">
-      <div className="container mx-auto px-4">
+    <div className="min-h-screen bg-gradient-to-b from-muted/20 to-background py-8 sm:py-16">
+      <div className="container mx-auto px-3 sm:px-4">
         {/* Header Section */}
-        <div className="text-center mb-12 animate-fade-in">
-          <div className="flex items-center justify-center gap-3 mb-4">
-            <Mail className="w-12 h-12 text-emerald-600" />
-            <h1 className="text-4xl md:text-5xl font-bold gradient-text">
+        <div className="text-center mb-8 sm:mb-12 animate-fade-in">
+          <div className="flex items-center justify-center gap-2 sm:gap-3 mb-3 sm:mb-4">
+            <Mail className="w-8 h-8 sm:w-12 sm:h-12 text-emerald-600" />
+            <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold gradient-text">
               Contacto
             </h1>
           </div>
-          <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+          <p className="text-base sm:text-xl text-muted-foreground max-w-2xl mx-auto px-2">
             ¿Tienes alguna pregunta? Estamos aquí para ayudarte
           </p>
         </div>
 
-        <div className="grid lg:grid-cols-3 gap-8 max-w-7xl mx-auto">
+        <div className="grid lg:grid-cols-3 gap-6 sm:gap-8 max-w-7xl mx-auto">
           {/* Contact Form */}
           <div className="lg:col-span-2 animate-fade-in" style={{ animationDelay: '100ms' }}>
             <Card className="border-2 hover:border-emerald-600/30 transition-all duration-300">
-              <CardHeader>
-                <CardTitle className="text-2xl flex items-center gap-2">
-                  <Send className="w-6 h-6 text-emerald-600" />
+              <CardHeader className="p-4 sm:p-6">
+                <CardTitle className="text-xl sm:text-2xl flex items-center gap-2">
+                  <Send className="w-5 h-5 sm:w-6 sm:h-6 text-emerald-600" />
                   Envíanos un mensaje
                 </CardTitle>
-                <p className="text-sm text-muted-foreground mt-2">
+                <p className="text-xs sm:text-sm text-muted-foreground mt-2">
                   Completa el formulario y nos pondremos en contacto contigo lo antes posible
                 </p>
               </CardHeader>
-              <CardContent>
-                <form onSubmit={handleSubmit} className="space-y-6">
-                  <div className="grid md:grid-cols-2 gap-4">
+              <CardContent className="p-4 sm:p-6 pt-0">
+                <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
+                  <div className="grid sm:grid-cols-2 gap-4">
                     <div>
                       <label className="block text-sm font-medium mb-2">
                         Nombre completo *
@@ -182,7 +182,7 @@ export const ContactPage = () => {
                         placeholder="Tu nombre"
                         required
                         maxLength={100}
-                        className="w-full"
+                        className="w-full h-11"
                       />
                     </div>
                     <div>
@@ -196,12 +196,12 @@ export const ContactPage = () => {
                         placeholder="tu@email.com"
                         required
                         maxLength={255}
-                        className="w-full"
+                        className="w-full h-11"
                       />
                     </div>
                   </div>
 
-                  <div className="grid md:grid-cols-2 gap-4">
+                  <div className="grid sm:grid-cols-2 gap-4">
                     <div>
                       <label className="block text-sm font-medium mb-2">
                         Teléfono
@@ -212,7 +212,7 @@ export const ContactPage = () => {
                         onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                         placeholder="+34 XXX XXX XXX"
                         maxLength={20}
-                        className="w-full"
+                        className="w-full h-11"
                       />
                     </div>
                     <div>
@@ -225,7 +225,7 @@ export const ContactPage = () => {
                         onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
                         placeholder="Tema de consulta"
                         maxLength={200}
-                        className="w-full"
+                        className="w-full h-11"
                       />
                     </div>
                   </div>
@@ -240,8 +240,8 @@ export const ContactPage = () => {
                       placeholder="Escribe tu mensaje aquí..."
                       required
                       maxLength={1000}
-                      rows={6}
-                      className="w-full resize-none"
+                      rows={5}
+                      className="w-full resize-none min-h-[120px]"
                     />
                     <p className="text-xs text-muted-foreground mt-1">
                       {formData.message.length}/1000 caracteres
@@ -251,7 +251,7 @@ export const ContactPage = () => {
                   <Button
                     type="submit"
                     disabled={isSubmitting}
-                    className="w-full bg-emerald-600 hover:bg-emerald-700 h-12 text-lg"
+                    className="w-full bg-emerald-600 hover:bg-emerald-700 h-12 text-base sm:text-lg"
                   >
                     {isSubmitting ? (
                       <>
