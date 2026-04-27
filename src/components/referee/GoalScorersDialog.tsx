@@ -250,7 +250,7 @@ export const GoalScorersDialog = ({
               <div className="space-y-3">
                 <Label>Seleccionar Jugador</Label>
                 {currentPlayers.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">No hay jugadores en la plantilla de este equipo para este torneo</p>
+                  <p className="text-sm text-muted-foreground">No hay jugadores registrados en la plantilla de este equipo para esta categoría del torneo. Añádelos desde la gestión de plantillas.</p>
                 ) : (
                   <ScrollArea className="h-40 border rounded-lg p-2">
                     <div className="grid grid-cols-2 gap-2">
