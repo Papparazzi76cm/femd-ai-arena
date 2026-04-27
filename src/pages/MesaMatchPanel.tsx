@@ -349,10 +349,13 @@ export const MesaMatchPanel = () => {
           const awayET = eventTeams.find(et => et.team_id === awayId);
 
           const loadRoster = async (etId: string) => {
-            const { data: rosters } = await supabase.from('team_rosters').select('participant_id').eq('event_team_id', etId).eq('roster_role', 'player');
+            const { data: rosters } = await supabase.from('team_rosters').select('participant_id, jersey_number').eq('event_team_id', etId).eq('roster_role', 'player');
             if (rosters && rosters.length > 0) {
-              const { data } = await supabase.from('participants').select('*').in('id', rosters.map(r => r.participant_id)).order('number');
-              return data || [];
+              const { data } = await supabase.from('participants').select('*').in('id', rosters.map(r => r.participant_id));
+              const jerseyMap = new Map(rosters.map(r => [r.participant_id, r.jersey_number]));
+              return (data || [])
+                .map((p: any) => ({ ...p, number: jerseyMap.get(p.id) ?? null }))
+                .sort((a: any, b: any) => (a.number ?? 9999) - (b.number ?? 9999));
             }
             return [];
           };
