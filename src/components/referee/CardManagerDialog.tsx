@@ -82,12 +82,15 @@ export const CardManagerDialog = ({
           const loadRoster = async (etId: string) => {
             const { data: rosters } = await supabase
               .from('team_rosters')
-              .select('participant_id')
+              .select('participant_id, jersey_number')
               .eq('event_team_id', etId);
             if (rosters && rosters.length > 0) {
               const pIds = rosters.map(r => r.participant_id);
-              const { data } = await supabase.from('participants').select('*').in('id', pIds).order('number');
-              return (data || []) as Participant[];
+              const { data } = await supabase.from('participants').select('*').in('id', pIds);
+              const jerseyMap = new Map(rosters.map(r => [r.participant_id, r.jersey_number]));
+              return ((data || []) as Participant[])
+                .map(p => ({ ...p, number: jerseyMap.get(p.id) ?? null }))
+                .sort((a, b) => (a.number ?? 9999) - (b.number ?? 9999));
             }
             return [];
           };
