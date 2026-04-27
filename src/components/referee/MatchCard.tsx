@@ -277,15 +277,8 @@ export const MatchCard = ({
         }
       }
 
-      // Fallback to team_id if no roster
-      if (homeRosterPlayers.length === 0 && homeTeamId) {
-        const { data } = await supabase.from('participants').select('*').eq('team_id', homeTeamId).order('number');
-        homeRosterPlayers = data || [];
-      }
-      if (awayRosterPlayers.length === 0 && awayTeamId) {
-        const { data } = await supabase.from('participants').select('*').eq('team_id', awayTeamId).order('number');
-        awayRosterPlayers = data || [];
-      }
+      // No fallback by team_id: stick to the roster of this event + category to
+      // avoid mixing players from previous tournaments or other categories.
 
       const { data: mvpData } = await supabase.from('match_mvps').select('*, player:participants(*)').eq('match_id', match.id).maybeSingle();
 
