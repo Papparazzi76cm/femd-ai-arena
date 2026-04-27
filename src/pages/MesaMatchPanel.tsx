@@ -362,15 +362,8 @@ export const MesaMatchPanel = () => {
         }
       }
 
-      // Fallback to team_id if no roster
-      if (homePlayers.length === 0 && homeId) {
-        const { data: d } = await supabase.from('participants').select('*').eq('team_id', homeId).order('number');
-        homePlayers = d || [];
-      }
-      if (awayPlayers.length === 0 && awayId) {
-        const { data: d } = await supabase.from('participants').select('*').eq('team_id', awayId).order('number');
-        awayPlayers = d || [];
-      }
+      // No fallback by team_id: only show players registered in the roster for
+      // this event + category, never the full historical club roster.
 
       const { data: mvpData } = await supabase.from('match_mvps').select('*, player:participants(*)').eq('match_id', data.match.id).maybeSingle();
 
