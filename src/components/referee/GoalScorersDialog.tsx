@@ -83,25 +83,31 @@ export const GoalScorersDialog = ({
           if (homeET) {
             const { data: homeRosters } = await supabase
               .from('team_rosters')
-              .select('participant_id, roster_role')
+              .select('participant_id, jersey_number, roster_role')
               .eq('event_team_id', homeET.id)
               .eq('roster_role', 'player');
             if (homeRosters && homeRosters.length > 0) {
               const pIds = homeRosters.map(r => r.participant_id);
-              const { data } = await supabase.from('participants').select('*').in('id', pIds).order('number');
-              homeRosterPlayers = (data || []) as Participant[];
+              const { data } = await supabase.from('participants').select('*').in('id', pIds);
+              const jerseyMap = new Map(homeRosters.map(r => [r.participant_id, r.jersey_number]));
+              homeRosterPlayers = ((data || []) as Participant[])
+                .map(p => ({ ...p, number: jerseyMap.get(p.id) ?? null }))
+                .sort((a, b) => (a.number ?? 9999) - (b.number ?? 9999));
             }
           }
           if (awayET) {
             const { data: awayRosters } = await supabase
               .from('team_rosters')
-              .select('participant_id, roster_role')
+              .select('participant_id, jersey_number, roster_role')
               .eq('event_team_id', awayET.id)
               .eq('roster_role', 'player');
             if (awayRosters && awayRosters.length > 0) {
               const pIds = awayRosters.map(r => r.participant_id);
-              const { data } = await supabase.from('participants').select('*').in('id', pIds).order('number');
-              awayRosterPlayers = (data || []) as Participant[];
+              const { data } = await supabase.from('participants').select('*').in('id', pIds);
+              const jerseyMap = new Map(awayRosters.map(r => [r.participant_id, r.jersey_number]));
+              awayRosterPlayers = ((data || []) as Participant[])
+                .map(p => ({ ...p, number: jerseyMap.get(p.id) ?? null }))
+                .sort((a, b) => (a.number ?? 9999) - (b.number ?? 9999));
             }
           }
         }
