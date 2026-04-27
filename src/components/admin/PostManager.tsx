@@ -192,13 +192,69 @@ export const PostManager = () => {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1">URL de Imagen</label>
-                <Input
-                  value={formData.image_url}
-                  onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
-                  placeholder="https://..."
-                  type="url"
-                />
+                <label className="block text-sm font-medium mb-1">Imagen</label>
+                <div className="space-y-2">
+                  <div className="flex flex-col sm:flex-row gap-2">
+                    <Input
+                      value={formData.image_url}
+                      onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
+                      placeholder="Pega una URL o sube una imagen"
+                      type="url"
+                      className="flex-1"
+                    />
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={handleImageUpload}
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={uploading}
+                      className="shrink-0"
+                    >
+                      {uploading ? (
+                        <>
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          Subiendo...
+                        </>
+                      ) : (
+                        <>
+                          <Upload className="w-4 h-4 mr-2" />
+                          Subir imagen
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                  {formData.image_url && (
+                    <div className="relative inline-block">
+                      <img
+                        src={formData.image_url}
+                        alt="Vista previa"
+                        className="h-32 w-auto rounded border object-cover"
+                        onError={(e) => {
+                          (e.currentTarget as HTMLImageElement).style.display = 'none';
+                        }}
+                      />
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="destructive"
+                        className="absolute top-1 right-1 h-7 w-7 p-0"
+                        onClick={() => setFormData({ ...formData, image_url: '' })}
+                      >
+                        <X className="w-3 h-3" />
+                      </Button>
+                    </div>
+                  )}
+                  <p className="text-xs text-muted-foreground flex items-center gap-1">
+                    <ImageIcon className="w-3 h-3" />
+                    Formatos: JPG, PNG, WebP. Máximo 5 MB.
+                  </p>
+                </div>
               </div>
               <div className="flex gap-2">
                 <Button type="submit" className="bg-emerald-600 hover:bg-emerald-700">
