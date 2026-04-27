@@ -23,6 +23,41 @@ export const PostManager = () => {
   });
   const { user } = useAuth();
   const { toast } = useToast();
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      toast({ title: 'Archivo no válido', description: 'Selecciona una imagen', variant: 'destructive' });
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      toast({ title: 'Imagen demasiado grande', description: 'Máximo 5 MB', variant: 'destructive' });
+      return;
+    }
+
+    setUploading(true);
+    try {
+      const ext = file.name.split('.').pop() || 'jpg';
+      const fileName = `posts/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+      const { error: uploadError } = await supabase.storage
+        .from('imagenes-web')
+        .upload(fileName, file, { contentType: file.type, upsert: false });
+      if (uploadError) throw uploadError;
+      const { data } = supabase.storage.from('imagenes-web').getPublicUrl(fileName);
+      setFormData((prev) => ({ ...prev, image_url: data.publicUrl }));
+      toast({ title: 'Imagen subida con éxito' });
+    } catch (err) {
+      console.error('Error subiendo imagen:', err);
+      toast({ title: 'Error', description: 'No se pudo subir la imagen', variant: 'destructive' });
+    } finally {
+      setUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
 
   useEffect(() => {
     loadPosts();
