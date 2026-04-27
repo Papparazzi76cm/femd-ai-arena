@@ -1,13 +1,14 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { postService } from '@/services/postService';
 import { Post } from '@/types/database';
 import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, Edit, Trash2, Save, X, Newspaper } from 'lucide-react';
+import { Plus, Edit, Trash2, Save, X, Newspaper, Upload, Loader2, Image as ImageIcon } from 'lucide-react';
 
 export const PostManager = () => {
   const [posts, setPosts] = useState<Post[]>([]);
