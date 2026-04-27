@@ -253,7 +253,7 @@ export const CardManagerDialog = ({
               <div className="space-y-3">
                 <Label>Seleccionar Jugador / Cuerpo Técnico *</Label>
                 {currentPlayers.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">No hay personas registradas en la plantilla de este equipo</p>
+                  <p className="text-sm text-muted-foreground">No hay personas registradas en la plantilla de este equipo para esta categoría del torneo.</p>
                 ) : (
                   <ScrollArea className="h-40 border rounded-lg p-2">
                     <div className="grid grid-cols-2 gap-2">
