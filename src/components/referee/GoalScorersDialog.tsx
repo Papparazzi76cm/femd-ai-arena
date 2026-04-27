@@ -107,15 +107,9 @@ export const GoalScorersDialog = ({
         }
       }
 
-      // Fallback: if no roster found, load by team_id
-      if (homeRosterPlayers.length === 0) {
-        const { data } = await supabase.from('participants').select('*').eq('team_id', homeTeamId).order('number');
-        homeRosterPlayers = (data || []) as Participant[];
-      }
-      if (awayRosterPlayers.length === 0) {
-        const { data } = await supabase.from('participants').select('*').eq('team_id', awayTeamId).order('number');
-        awayRosterPlayers = (data || []) as Participant[];
-      }
+      // No fallback by team_id: only the players registered in the roster of this
+      // event + category should be selectable. Showing all club participants would
+      // mix players from other tournaments/categories.
 
       const { data: goalsData } = await supabase.from('match_goals').select('*').eq('match_id', matchId).order('minute');
 
@@ -256,7 +250,7 @@ export const GoalScorersDialog = ({
               <div className="space-y-3">
                 <Label>Seleccionar Jugador</Label>
                 {currentPlayers.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">No hay jugadores en la plantilla de este equipo para este torneo</p>
+                  <p className="text-sm text-muted-foreground">No hay jugadores registrados en la plantilla de este equipo para esta categoría del torneo. Añádelos desde la gestión de plantillas.</p>
                 ) : (
                   <ScrollArea className="h-40 border rounded-lg p-2">
                     <div className="grid grid-cols-2 gap-2">

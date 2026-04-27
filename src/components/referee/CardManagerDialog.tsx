@@ -97,15 +97,8 @@ export const CardManagerDialog = ({
         }
       }
 
-      // Fallback
-      if (homeP.length === 0) {
-        const { data } = await supabase.from('participants').select('*').eq('team_id', homeTeamId).order('number');
-        homeP = (data || []) as Participant[];
-      }
-      if (awayP.length === 0) {
-        const { data } = await supabase.from('participants').select('*').eq('team_id', awayTeamId).order('number');
-        awayP = (data || []) as Participant[];
-      }
+      // No fallback by team_id: only the roster registered for this event + category
+      // should appear. Otherwise we would list players from other tournaments/categories.
 
       const { data: cardsData } = await supabase.from('match_cards').select('*').eq('match_id', matchId).order('minute');
 
@@ -260,7 +253,7 @@ export const CardManagerDialog = ({
               <div className="space-y-3">
                 <Label>Seleccionar Jugador / Cuerpo Técnico *</Label>
                 {currentPlayers.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">No hay personas registradas en la plantilla de este equipo</p>
+                  <p className="text-sm text-muted-foreground">No hay personas registradas en la plantilla de este equipo para esta categoría del torneo.</p>
                 ) : (
                   <ScrollArea className="h-40 border rounded-lg p-2">
                     <div className="grid grid-cols-2 gap-2">
