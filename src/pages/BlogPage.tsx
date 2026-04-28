@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { Newspaper, Clock, Search, ChevronLeft, ChevronRight, Loader2, Calendar } from 'lucide-react';
+import { PostImage } from '@/components/PostImage';
 
 const POSTS_PER_PAGE = 6;
 
