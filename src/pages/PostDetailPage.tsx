@@ -4,6 +4,7 @@ import { postService } from '@/services/postService';
 import { Post } from '@/types/database';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Calendar, Clock, Loader2 } from 'lucide-react';
+import { PostImage } from '@/components/PostImage';
 
 export function PostDetailPage() {
   const { id } = useParams<{ id: string }>();
