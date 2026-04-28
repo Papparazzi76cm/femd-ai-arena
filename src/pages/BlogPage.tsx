@@ -204,16 +204,14 @@ export const BlogPage = () => {
                     className="group overflow-hidden hover-scale border-2 hover:border-primary/30 transition-all duration-300 hover:shadow-xl animate-fade-in h-full"
                     style={{ animationDelay: `${(index + 3) * 100}ms` }}
                   >
-                    {post.image_url && (
-                      <div className="relative h-40 sm:h-48 overflow-hidden">
-                        <img
-                          src={post.image_url}
-                          alt={post.title}
-                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                      </div>
-                    )}
+                    <div className="relative h-40 sm:h-48 overflow-hidden">
+                      <PostImage
+                        src={post.image_url}
+                        alt={post.title}
+                        imgClassName="group-hover:scale-110 transition-transform duration-500"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
+                    </div>
                     <CardHeader className="pb-3">
                       <div className="flex items-center gap-2 text-xs text-muted-foreground mb-2">
                         <Calendar className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
