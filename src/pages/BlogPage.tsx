@@ -134,20 +134,19 @@ export const BlogPage = () => {
             <Link to={`/noticias/${featuredPost.id}`}>
               <Card className="overflow-hidden border-2 border-primary/20 hover:border-primary/50 transition-all duration-300 hover:shadow-2xl">
                 <div className="grid md:grid-cols-2 gap-0">
-                  {featuredPost.image_url && (
-                    <div className="relative h-48 sm:h-64 md:h-auto overflow-hidden">
-                      <img
-                        src={featuredPost.image_url}
-                        alt={featuredPost.title}
-                        className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
-                      />
-                      <div className="absolute top-3 left-3 sm:top-4 sm:left-4">
-                        <span className="px-2.5 py-1 sm:px-3 bg-primary text-primary-foreground text-xs sm:text-sm font-semibold rounded-full">
-                          Destacado
-                        </span>
-                      </div>
+                  <div className="relative h-48 sm:h-64 md:h-auto md:min-h-[280px] overflow-hidden">
+                    <PostImage
+                      src={featuredPost.image_url}
+                      alt={featuredPost.title}
+                      variant="featured"
+                      imgClassName="hover:scale-105 transition-transform duration-500"
+                    />
+                    <div className="absolute top-3 left-3 sm:top-4 sm:left-4 z-10">
+                      <span className="px-2.5 py-1 sm:px-3 bg-primary text-primary-foreground text-xs sm:text-sm font-semibold rounded-full shadow-md">
+                        Destacado
+                      </span>
                     </div>
-                  )}
+                  </div>
                   <div className="p-5 sm:p-8 flex flex-col justify-center">
                     <CardHeader className="p-0 mb-3 sm:mb-4">
                       <CardTitle className="text-xl sm:text-3xl mb-3 sm:mb-4 hover:text-primary transition-colors line-clamp-3">
