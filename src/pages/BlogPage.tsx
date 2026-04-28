@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { Newspaper, Clock, Search, ChevronLeft, ChevronRight, Loader2, Calendar } from 'lucide-react';
+import { PostImage } from '@/components/PostImage';
 
 const POSTS_PER_PAGE = 6;
 
@@ -133,20 +134,19 @@ export const BlogPage = () => {
             <Link to={`/noticias/${featuredPost.id}`}>
               <Card className="overflow-hidden border-2 border-primary/20 hover:border-primary/50 transition-all duration-300 hover:shadow-2xl">
                 <div className="grid md:grid-cols-2 gap-0">
-                  {featuredPost.image_url && (
-                    <div className="relative h-48 sm:h-64 md:h-auto overflow-hidden">
-                      <img
-                        src={featuredPost.image_url}
-                        alt={featuredPost.title}
-                        className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
-                      />
-                      <div className="absolute top-3 left-3 sm:top-4 sm:left-4">
-                        <span className="px-2.5 py-1 sm:px-3 bg-primary text-primary-foreground text-xs sm:text-sm font-semibold rounded-full">
-                          Destacado
-                        </span>
-                      </div>
+                  <div className="relative h-48 sm:h-64 md:h-auto md:min-h-[280px] overflow-hidden">
+                    <PostImage
+                      src={featuredPost.image_url}
+                      alt={featuredPost.title}
+                      variant="featured"
+                      imgClassName="hover:scale-105 transition-transform duration-500"
+                    />
+                    <div className="absolute top-3 left-3 sm:top-4 sm:left-4 z-10">
+                      <span className="px-2.5 py-1 sm:px-3 bg-primary text-primary-foreground text-xs sm:text-sm font-semibold rounded-full shadow-md">
+                        Destacado
+                      </span>
                     </div>
-                  )}
+                  </div>
                   <div className="p-5 sm:p-8 flex flex-col justify-center">
                     <CardHeader className="p-0 mb-3 sm:mb-4">
                       <CardTitle className="text-xl sm:text-3xl mb-3 sm:mb-4 hover:text-primary transition-colors line-clamp-3">
@@ -204,16 +204,14 @@ export const BlogPage = () => {
                     className="group overflow-hidden hover-scale border-2 hover:border-primary/30 transition-all duration-300 hover:shadow-xl animate-fade-in h-full"
                     style={{ animationDelay: `${(index + 3) * 100}ms` }}
                   >
-                    {post.image_url && (
-                      <div className="relative h-40 sm:h-48 overflow-hidden">
-                        <img
-                          src={post.image_url}
-                          alt={post.title}
-                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                      </div>
-                    )}
+                    <div className="relative h-40 sm:h-48 overflow-hidden">
+                      <PostImage
+                        src={post.image_url}
+                        alt={post.title}
+                        imgClassName="group-hover:scale-110 transition-transform duration-500"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
+                    </div>
                     <CardHeader className="pb-3">
                       <div className="flex items-center gap-2 text-xs text-muted-foreground mb-2">
                         <Calendar className="w-3.5 h-3.5 sm:w-4 sm:h-4" />

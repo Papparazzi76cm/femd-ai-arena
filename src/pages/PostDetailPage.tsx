@@ -4,6 +4,7 @@ import { postService } from '@/services/postService';
 import { Post } from '@/types/database';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Calendar, Clock, Loader2 } from 'lucide-react';
+import { PostImage } from '@/components/PostImage';
 
 export function PostDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -60,16 +61,14 @@ export function PostDetailPage() {
   return (
     <div className="min-h-screen pt-16 sm:pt-20">
       {/* Hero Image */}
-      {post.image_url && (
-        <div className="relative h-[28vh] sm:h-[40vh] md:h-[50vh] w-full">
-          <img
-            src={post.image_url}
-            alt={post.title}
-            className="w-full h-full object-cover"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-background via-background/50 to-transparent" />
-        </div>
-      )}
+      <div className="relative h-[28vh] sm:h-[40vh] md:h-[50vh] w-full bg-muted">
+        <PostImage
+          src={post.image_url}
+          alt={post.title}
+          variant="featured"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/50 to-transparent pointer-events-none" />
+      </div>
 
       <div className="container mx-auto px-3 sm:px-4 py-6 sm:py-8">
         {/* Back Button */}
