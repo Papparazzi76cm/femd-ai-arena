@@ -80,7 +80,7 @@ export const GoalScorersDialog = ({
         const homeETId = await resolveEventTeamId(homeTeamId, homeEventTeamId);
         const awayETId = await resolveEventTeamId(awayTeamId, awayEventTeamId);
 
-          if (homeETId) {
+        if (homeETId) {
             const { data: homeRosters } = await supabase
               .from('team_rosters')
               .select('participant_id, jersey_number, roster_role')
@@ -94,8 +94,8 @@ export const GoalScorersDialog = ({
                 .map(p => ({ ...p, number: jerseyMap.get(p.id) ?? null }))
                 .sort((a, b) => (a.number ?? 9999) - (b.number ?? 9999));
             }
-          }
-          if (awayETId) {
+        }
+        if (awayETId) {
             const { data: awayRosters } = await supabase
               .from('team_rosters')
               .select('participant_id, jersey_number, roster_role')
@@ -108,7 +108,8 @@ export const GoalScorersDialog = ({
               awayRosterPlayers = ((data || []) as Participant[])
                 .map(p => ({ ...p, number: jerseyMap.get(p.id) ?? null }))
                 .sort((a, b) => (a.number ?? 9999) - (b.number ?? 9999));
-            }
+          }
+        }
       }
 
       // No fallback by team_id: only the players registered in the roster of this
