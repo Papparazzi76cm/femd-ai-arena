@@ -50,6 +50,8 @@ export interface Match {
   event_id: string;
   home_team_id: string | null;
   away_team_id: string | null;
+  home_event_team_id?: string | null;
+  away_event_team_id?: string | null;
   home_placeholder?: string | null;
   away_placeholder?: string | null;
   phase: TournamentPhase;

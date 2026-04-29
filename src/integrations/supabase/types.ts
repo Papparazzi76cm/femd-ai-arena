@@ -593,6 +593,7 @@ export type Database = {
       }
       matches: {
         Row: {
+          away_event_team_id: string | null
           away_placeholder: string | null
           away_red_cards: number | null
           away_score: number | null
@@ -603,6 +604,7 @@ export type Database = {
           event_id: string
           field_id: string | null
           group_name: string | null
+          home_event_team_id: string | null
           home_placeholder: string | null
           home_red_cards: number | null
           home_score: number | null
@@ -619,6 +621,7 @@ export type Database = {
           status: string | null
         }
         Insert: {
+          away_event_team_id?: string | null
           away_placeholder?: string | null
           away_red_cards?: number | null
           away_score?: number | null
@@ -629,6 +632,7 @@ export type Database = {
           event_id: string
           field_id?: string | null
           group_name?: string | null
+          home_event_team_id?: string | null
           home_placeholder?: string | null
           home_red_cards?: number | null
           home_score?: number | null
@@ -645,6 +649,7 @@ export type Database = {
           status?: string | null
         }
         Update: {
+          away_event_team_id?: string | null
           away_placeholder?: string | null
           away_red_cards?: number | null
           away_score?: number | null
@@ -655,6 +660,7 @@ export type Database = {
           event_id?: string
           field_id?: string | null
           group_name?: string | null
+          home_event_team_id?: string | null
           home_placeholder?: string | null
           home_red_cards?: number | null
           home_score?: number | null

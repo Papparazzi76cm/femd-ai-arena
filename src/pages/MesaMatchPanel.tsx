@@ -10,6 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { GoalScorersDialog } from '@/components/referee/GoalScorersDialog';
+import { CardManagerDialog } from '@/components/referee/CardManagerDialog';
 import { 
   Loader2, CheckCircle, XCircle, Calendar, MapPin, Trophy, 
   Play, Square, Save, Goal, Clock, Building2, Phone, Edit2, RotateCcw, Star, Upload, Camera
@@ -30,6 +31,8 @@ interface AssignmentData {
     event_id: string;
     home_team_id: string;
     away_team_id: string;
+    home_event_team_id: string | null;
+    away_event_team_id: string | null;
     home_score: number | null;
     away_score: number | null;
     home_yellow_cards: number;
@@ -62,6 +65,7 @@ export const MesaMatchPanel = () => {
   const [saving, setSaving] = useState(false);
   const [editFinishedOpen, setEditFinishedOpen] = useState(false);
   const [goalScorersOpen, setGoalScorersOpen] = useState(false);
+  const [cardManagerOpen, setCardManagerOpen] = useState(false);
   const [mvpOpen, setMvpOpen] = useState(false);
   const [mvpPlayers, setMvpPlayers] = useState<any[]>([]);
   const [selectedMvp, setSelectedMvp] = useState<string>('');
@@ -332,22 +336,10 @@ export const MesaMatchPanel = () => {
       let homePlayers: any[] = [];
       let awayPlayers: any[] = [];
 
-      // Load roster-filtered players by event and category
+      // Load roster-filtered players by the exact event team assigned to this match
       if (data.match.event_id && homeId && awayId) {
-        let query = supabase
-          .from('event_teams')
-          .select('id, team_id')
-          .eq('event_id', data.match.event_id)
-          .in('team_id', [homeId, awayId]);
-        if (data.match.category_id) {
-          query = query.eq('category_id', data.match.category_id);
-        }
-        const { data: eventTeams } = await query;
-
-        if (eventTeams) {
-          const homeET = eventTeams.find(et => et.team_id === homeId);
-          const awayET = eventTeams.find(et => et.team_id === awayId);
-
+          const homeETId = data.match.home_event_team_id;
+          const awayETId = data.match.away_event_team_id;
           const loadRoster = async (etId: string) => {
             const { data: rosters } = await supabase.from('team_rosters').select('participant_id, jersey_number').eq('event_team_id', etId).eq('roster_role', 'player');
             if (rosters && rosters.length > 0) {
@@ -360,9 +352,8 @@ export const MesaMatchPanel = () => {
             return [];
           };
 
-          if (homeET) homePlayers = await loadRoster(homeET.id);
-          if (awayET) awayPlayers = await loadRoster(awayET.id);
-        }
+          if (homeETId) homePlayers = await loadRoster(homeETId);
+          if (awayETId) awayPlayers = await loadRoster(awayETId);
       }
 
       // No fallback by team_id: only show players registered in the roster for

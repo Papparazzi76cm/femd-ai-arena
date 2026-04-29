@@ -246,22 +246,19 @@ export const MatchCard = ({
       let awayRosterPlayers: any[] = [];
 
       if (eventId) {
-        let query = supabase
-          .from('event_teams')
-          .select('id, team_id')
-          .eq('event_id', eventId)
-          .in('team_id', [homeTeamId, awayTeamId].filter(Boolean));
-        if (match.category_id) {
-          query = query.eq('category_id', match.category_id);
-        }
-        const { data: eventTeamsData } = await query;
+        const resolveEventTeamId = async (teamId: string, explicitId?: string | null) => {
+          if (explicitId) return explicitId;
+          let query = supabase.from('event_teams').select('id').eq('event_id', eventId).eq('team_id', teamId);
+          if (match.category_id) query = query.eq('category_id', match.category_id);
+          const { data } = await query;
+          return data && data.length === 1 ? data[0].id : null;
+        };
 
-        if (eventTeamsData) {
-          const homeET = eventTeamsData.find(et => et.team_id === homeTeamId);
-          const awayET = eventTeamsData.find(et => et.team_id === awayTeamId);
+        const homeETId = await resolveEventTeamId(homeTeamId, (match as any).home_event_team_id);
+        const awayETId = await resolveEventTeamId(awayTeamId, (match as any).away_event_team_id);
 
-          if (homeET) {
-            const { data: rosters } = await supabase.from('team_rosters').select('participant_id, jersey_number').eq('event_team_id', homeET.id).eq('roster_role', 'player');
+          if (homeETId) {
+            const { data: rosters } = await supabase.from('team_rosters').select('participant_id, jersey_number').eq('event_team_id', homeETId).eq('roster_role', 'player');
             if (rosters && rosters.length > 0) {
               const { data } = await supabase.from('participants').select('*').in('id', rosters.map(r => r.participant_id));
               const jerseyMap = new Map(rosters.map(r => [r.participant_id, r.jersey_number]));
@@ -270,8 +267,8 @@ export const MatchCard = ({
                 .sort((a: any, b: any) => (a.number ?? 9999) - (b.number ?? 9999));
             }
           }
-          if (awayET) {
-            const { data: rosters } = await supabase.from('team_rosters').select('participant_id, jersey_number').eq('event_team_id', awayET.id).eq('roster_role', 'player');
+          if (awayETId) {
+            const { data: rosters } = await supabase.from('team_rosters').select('participant_id, jersey_number').eq('event_team_id', awayETId).eq('roster_role', 'player');
             if (rosters && rosters.length > 0) {
               const { data } = await supabase.from('participants').select('*').in('id', rosters.map(r => r.participant_id));
               const jerseyMap = new Map(rosters.map(r => [r.participant_id, r.jersey_number]));
@@ -280,7 +277,6 @@ export const MatchCard = ({
                 .sort((a: any, b: any) => (a.number ?? 9999) - (b.number ?? 9999));
             }
           }
-        }
       }
 
       // No fallback by team_id: stick to the roster of this event + category to
@@ -590,6 +586,8 @@ export const MatchCard = ({
         awayTeamName={awayTeamName}
         eventId={eventId}
         categoryId={match.category_id || undefined}
+        homeEventTeamId={(match as any).home_event_team_id}
+        awayEventTeamId={(match as any).away_event_team_id}
       />
 
       <CardManagerDialog
@@ -602,6 +600,8 @@ export const MatchCard = ({
         awayTeamName={awayTeamName}
         eventId={eventId}
         categoryId={match.category_id || undefined}
+        homeEventTeamId={(match as any).home_event_team_id}
+        awayEventTeamId={(match as any).away_event_team_id}
       />
 
       {/* MVP Dialog */}

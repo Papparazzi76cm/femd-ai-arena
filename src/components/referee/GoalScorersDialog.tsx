@@ -29,6 +29,8 @@ interface GoalScorersDialogProps {
   awayTeamName: string;
   eventId?: string;
   categoryId?: string;
+  homeEventTeamId?: string | null;
+  awayEventTeamId?: string | null;
 }
 
 export const GoalScorersDialog = ({
@@ -41,6 +43,8 @@ export const GoalScorersDialog = ({
   awayTeamName,
   eventId,
   categoryId,
+  homeEventTeamId,
+  awayEventTeamId,
 }: GoalScorersDialogProps) => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -65,26 +69,22 @@ export const GoalScorersDialog = ({
       let awayRosterPlayers: Participant[] = [];
 
       if (eventId) {
-        // Get event_team ids for both teams in this event, filtered by category
-        let query = supabase
-          .from('event_teams')
-          .select('id, team_id')
-          .eq('event_id', eventId)
-          .in('team_id', [homeTeamId, awayTeamId]);
-        if (categoryId) {
-          query = query.eq('category_id', categoryId);
-        }
-        const { data: eventTeams } = await query;
+        const resolveEventTeamId = async (teamId: string, explicitId?: string | null) => {
+          if (explicitId) return explicitId;
+          let query = supabase.from('event_teams').select('id').eq('event_id', eventId).eq('team_id', teamId);
+          if (categoryId) query = query.eq('category_id', categoryId);
+          const { data } = await query;
+          return data && data.length === 1 ? data[0].id : null;
+        };
 
-        if (eventTeams && eventTeams.length > 0) {
-          const homeET = eventTeams.find(et => et.team_id === homeTeamId);
-          const awayET = eventTeams.find(et => et.team_id === awayTeamId);
+        const homeETId = await resolveEventTeamId(homeTeamId, homeEventTeamId);
+        const awayETId = await resolveEventTeamId(awayTeamId, awayEventTeamId);
 
-          if (homeET) {
+        if (homeETId) {
             const { data: homeRosters } = await supabase
               .from('team_rosters')
               .select('participant_id, jersey_number, roster_role')
-              .eq('event_team_id', homeET.id)
+              .eq('event_team_id', homeETId)
               .eq('roster_role', 'player');
             if (homeRosters && homeRosters.length > 0) {
               const pIds = homeRosters.map(r => r.participant_id);
@@ -94,12 +94,12 @@ export const GoalScorersDialog = ({
                 .map(p => ({ ...p, number: jerseyMap.get(p.id) ?? null }))
                 .sort((a, b) => (a.number ?? 9999) - (b.number ?? 9999));
             }
-          }
-          if (awayET) {
+        }
+        if (awayETId) {
             const { data: awayRosters } = await supabase
               .from('team_rosters')
               .select('participant_id, jersey_number, roster_role')
-              .eq('event_team_id', awayET.id)
+              .eq('event_team_id', awayETId)
               .eq('roster_role', 'player');
             if (awayRosters && awayRosters.length > 0) {
               const pIds = awayRosters.map(r => r.participant_id);
@@ -108,7 +108,6 @@ export const GoalScorersDialog = ({
               awayRosterPlayers = ((data || []) as Participant[])
                 .map(p => ({ ...p, number: jerseyMap.get(p.id) ?? null }))
                 .sort((a, b) => (a.number ?? 9999) - (b.number ?? 9999));
-            }
           }
         }
       }
