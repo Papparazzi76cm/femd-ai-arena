@@ -586,6 +586,8 @@ export const MatchCard = ({
         awayTeamName={awayTeamName}
         eventId={eventId}
         categoryId={match.category_id || undefined}
+        homeEventTeamId={(match as any).home_event_team_id}
+        awayEventTeamId={(match as any).away_event_team_id}
       />
 
       <CardManagerDialog
@@ -598,6 +600,8 @@ export const MatchCard = ({
         awayTeamName={awayTeamName}
         eventId={eventId}
         categoryId={match.category_id || undefined}
+        homeEventTeamId={(match as any).home_event_team_id}
+        awayEventTeamId={(match as any).away_event_team_id}
       />
 
       {/* MVP Dialog */}
