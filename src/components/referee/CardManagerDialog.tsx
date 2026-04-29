@@ -28,6 +28,8 @@ interface CardManagerDialogProps {
   awayTeamName: string;
   eventId?: string;
   categoryId?: string;
+  homeEventTeamId?: string | null;
+  awayEventTeamId?: string | null;
   onCardsChanged?: () => void;
 }
 
@@ -41,6 +43,8 @@ export const CardManagerDialog = ({
   awayTeamName,
   eventId,
   categoryId,
+  homeEventTeamId,
+  awayEventTeamId,
   onCardsChanged,
 }: CardManagerDialogProps) => {
   const [loading, setLoading] = useState(true);
@@ -65,21 +69,15 @@ export const CardManagerDialog = ({
 
       // Load roster players (players + staff)
       if (eventId) {
-        let query = supabase
-          .from('event_teams')
-          .select('id, team_id')
-          .eq('event_id', eventId)
-          .in('team_id', [homeTeamId, awayTeamId]);
-        if (categoryId) {
-          query = query.eq('category_id', categoryId);
-        }
-        const { data: eventTeams } = await query;
+        const resolveEventTeamId = async (teamId: string, explicitId?: string | null) => {
+          if (explicitId) return explicitId;
+          let query = supabase.from('event_teams').select('id').eq('event_id', eventId).eq('team_id', teamId);
+          if (categoryId) query = query.eq('category_id', categoryId);
+          const { data } = await query;
+          return data && data.length === 1 ? data[0].id : null;
+        };
 
-        if (eventTeams && eventTeams.length > 0) {
-          const homeET = eventTeams.find(et => et.team_id === homeTeamId);
-          const awayET = eventTeams.find(et => et.team_id === awayTeamId);
-
-          const loadRoster = async (etId: string) => {
+        const loadRoster = async (etId: string) => {
             const { data: rosters } = await supabase
               .from('team_rosters')
               .select('participant_id, jersey_number')
@@ -93,11 +91,12 @@ export const CardManagerDialog = ({
                 .sort((a, b) => (a.number ?? 9999) - (b.number ?? 9999));
             }
             return [];
-          };
+        };
 
-          if (homeET) homeP = await loadRoster(homeET.id);
-          if (awayET) awayP = await loadRoster(awayET.id);
-        }
+        const homeETId = await resolveEventTeamId(homeTeamId, homeEventTeamId);
+        const awayETId = await resolveEventTeamId(awayTeamId, awayEventTeamId);
+        if (homeETId) homeP = await loadRoster(homeETId);
+        if (awayETId) awayP = await loadRoster(awayETId);
       }
 
       // No fallback by team_id: only the roster registered for this event + category
