@@ -96,9 +96,24 @@ export const tournamentService = {
   },
 
   async updateMatch(id: string, updates: Partial<Match>): Promise<void> {
+    const safeUpdates: any = { ...updates };
+    if (updates.home_team_id !== undefined || updates.away_team_id !== undefined || updates.category_id !== undefined) {
+      const { data: currentMatch } = await supabase.from('matches').select('*').eq('id', id).single();
+      if (currentMatch) {
+        const eventId = updates.event_id ?? currentMatch.event_id;
+        const categoryId = updates.category_id !== undefined ? updates.category_id : currentMatch.category_id;
+        if (updates.home_team_id !== undefined) {
+          safeUpdates.home_event_team_id = await this.resolveEventTeamId(eventId, updates.home_team_id, categoryId);
+        }
+        if (updates.away_team_id !== undefined) {
+          safeUpdates.away_event_team_id = await this.resolveEventTeamId(eventId, updates.away_team_id, categoryId);
+        }
+      }
+    }
+
     const { error } = await supabase
       .from('matches')
-      .update(updates)
+      .update(safeUpdates)
       .eq('id', id);
     
     if (error) throw error;
@@ -600,11 +615,14 @@ export const tournamentService = {
 
   // Manually assign a team to a match slot
   async manuallyAssignTeam(matchId: string, side: 'home' | 'away', teamId: string): Promise<void> {
+    const { data: match } = await supabase.from('matches').select('*').eq('id', matchId).single();
     const updates: any = {};
     if (side === 'home') {
       updates.home_team_id = teamId;
+      updates.home_event_team_id = match ? await this.resolveEventTeamId(match.event_id, teamId, match.category_id) : null;
     } else {
       updates.away_team_id = teamId;
+      updates.away_event_team_id = match ? await this.resolveEventTeamId(match.event_id, teamId, match.category_id) : null;
     }
     const { error } = await supabase
       .from('matches')
