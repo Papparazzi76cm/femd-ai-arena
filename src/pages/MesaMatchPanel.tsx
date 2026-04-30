@@ -13,7 +13,7 @@ import { GoalScorersDialog } from '@/components/referee/GoalScorersDialog';
 import { CardManagerDialog } from '@/components/referee/CardManagerDialog';
 import { 
   Loader2, CheckCircle, XCircle, Calendar, MapPin, Trophy, 
-  Play, Square, Save, Goal, Clock, Building2, Phone, Edit2, RotateCcw, Star, Upload, Camera
+  Play, Square, Save, Goal, Clock, Building2, Phone, Edit2, RotateCcw, Star, Upload, Camera, CreditCard
 } from 'lucide-react';
 
 interface AssignmentData {
