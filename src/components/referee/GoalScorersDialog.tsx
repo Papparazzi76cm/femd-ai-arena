@@ -136,6 +136,19 @@ export const GoalScorersDialog = ({
     }
   };
 
+  const syncMatchScore = async (updatedGoals: MatchGoal[]) => {
+    const homeCount = updatedGoals.filter(g => g.team_id === homeTeamId).length;
+    const awayCount = updatedGoals.filter(g => g.team_id === awayTeamId).length;
+    try {
+      await supabase
+        .from('matches')
+        .update({ home_score: homeCount, away_score: awayCount })
+        .eq('id', matchId);
+    } catch (e) {
+      console.error('Error syncing match score:', e);
+    }
+  };
+
   const handleAddGoal = async () => {
     if (!selectedPlayer) return;
     
@@ -157,7 +170,9 @@ export const GoalScorersDialog = ({
 
       if (error) throw error;
       
-      setGoals([...goals, data as MatchGoal]);
+      const updated = [...goals, data as MatchGoal];
+      setGoals(updated);
+      await syncMatchScore(updated);
       setSelectedPlayer('');
       setMinute('');
     } catch (error) {
@@ -170,7 +185,9 @@ export const GoalScorersDialog = ({
   const handleDeleteGoal = async (goalId: string) => {
     try {
       await supabase.from('match_goals').delete().eq('id', goalId);
-      setGoals(goals.filter(g => g.id !== goalId));
+      const updated = goals.filter(g => g.id !== goalId);
+      setGoals(updated);
+      await syncMatchScore(updated);
     } catch (error) {
       console.error('Error deleting goal:', error);
     }
