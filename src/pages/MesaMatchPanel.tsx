@@ -911,6 +911,25 @@ export const MesaMatchPanel = () => {
             awayTeamName={awayTeam.name}
             eventId={match.event_id}
             categoryId={match.category_id || undefined}
+            homeEventTeamId={match.home_event_team_id}
+            awayEventTeamId={match.away_event_team_id}
+          />
+        )}
+
+        {/* Card manager dialog */}
+        {homeTeam && awayTeam && (
+          <CardManagerDialog
+            open={cardManagerOpen}
+            onOpenChange={setCardManagerOpen}
+            matchId={match.id}
+            homeTeamId={homeTeam.id}
+            awayTeamId={awayTeam.id}
+            homeTeamName={homeTeam.name}
+            awayTeamName={awayTeam.name}
+            eventId={match.event_id}
+            categoryId={match.category_id || undefined}
+            homeEventTeamId={match.home_event_team_id}
+            awayEventTeamId={match.away_event_team_id}
           />
         )}
       </div>
