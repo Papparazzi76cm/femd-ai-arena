@@ -48,6 +48,22 @@ export const tournamentService = {
   },
 
   // Matches
+  async resolveEventTeamId(eventId: string, teamId: string | null, categoryId?: string | null): Promise<string | null> {
+    if (!teamId) return null;
+    const { data } = await supabase
+      .from('event_teams')
+      .select('id, category_id')
+      .eq('event_id', eventId)
+      .eq('team_id', teamId);
+
+    if (!data || data.length === 0) return null;
+    const exact = categoryId ? data.find(et => et.category_id === categoryId) : null;
+    if (exact) return exact.id;
+    const uncategorized = data.filter(et => !et.category_id);
+    if (uncategorized.length === 1) return uncategorized[0].id;
+    return data.length === 1 ? data[0].id : null;
+  },
+
   async getMatches(eventId: string): Promise<Match[]> {
     const { data, error } = await supabase
       .from('matches')
@@ -61,9 +77,17 @@ export const tournamentService = {
   },
 
   async createMatch(match: Omit<Match, 'id' | 'created_at'>): Promise<Match> {
+    const matchWithEventTeams: any = { ...match };
+    if (match.home_team_id && !match.home_event_team_id) {
+      matchWithEventTeams.home_event_team_id = await this.resolveEventTeamId(match.event_id, match.home_team_id, match.category_id);
+    }
+    if (match.away_team_id && !match.away_event_team_id) {
+      matchWithEventTeams.away_event_team_id = await this.resolveEventTeamId(match.event_id, match.away_team_id, match.category_id);
+    }
+
     const { data, error } = await supabase
       .from('matches')
-      .insert(match)
+      .insert(matchWithEventTeams)
       .select()
       .single();
     
@@ -72,9 +96,24 @@ export const tournamentService = {
   },
 
   async updateMatch(id: string, updates: Partial<Match>): Promise<void> {
+    const safeUpdates: any = { ...updates };
+    if (updates.home_team_id !== undefined || updates.away_team_id !== undefined || updates.category_id !== undefined) {
+      const { data: currentMatch } = await supabase.from('matches').select('*').eq('id', id).single();
+      if (currentMatch) {
+        const eventId = updates.event_id ?? currentMatch.event_id;
+        const categoryId = updates.category_id !== undefined ? updates.category_id : currentMatch.category_id;
+        if (updates.home_team_id !== undefined) {
+          safeUpdates.home_event_team_id = await this.resolveEventTeamId(eventId, updates.home_team_id, categoryId);
+        }
+        if (updates.away_team_id !== undefined) {
+          safeUpdates.away_event_team_id = await this.resolveEventTeamId(eventId, updates.away_team_id, categoryId);
+        }
+      }
+    }
+
     const { error } = await supabase
       .from('matches')
-      .update(updates)
+      .update(safeUpdates)
       .eq('id', id);
     
     if (error) throw error;
@@ -489,10 +528,14 @@ export const tournamentService = {
           // For group/best placeholders it's eventTeamId, for winner/loser it's teamId
           if (m.home_placeholder.startsWith('Ganador') || m.home_placeholder.startsWith('Perdedor')) {
             updates.home_team_id = resolvedId;
+            updates.home_event_team_id = await this.resolveEventTeamId(eventId, resolvedId, m.category_id);
           } else {
             // It's an eventTeamId, need to get the team_id
             const et = eventTeams.find((e: any) => e.id === resolvedId);
-            if (et) updates.home_team_id = et.team_id;
+            if (et) {
+              updates.home_team_id = et.team_id;
+              updates.home_event_team_id = et.id;
+            }
           }
           resolved++;
         }
@@ -502,9 +545,13 @@ export const tournamentService = {
         if (resolvedId) {
           if (m.away_placeholder.startsWith('Ganador') || m.away_placeholder.startsWith('Perdedor')) {
             updates.away_team_id = resolvedId;
+            updates.away_event_team_id = await this.resolveEventTeamId(eventId, resolvedId, m.category_id);
           } else {
             const et = eventTeams.find((e: any) => e.id === resolvedId);
-            if (et) updates.away_team_id = et.team_id;
+            if (et) {
+              updates.away_team_id = et.team_id;
+              updates.away_event_team_id = et.id;
+            }
           }
           resolved++;
         }
@@ -529,12 +576,11 @@ export const tournamentService = {
     if (finishedMatch.home_score == null || finishedMatch.away_score == null) return 0;
 
     const bracketName = finishedMatch.group_name;
-    const winnerId = finishedMatch.home_score > finishedMatch.away_score
-      ? finishedMatch.home_team_id
-      : finishedMatch.away_team_id;
-    const loserId = finishedMatch.home_score > finishedMatch.away_score
-      ? finishedMatch.away_team_id
-      : finishedMatch.home_team_id;
+    const homeWon = finishedMatch.home_score > finishedMatch.away_score;
+    const winnerId = homeWon ? finishedMatch.home_team_id : finishedMatch.away_team_id;
+    const loserId = homeWon ? finishedMatch.away_team_id : finishedMatch.home_team_id;
+    const winnerEventTeamId = homeWon ? finishedMatch.home_event_team_id : finishedMatch.away_event_team_id;
+    const loserEventTeamId = homeWon ? finishedMatch.away_event_team_id : finishedMatch.home_event_team_id;
 
     if (!winnerId || !loserId) return 0;
 
@@ -552,18 +598,22 @@ export const tournamentService = {
       const updates: any = {};
       if (m.home_placeholder === `Ganador ${bracketName}` && !m.home_team_id) {
         updates.home_team_id = winnerId;
+        updates.home_event_team_id = winnerEventTeamId || await this.resolveEventTeamId(eventId, winnerId, m.category_id);
         resolved++;
       }
       if (m.away_placeholder === `Ganador ${bracketName}` && !m.away_team_id) {
         updates.away_team_id = winnerId;
+        updates.away_event_team_id = winnerEventTeamId || await this.resolveEventTeamId(eventId, winnerId, m.category_id);
         resolved++;
       }
       if (m.home_placeholder === `Perdedor ${bracketName}` && !m.home_team_id) {
         updates.home_team_id = loserId;
+        updates.home_event_team_id = loserEventTeamId || await this.resolveEventTeamId(eventId, loserId, m.category_id);
         resolved++;
       }
       if (m.away_placeholder === `Perdedor ${bracketName}` && !m.away_team_id) {
         updates.away_team_id = loserId;
+        updates.away_event_team_id = loserEventTeamId || await this.resolveEventTeamId(eventId, loserId, m.category_id);
         resolved++;
       }
       if (Object.keys(updates).length > 0) {
@@ -576,11 +626,14 @@ export const tournamentService = {
 
   // Manually assign a team to a match slot
   async manuallyAssignTeam(matchId: string, side: 'home' | 'away', teamId: string): Promise<void> {
+    const { data: match } = await supabase.from('matches').select('*').eq('id', matchId).single();
     const updates: any = {};
     if (side === 'home') {
       updates.home_team_id = teamId;
+      updates.home_event_team_id = match ? await this.resolveEventTeamId(match.event_id, teamId, match.category_id) : null;
     } else {
       updates.away_team_id = teamId;
+      updates.away_event_team_id = match ? await this.resolveEventTeamId(match.event_id, teamId, match.category_id) : null;
     }
     const { error } = await supabase
       .from('matches')

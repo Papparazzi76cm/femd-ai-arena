@@ -338,8 +338,24 @@ export const MesaMatchPanel = () => {
 
       // Load roster-filtered players by the exact event team assigned to this match
       if (data.match.event_id && homeId && awayId) {
-          const homeETId = data.match.home_event_team_id;
-          const awayETId = data.match.away_event_team_id;
+          const resolveEventTeamId = async (teamId: string, explicitId?: string | null) => {
+            if (explicitId) return explicitId;
+            const { data: eventTeams } = await supabase
+              .from('event_teams')
+              .select('id, category_id')
+              .eq('event_id', data.match.event_id)
+              .eq('team_id', teamId);
+
+            if (!eventTeams || eventTeams.length === 0) return null;
+            const exact = data.match.category_id ? eventTeams.find(et => et.category_id === data.match.category_id) : null;
+            if (exact) return exact.id;
+            const uncategorized = eventTeams.filter(et => !et.category_id);
+            if (uncategorized.length === 1) return uncategorized[0].id;
+            return eventTeams.length === 1 ? eventTeams[0].id : null;
+          };
+
+          const homeETId = await resolveEventTeamId(homeId, data.match.home_event_team_id);
+          const awayETId = await resolveEventTeamId(awayId, data.match.away_event_team_id);
           const loadRoster = async (etId: string) => {
             const { data: rosters } = await supabase.from('team_rosters').select('participant_id, jersey_number').eq('event_team_id', etId).eq('roster_role', 'player');
             if (rosters && rosters.length > 0) {
