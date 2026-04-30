@@ -528,10 +528,14 @@ export const tournamentService = {
           // For group/best placeholders it's eventTeamId, for winner/loser it's teamId
           if (m.home_placeholder.startsWith('Ganador') || m.home_placeholder.startsWith('Perdedor')) {
             updates.home_team_id = resolvedId;
+            updates.home_event_team_id = await this.resolveEventTeamId(eventId, resolvedId, m.category_id);
           } else {
             // It's an eventTeamId, need to get the team_id
             const et = eventTeams.find((e: any) => e.id === resolvedId);
-            if (et) updates.home_team_id = et.team_id;
+            if (et) {
+              updates.home_team_id = et.team_id;
+              updates.home_event_team_id = et.id;
+            }
           }
           resolved++;
         }
@@ -541,9 +545,13 @@ export const tournamentService = {
         if (resolvedId) {
           if (m.away_placeholder.startsWith('Ganador') || m.away_placeholder.startsWith('Perdedor')) {
             updates.away_team_id = resolvedId;
+            updates.away_event_team_id = await this.resolveEventTeamId(eventId, resolvedId, m.category_id);
           } else {
             const et = eventTeams.find((e: any) => e.id === resolvedId);
-            if (et) updates.away_team_id = et.team_id;
+            if (et) {
+              updates.away_team_id = et.team_id;
+              updates.away_event_team_id = et.id;
+            }
           }
           resolved++;
         }
