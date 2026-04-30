@@ -48,6 +48,22 @@ export const tournamentService = {
   },
 
   // Matches
+  async resolveEventTeamId(eventId: string, teamId: string | null, categoryId?: string | null): Promise<string | null> {
+    if (!teamId) return null;
+    const { data } = await supabase
+      .from('event_teams')
+      .select('id, category_id')
+      .eq('event_id', eventId)
+      .eq('team_id', teamId);
+
+    if (!data || data.length === 0) return null;
+    const exact = categoryId ? data.find(et => et.category_id === categoryId) : null;
+    if (exact) return exact.id;
+    const uncategorized = data.filter(et => !et.category_id);
+    if (uncategorized.length === 1) return uncategorized[0].id;
+    return data.length === 1 ? data[0].id : null;
+  },
+
   async getMatches(eventId: string): Promise<Match[]> {
     const { data, error } = await supabase
       .from('matches')
@@ -61,9 +77,17 @@ export const tournamentService = {
   },
 
   async createMatch(match: Omit<Match, 'id' | 'created_at'>): Promise<Match> {
+    const matchWithEventTeams: any = { ...match };
+    if (match.home_team_id && !match.home_event_team_id) {
+      matchWithEventTeams.home_event_team_id = await this.resolveEventTeamId(match.event_id, match.home_team_id, match.category_id);
+    }
+    if (match.away_team_id && !match.away_event_team_id) {
+      matchWithEventTeams.away_event_team_id = await this.resolveEventTeamId(match.event_id, match.away_team_id, match.category_id);
+    }
+
     const { data, error } = await supabase
       .from('matches')
-      .insert(match)
+      .insert(matchWithEventTeams)
       .select()
       .single();
     
