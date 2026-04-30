@@ -248,10 +248,18 @@ export const MatchCard = ({
       if (eventId) {
         const resolveEventTeamId = async (teamId: string, explicitId?: string | null) => {
           if (explicitId) return explicitId;
-          let query = supabase.from('event_teams').select('id').eq('event_id', eventId).eq('team_id', teamId);
-          if (match.category_id) query = query.eq('category_id', match.category_id);
-          const { data } = await query;
-          return data && data.length === 1 ? data[0].id : null;
+          const { data } = await supabase
+            .from('event_teams')
+            .select('id, category_id')
+            .eq('event_id', eventId)
+            .eq('team_id', teamId);
+
+          if (!data || data.length === 0) return null;
+          const exact = match.category_id ? data.find(et => et.category_id === match.category_id) : null;
+          if (exact) return exact.id;
+          const uncategorized = data.filter(et => !et.category_id);
+          if (uncategorized.length === 1) return uncategorized[0].id;
+          return data.length === 1 ? data[0].id : null;
         };
 
         const homeETId = await resolveEventTeamId(homeTeamId, (match as any).home_event_team_id);
