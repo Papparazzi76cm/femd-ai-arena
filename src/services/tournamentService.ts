@@ -576,12 +576,11 @@ export const tournamentService = {
     if (finishedMatch.home_score == null || finishedMatch.away_score == null) return 0;
 
     const bracketName = finishedMatch.group_name;
-    const winnerId = finishedMatch.home_score > finishedMatch.away_score
-      ? finishedMatch.home_team_id
-      : finishedMatch.away_team_id;
-    const loserId = finishedMatch.home_score > finishedMatch.away_score
-      ? finishedMatch.away_team_id
-      : finishedMatch.home_team_id;
+    const homeWon = finishedMatch.home_score > finishedMatch.away_score;
+    const winnerId = homeWon ? finishedMatch.home_team_id : finishedMatch.away_team_id;
+    const loserId = homeWon ? finishedMatch.away_team_id : finishedMatch.home_team_id;
+    const winnerEventTeamId = homeWon ? finishedMatch.home_event_team_id : finishedMatch.away_event_team_id;
+    const loserEventTeamId = homeWon ? finishedMatch.away_event_team_id : finishedMatch.home_event_team_id;
 
     if (!winnerId || !loserId) return 0;
 
@@ -599,18 +598,22 @@ export const tournamentService = {
       const updates: any = {};
       if (m.home_placeholder === `Ganador ${bracketName}` && !m.home_team_id) {
         updates.home_team_id = winnerId;
+        updates.home_event_team_id = winnerEventTeamId || await this.resolveEventTeamId(eventId, winnerId, m.category_id);
         resolved++;
       }
       if (m.away_placeholder === `Ganador ${bracketName}` && !m.away_team_id) {
         updates.away_team_id = winnerId;
+        updates.away_event_team_id = winnerEventTeamId || await this.resolveEventTeamId(eventId, winnerId, m.category_id);
         resolved++;
       }
       if (m.home_placeholder === `Perdedor ${bracketName}` && !m.home_team_id) {
         updates.home_team_id = loserId;
+        updates.home_event_team_id = loserEventTeamId || await this.resolveEventTeamId(eventId, loserId, m.category_id);
         resolved++;
       }
       if (m.away_placeholder === `Perdedor ${bracketName}` && !m.away_team_id) {
         updates.away_team_id = loserId;
+        updates.away_event_team_id = loserEventTeamId || await this.resolveEventTeamId(eventId, loserId, m.category_id);
         resolved++;
       }
       if (Object.keys(updates).length > 0) {
