@@ -360,7 +360,12 @@ export const TournamentManager = ({ eventId }: TournamentManagerProps) => {
 
   const handleManualAssign = async (matchId: string, side: 'home' | 'away', teamId: string) => {
     try {
-      await tournamentService.manuallyAssignTeam(matchId, side, teamId);
+      const eventTeam = eventTeams.find(et => et.id === teamId);
+      if (!eventTeam) throw new Error('Equipo del torneo no encontrado');
+      await tournamentService.updateMatch(matchId, side === 'home'
+        ? { home_team_id: eventTeam.team_id, home_event_team_id: eventTeam.id }
+        : { away_team_id: eventTeam.team_id, away_event_team_id: eventTeam.id }
+      );
       toast({ title: 'Equipo asignado', description: 'Se asignó el equipo manualmente al cruce.' });
       await loadData();
     } catch (error) {
@@ -388,10 +393,15 @@ export const TournamentManager = ({ eventId }: TournamentManagerProps) => {
 
     try {
       setLoading(true);
+      const homeEventTeam = eventTeams.find(et => et.id === newMatchHomeTeamId);
+      const awayEventTeam = eventTeams.find(et => et.id === newMatchAwayTeamId);
+      if (!homeEventTeam || !awayEventTeam) throw new Error('Equipo del torneo no encontrado');
       const matchData: any = {
         event_id: eventId,
-        home_team_id: newMatchHomeTeamId,
-        away_team_id: newMatchAwayTeamId,
+        home_team_id: homeEventTeam.team_id,
+        away_team_id: awayEventTeam.team_id,
+        home_event_team_id: homeEventTeam.id,
+        away_event_team_id: awayEventTeam.id,
         phase: newMatchPhase,
         status: 'scheduled',
         match_halves: newMatchHalves,
@@ -440,8 +450,8 @@ export const TournamentManager = ({ eventId }: TournamentManagerProps) => {
   // Edit match
   const handleEditMatch = (match: Match) => {
     setEditingMatch(match);
-    setEditMatchHomeTeamId(match.home_team_id || '');
-    setEditMatchAwayTeamId(match.away_team_id || '');
+    setEditMatchHomeTeamId(match.home_event_team_id || eventTeams.find(et => et.team_id === match.home_team_id && (!match.category_id || et.category_id === match.category_id))?.id || '');
+    setEditMatchAwayTeamId(match.away_event_team_id || eventTeams.find(et => et.team_id === match.away_team_id && (!match.category_id || et.category_id === match.category_id))?.id || '');
     setEditMatchPhase(match.phase);
     setEditMatchGroup(match.group_name || '');
     setEditMatchHalves(match.match_halves || 1);
