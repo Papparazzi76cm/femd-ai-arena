@@ -932,7 +932,7 @@ export const TournamentManager = ({ eventId }: TournamentManagerProps) => {
                         <SelectTrigger><SelectValue placeholder="Seleccionar" /></SelectTrigger>
                         <SelectContent>
                           {eventTeams.map(et => (
-                            <SelectItem key={et.id} value={et.team_id}>
+                            <SelectItem key={et.id} value={et.id}>
                               {getTeamName(et.team_id)}
                             </SelectItem>
                           ))}
@@ -945,7 +945,7 @@ export const TournamentManager = ({ eventId }: TournamentManagerProps) => {
                         <SelectTrigger><SelectValue placeholder="Seleccionar" /></SelectTrigger>
                         <SelectContent>
                           {eventTeams.map(et => (
-                            <SelectItem key={et.id} value={et.team_id}>
+                            <SelectItem key={et.id} value={et.id}>
                               {getTeamName(et.team_id)}
                             </SelectItem>
                           ))}
@@ -1244,7 +1244,7 @@ export const TournamentManager = ({ eventId }: TournamentManagerProps) => {
                       <SelectContent>
                         <SelectItem value="__none__">Por determinar</SelectItem>
                         {eventTeams.map(et => (
-                          <SelectItem key={et.id} value={et.team_id}>
+                          <SelectItem key={et.id} value={et.id}>
                             {getTeamName(et.team_id)}
                           </SelectItem>
                         ))}
@@ -1258,7 +1258,7 @@ export const TournamentManager = ({ eventId }: TournamentManagerProps) => {
                       <SelectContent>
                         <SelectItem value="__none__">Por determinar</SelectItem>
                         {eventTeams.map(et => (
-                          <SelectItem key={et.id} value={et.team_id}>
+                          <SelectItem key={et.id} value={et.id}>
                             {getTeamName(et.team_id)}
                           </SelectItem>
                         ))}
