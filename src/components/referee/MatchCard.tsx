@@ -59,6 +59,7 @@ export const MatchCard = ({
   const prevScoreRef = useRef({ home: match.home_score ?? 0, away: match.away_score ?? 0 });
   const isLive = match.status === 'in_progress';
   const isFinished = match.status === 'finished';
+  const effectiveEventId = eventId || match.event_id;
 
   // Sync local state when match data changes
   useEffect(() => {
@@ -245,13 +246,13 @@ export const MatchCard = ({
       let homeRosterPlayers: any[] = [];
       let awayRosterPlayers: any[] = [];
 
-      if (eventId) {
+      if (effectiveEventId) {
         const resolveEventTeamId = async (teamId: string, explicitId?: string | null) => {
           if (explicitId) return explicitId;
           const { data } = await supabase
             .from('event_teams')
             .select('id, category_id')
-            .eq('event_id', eventId)
+            .eq('event_id', effectiveEventId)
             .eq('team_id', teamId);
 
           if (!data || data.length === 0) return null;
