@@ -13,7 +13,7 @@ import { GoalScorersDialog } from '@/components/referee/GoalScorersDialog';
 import { CardManagerDialog } from '@/components/referee/CardManagerDialog';
 import { 
   Loader2, CheckCircle, XCircle, Calendar, MapPin, Trophy, 
-  Play, Square, Save, Goal, Clock, Building2, Phone, Edit2, RotateCcw, Star, Upload, Camera
+  Play, Square, Save, Goal, Clock, Building2, Phone, Edit2, RotateCcw, Star, Upload, Camera, CreditCard
 } from 'lucide-react';
 
 interface AssignmentData {
@@ -707,12 +707,16 @@ export const MesaMatchPanel = () => {
 
         {/* Goal scorers button - during live match */}
         {isLive && homeTeam && awayTeam && (
-          <div className="flex flex-col sm:flex-row gap-2">
-            <Button variant="outline" className="flex-1 h-11" onClick={() => setGoalScorersOpen(true)}>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+            <Button variant="outline" className="h-11" onClick={() => setGoalScorersOpen(true)}>
               <Goal className="w-4 h-4 mr-2" />
-              Registrar Goleadores
+              Goleadores
             </Button>
-            <Button variant="outline" className="flex-1 h-11" onClick={() => { loadMvpData(); setMvpOpen(true); }}>
+            <Button variant="outline" className="h-11" onClick={() => setCardManagerOpen(true)}>
+              <CreditCard className="w-4 h-4 mr-2" />
+              Tarjetas
+            </Button>
+            <Button variant="outline" className="h-11" onClick={() => { loadMvpData(); setMvpOpen(true); }}>
               <Star className="w-4 h-4 mr-2" />
               MVP
             </Button>
@@ -907,6 +911,25 @@ export const MesaMatchPanel = () => {
             awayTeamName={awayTeam.name}
             eventId={match.event_id}
             categoryId={match.category_id || undefined}
+            homeEventTeamId={match.home_event_team_id}
+            awayEventTeamId={match.away_event_team_id}
+          />
+        )}
+
+        {/* Card manager dialog */}
+        {homeTeam && awayTeam && (
+          <CardManagerDialog
+            open={cardManagerOpen}
+            onOpenChange={setCardManagerOpen}
+            matchId={match.id}
+            homeTeamId={homeTeam.id}
+            awayTeamId={awayTeam.id}
+            homeTeamName={homeTeam.name}
+            awayTeamName={awayTeam.name}
+            eventId={match.event_id}
+            categoryId={match.category_id || undefined}
+            homeEventTeamId={match.home_event_team_id}
+            awayEventTeamId={match.away_event_team_id}
           />
         )}
       </div>
