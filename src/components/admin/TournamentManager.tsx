@@ -474,9 +474,13 @@ export const TournamentManager = ({ eventId }: TournamentManagerProps) => {
     if (!editingMatch) return;
     try {
       setLoading(true);
+      const homeEventTeam = editMatchHomeTeamId ? eventTeams.find(et => et.id === editMatchHomeTeamId) : null;
+      const awayEventTeam = editMatchAwayTeamId ? eventTeams.find(et => et.id === editMatchAwayTeamId) : null;
       const updates: any = {
-        home_team_id: editMatchHomeTeamId || null,
-        away_team_id: editMatchAwayTeamId || null,
+        home_team_id: homeEventTeam?.team_id || null,
+        away_team_id: awayEventTeam?.team_id || null,
+        home_event_team_id: homeEventTeam?.id || null,
+        away_event_team_id: awayEventTeam?.id || null,
         phase: editMatchPhase,
         group_name: editMatchGroup || null,
         match_halves: editMatchHalves,
@@ -1116,13 +1120,13 @@ export const TournamentManager = ({ eventId }: TournamentManagerProps) => {
                                  </div>
                                  {hasUnresolvedHome && (
                                    <div className="mt-1">
-                                     <Select onValueChange={v => handleManualAssign(match.id, 'home', v)}>
+                                      <Select onValueChange={v => handleManualAssign(match.id, 'home', v)}>
                                        <SelectTrigger className="h-7 text-xs w-full border-dashed border-amber-400">
                                          <SelectValue placeholder="Asignar manualmente..." />
                                        </SelectTrigger>
                                        <SelectContent>
                                          {eventTeams.map(et => (
-                                           <SelectItem key={et.id} value={et.team_id}>
+                                            <SelectItem key={et.id} value={et.id}>
                                              {getTeamName(et.team_id)}
                                            </SelectItem>
                                          ))}
@@ -1160,7 +1164,7 @@ export const TournamentManager = ({ eventId }: TournamentManagerProps) => {
                                        </SelectTrigger>
                                        <SelectContent>
                                          {eventTeams.map(et => (
-                                           <SelectItem key={et.id} value={et.team_id}>
+                                            <SelectItem key={et.id} value={et.id}>
                                              {getTeamName(et.team_id)}
                                            </SelectItem>
                                          ))}
