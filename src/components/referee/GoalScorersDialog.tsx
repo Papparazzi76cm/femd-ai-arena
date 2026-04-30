@@ -71,10 +71,18 @@ export const GoalScorersDialog = ({
       if (eventId) {
         const resolveEventTeamId = async (teamId: string, explicitId?: string | null) => {
           if (explicitId) return explicitId;
-          let query = supabase.from('event_teams').select('id').eq('event_id', eventId).eq('team_id', teamId);
-          if (categoryId) query = query.eq('category_id', categoryId);
-          const { data } = await query;
-          return data && data.length === 1 ? data[0].id : null;
+          const { data } = await supabase
+            .from('event_teams')
+            .select('id, category_id')
+            .eq('event_id', eventId)
+            .eq('team_id', teamId);
+
+          if (!data || data.length === 0) return null;
+          const exact = categoryId ? data.find(et => et.category_id === categoryId) : null;
+          if (exact) return exact.id;
+          const uncategorized = data.filter(et => !et.category_id);
+          if (uncategorized.length === 1) return uncategorized[0].id;
+          return data.length === 1 ? data[0].id : null;
         };
 
         const homeETId = await resolveEventTeamId(homeTeamId, homeEventTeamId);
