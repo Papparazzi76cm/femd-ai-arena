@@ -35,24 +35,23 @@ export const PlayerDetailPage = () => {
   const [history, setHistory] = useState<TeamHistoryWithDetails[]>([]);
   const [matches, setMatches] = useState<any[]>([]);
   const [goals, setGoals] = useState<any[]>([]);
+  const [cards, setCards] = useState<any[]>([]);
+  const [matchesPlayed, setMatchesPlayed] = useState(0);
   const [playerEvents, setPlayerEvents] = useState<{ id: string; title: string; date: string }[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Accumulated stats from history
-  const accumulatedStats = history.reduce((acc, h) => ({
-    matches_played: acc.matches_played + (h.matches_played || 0),
-    goals_scored: acc.goals_scored + (h.goals_scored || 0),
-    yellow_cards: acc.yellow_cards + (h.yellow_cards || 0),
-    red_cards: acc.red_cards + (h.red_cards || 0),
-  }), { matches_played: 0, goals_scored: 0, yellow_cards: 0, red_cards: 0 });
+  // Live stats derived from actual match data (goals, cards, matches played)
+  const liveYellow = cards.filter(c => c.card_type === 'yellow').length;
+  const liveRed = cards.filter(c => c.card_type === 'red').length;
+  const liveGoals = goals.filter(g => !g.is_own_goal).length;
 
-  // Total stats = current + accumulated
   const totalStats = {
-    matches_played: (player?.matches_played || 0) + accumulatedStats.matches_played,
-    goals_scored: (player?.goals_scored || 0) + accumulatedStats.goals_scored,
-    yellow_cards: (player?.yellow_cards || 0) + accumulatedStats.yellow_cards,
-    red_cards: (player?.red_cards || 0) + accumulatedStats.red_cards,
+    matches_played: matchesPlayed,
+    goals_scored: liveGoals,
+    yellow_cards: liveYellow,
+    red_cards: liveRed,
   };
+
 
   useEffect(() => {
     loadPlayerData();
