@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Match } from '@/types/tournament';
-import { Calendar, MapPin, Save, Play, Square, Check, Goal, RotateCcw, Star, Upload, CreditCard } from 'lucide-react';
+import { Calendar, MapPin, Save, Play, Square, Check, Goal, RotateCcw, Star, Upload, CreditCard, Undo2 } from 'lucide-react';
 import { MatchTimer } from './MatchTimer';
 import { useGoalSound } from '@/hooks/useGoalSound';
 import { useMatchNotifications } from '@/hooks/useMatchNotifications';
@@ -169,6 +169,53 @@ export const MatchCard = ({
     } finally {
       setSaving(false);
     }
+  };
+
+  // Devuelve el partido a su estado inicial: programado, marcadores a nulo,
+  // sin started_at, y elimina goles/tarjetas/MVP asociados. Útil para pruebas.
+  const handleResetToScheduled = async () => {
+    if (!confirm('¿Seguro? Esto borrará goles, tarjetas y MVP de este partido y lo dejará como "Programado".')) return;
+    setSaving(true);
+    try {
+      await Promise.all([
+        supabase.from('match_goals').delete().eq('match_id', match.id),
+        supabase.from('match_cards').delete().eq('match_id', match.id),
+        supabase.from('match_mvps').delete().eq('match_id', match.id),
+      ]);
+      await onUpdate(match.id, {
+        status: 'scheduled',
+        home_score: null as any,
+        away_score: null as any,
+        home_yellow_cards: 0,
+        home_red_cards: 0,
+        away_yellow_cards: 0,
+        away_red_cards: 0,
+        started_at: null as any,
+      });
+      setIsEditing(false);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // Handlers para partidos con 2 tiempos
+  const handleStartSecondHalf = async () => {
+    setSaving(true);
+    try {
+      // Reinicia el cronómetro guardando started_at justo ahora;
+      // el timer ya ofrece visualización del 2º tiempo internamente.
+      await onUpdate(match.id, { started_at: new Date().toISOString() });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // Marca el final de la 1ª parte sin finalizar el partido: simplemente
+  // dejamos started_at intacto y el árbitro pulsará "Iniciar 2ª parte" cuando reanude.
+  const handleEndFirstHalf = async () => {
+    // No hay cambio de estado en DB necesario; el timer auto-pausa al final del 1er tiempo.
+    // Mantenemos el botón como confirmación explícita y por simetría visual.
+    return;
   };
 
   const handleScoreChange = (team: 'home' | 'away', newScore: number) => {
