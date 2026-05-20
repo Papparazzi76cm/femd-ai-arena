@@ -341,11 +341,11 @@ export const PlayerDetailPage = () => {
                               <Badge className="bg-emerald-500 text-white text-xs">Actual</Badge>
                             </div>
                             <p className="text-sm text-muted-foreground">
-                              PJ: {player.matches_played || 0} | 
-                              Goles: {player.goals_scored || 0} | 
-                              TA: {player.yellow_cards || 0} | 
-                              TR: {player.red_cards || 0}
+                              Goles: {goals.filter(g => !g.is_own_goal && g.team_id === currentTeam.id).length} | 
+                              TA: {cards.filter(c => c.card_type === 'yellow' && c.team_id === currentTeam.id).length} | 
+                              TR: {cards.filter(c => c.card_type === 'red' && c.team_id === currentTeam.id).length}
                             </p>
+
                           </Link>
                         </div>
                       )}
