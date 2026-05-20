@@ -937,8 +937,8 @@ export function TournamentDetailPage() {
                                 <TableHead className="text-center px-1 sm:px-4">G</TableHead>
                                 <TableHead className="text-center px-1 sm:px-4 hidden sm:table-cell">E</TableHead>
                                 <TableHead className="text-center px-1 sm:px-4">P</TableHead>
-                                <TableHead className="text-center px-1 sm:px-4 hidden sm:table-cell">GF</TableHead>
-                                <TableHead className="text-center px-1 sm:px-4 hidden sm:table-cell">GC</TableHead>
+                                <TableHead className="text-center px-1 sm:px-4 hidden md:table-cell">GF</TableHead>
+                                <TableHead className="text-center px-1 sm:px-4 hidden md:table-cell">GC</TableHead>
                                 <TableHead className="text-center px-1 sm:px-4 hidden sm:table-cell">DG</TableHead>
                               </TableRow>
                             </TableHeader>
@@ -967,8 +967,8 @@ export function TournamentDetailPage() {
                                   <TableCell className="text-center px-1 sm:px-4">{team.wins}</TableCell>
                                   <TableCell className="text-center text-muted-foreground px-1 sm:px-4 hidden sm:table-cell">{team.draws}</TableCell>
                                   <TableCell className="text-center text-destructive px-1 sm:px-4">{team.losses}</TableCell>
-                                  <TableCell className="text-center text-primary px-1 sm:px-4 hidden sm:table-cell">{team.goals_for}</TableCell>
-                                  <TableCell className="text-center text-destructive px-1 sm:px-4 hidden sm:table-cell">{team.goals_against}</TableCell>
+                                  <TableCell className="text-center text-primary px-1 sm:px-4 hidden md:table-cell">{team.goals_for}</TableCell>
+                                  <TableCell className="text-center text-destructive px-1 sm:px-4 hidden md:table-cell">{team.goals_against}</TableCell>
                                   <TableCell className={`text-center font-medium px-1 sm:px-4 hidden sm:table-cell ${team.goal_difference > 0 ? 'text-green-600' : team.goal_difference < 0 ? 'text-red-600' : ''}`}>
                                     {team.goal_difference > 0 ? `+${team.goal_difference}` : team.goal_difference}
                                   </TableCell>
