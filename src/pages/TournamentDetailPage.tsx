@@ -603,46 +603,47 @@ export function TournamentDetailPage() {
           </Card>
         )}
 
-        {/* Hero Section */}
-        <div className="mb-8 sm:mb-12 animate-fade-in">
-          {event.poster_url && (
-            <div className="mb-4 sm:mb-6 rounded-lg overflow-hidden max-w-3xl mx-auto">
-              <img
-                src={event.poster_url}
-                alt={event.title}
-                className="w-full h-auto object-cover"
-                onError={(e) => {
-                  e.currentTarget.style.display = 'none';
-                }}
-              />
-            </div>
-          )}
-          
-          <div className="text-center">
-            <h1 className="text-2xl sm:text-4xl md:text-5xl font-bold text-foreground mb-3 sm:mb-4 leading-tight">
-              {event.title}
-            </h1>
-            
-            <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-muted-foreground mb-3 sm:mb-4 text-sm sm:text-base">
-              <div className="flex items-center gap-1.5 sm:gap-2">
-                <Calendar className="h-4 w-4 sm:h-5 sm:w-5 text-primary flex-shrink-0" />
-                <span>
-                  {format(new Date(event.date), "d 'de' MMMM, yyyy", { locale: es })}
-                </span>
-              </div>
-              {event.location && (
-                <div className="flex items-center gap-1.5 sm:gap-2">
-                  <MapPin className="h-4 w-4 sm:h-5 sm:w-5 text-primary flex-shrink-0" />
-                  <span className="text-center">{event.location}</span>
+        {/* Compact Header */}
+        <div className="mb-6 sm:mb-8 animate-fade-in">
+          <div className="flex items-start gap-3 sm:gap-5">
+            {event.poster_url && (
+              <a
+                href={event.poster_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex-shrink-0 rounded-md overflow-hidden border border-border shadow-sm hover:shadow-md transition-shadow"
+                aria-label="Ver cartel completo"
+              >
+                <img
+                  src={event.poster_url}
+                  alt={event.title}
+                  className="w-16 h-20 sm:w-20 sm:h-28 object-cover"
+                  onError={(e) => { (e.currentTarget.parentElement as HTMLElement).style.display = 'none'; }}
+                />
+              </a>
+            )}
+            <div className="flex-1 min-w-0">
+              <h1 className="text-xl sm:text-3xl md:text-4xl font-bold text-foreground mb-2 leading-tight">
+                {event.title}
+              </h1>
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-muted-foreground text-xs sm:text-sm">
+                <div className="flex items-center gap-1.5">
+                  <Calendar className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-primary flex-shrink-0" />
+                  <span>{format(new Date(event.date), "d 'de' MMMM, yyyy", { locale: es })}</span>
                 </div>
+                {event.location && (
+                  <div className="flex items-center gap-1.5">
+                    <MapPin className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-primary flex-shrink-0" />
+                    <span>{event.location}</span>
+                  </div>
+                )}
+              </div>
+              {event.description && (
+                <p className="text-xs sm:text-sm text-muted-foreground mt-2 line-clamp-2">
+                  {event.description}
+                </p>
               )}
             </div>
-
-            {event.description && (
-              <p className="text-sm sm:text-lg text-muted-foreground max-w-3xl mx-auto px-2">
-                {event.description}
-              </p>
-            )}
           </div>
         </div>
 
