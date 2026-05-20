@@ -59,7 +59,7 @@ export const SponsorsBanner = ({ eventId, minSponsors = 1 }: Props) => {
           <img
             src={s.logo_url}
             alt={s.name}
-            className="h-12 sm:h-16 w-auto max-w-[180px] sm:max-w-[240px] object-contain"
+            className="h-[72px] sm:h-24 w-auto max-w-[270px] sm:max-w-[360px] object-contain"
             loading="lazy"
           />
         ) : null}
@@ -84,7 +84,7 @@ export const SponsorsBanner = ({ eventId, minSponsors = 1 }: Props) => {
       <div className="text-[10px] uppercase tracking-wider text-muted-foreground/70 text-center pt-1.5">
         Patrocinadores
       </div>
-      <div className="relative overflow-hidden py-3 sm:py-4">
+      <div className="relative overflow-hidden py-5 sm:py-6">
         <div
           className="flex items-center w-max sponsors-marquee-track"
           style={{ animation: `sponsors-marquee ${durationSec}s linear infinite` }}
