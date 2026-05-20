@@ -572,13 +572,24 @@ export const MatchCard = ({
                   <Save className="w-4 h-4 mr-2" />
                   {saving ? 'Guardando...' : 'Guardar'}
                 </Button>
+                {match.match_halves === 2 && (
+                  <Button
+                    variant="outline"
+                    onClick={handleStartSecondHalf}
+                    disabled={saving}
+                    className="h-11 border-blue-500 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20"
+                  >
+                    <Play className="w-4 h-4 mr-2" />
+                    Iniciar 2ª Parte
+                  </Button>
+                )}
                 <Button 
                   onClick={handleEndMatch} 
                   disabled={saving}
                   className="bg-red-600 hover:bg-red-700 text-white h-11"
                 >
                   <Square className="w-4 h-4 mr-2" />
-                  {saving ? 'Finalizando...' : 'Finalizar'}
+                  {saving ? 'Finalizando...' : 'Finalizar Partido'}
                 </Button>
               </>
             )}
@@ -612,6 +623,16 @@ export const MatchCard = ({
                 >
                   <Star className="w-4 h-4 mr-1" />
                   MVP
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleResetToScheduled}
+                  disabled={saving}
+                  className="h-10 border-amber-500 text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-900/20"
+                >
+                  <Undo2 className="w-4 h-4 mr-1" />
+                  Partido sin iniciar
                 </Button>
               </>
             )}
