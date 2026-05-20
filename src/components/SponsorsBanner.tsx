@@ -59,7 +59,7 @@ export const SponsorsBanner = ({ eventId, minSponsors = 1 }: Props) => {
           <img
             src={s.logo_url}
             alt={s.name}
-            className="h-12 sm:h-16 w-auto max-w-[180px] sm:max-w-[240px] object-contain"
+            className="h-[72px] sm:h-24 w-auto max-w-[270px] sm:max-w-[360px] object-contain"
             loading="lazy"
           />
         ) : null}
