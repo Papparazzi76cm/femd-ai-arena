@@ -671,6 +671,17 @@ export const MesaMatchPanel = () => {
           </div>
         </Card>
 
+        {/* Match Timer (visible while live) */}
+        {isLive && (
+          <MatchTimer
+            isLive={isLive}
+            matchDurationMinutes={match.match_duration_minutes || 40}
+            matchHalves={match.match_halves || 1}
+            startedAt={match.started_at}
+            readOnly
+          />
+        )}
+
         {/* Scoreboard */}
         <Card className={`p-3 sm:p-6 ${isLive ? 'border-2 border-red-500' : ''}`}>
           <div className="grid grid-cols-3 gap-2 sm:gap-4 items-center">
