@@ -780,11 +780,11 @@ export const MesaMatchPanel = () => {
 
         {/* Actions */}
         {!isFinished && isAccepted && (
-          <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
+          <div className="flex flex-col sm:flex-row flex-wrap gap-2 sm:gap-3">
             {match.status === 'scheduled' && (
               <Button onClick={handleStartMatch} className="flex-1 h-11 bg-emerald-600 hover:bg-emerald-700" disabled={saving}>
                 <Play className="w-4 h-4 mr-2" />
-                Iniciar Partido
+                {match.match_halves === 2 ? 'Iniciar Primera Parte' : 'Iniciar Partido'}
               </Button>
             )}
             {isLive && (
@@ -793,9 +793,15 @@ export const MesaMatchPanel = () => {
                   <Save className="w-4 h-4 mr-2" />
                   Guardar
                 </Button>
+                {match.match_halves === 2 && (
+                  <Button variant="outline" onClick={handleStartSecondHalf} disabled={saving} className="flex-1 h-11 border-blue-500 text-blue-600">
+                    <Play className="w-4 h-4 mr-2" />
+                    Iniciar 2ª Parte
+                  </Button>
+                )}
                 <Button onClick={handleEndMatch} className="flex-1 h-11 bg-red-600 hover:bg-red-700" disabled={saving}>
                   <Square className="w-4 h-4 mr-2" />
-                  Finalizar
+                  Finalizar Partido
                 </Button>
               </>
             )}
@@ -833,6 +839,10 @@ export const MesaMatchPanel = () => {
               <Button variant="outline" size="sm" onClick={() => { loadMvpData(); setMvpOpen(true); }} className="h-10">
                 <Star className="w-4 h-4 mr-1" />
                 MVP
+              </Button>
+              <Button variant="outline" size="sm" onClick={handleResetToScheduled} disabled={saving} className="h-10 border-amber-500 text-amber-600 col-span-2 sm:col-span-1">
+                <Undo2 className="w-4 h-4 mr-1" />
+                Partido sin iniciar
               </Button>
             </div>
           </Card>
