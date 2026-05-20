@@ -676,8 +676,9 @@ export const LiveTournamentPage = () => {
               {/* Standings Tab */}
               <TabsContent value="standings">
                 <div className="space-y-6">
-                  {Object.entries(groupedStandings).map(([groupName, groupTeams]) => (
-                    <Card key={groupName} className="overflow-hidden">
+                  {Object.entries(groupedStandings).map(([groupName, groupTeams], gIdx, arr) => (
+                    <div key={groupName}>
+                    <Card className="overflow-hidden">
                       <div className="bg-primary/10 px-4 py-2 border-b"><h3 className="font-bold">{groupName}</h3></div>
                       <div className="overflow-x-auto">
                         <table className="w-full text-xs sm:text-sm">
