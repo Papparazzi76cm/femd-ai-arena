@@ -937,8 +937,8 @@ export function TournamentDetailPage() {
                                 <TableHead className="text-center px-1 sm:px-4">G</TableHead>
                                 <TableHead className="text-center px-1 sm:px-4 hidden sm:table-cell">E</TableHead>
                                 <TableHead className="text-center px-1 sm:px-4">P</TableHead>
-                                <TableHead className="text-center px-1 sm:px-4 hidden md:table-cell">GF</TableHead>
-                                <TableHead className="text-center px-1 sm:px-4 hidden md:table-cell">GC</TableHead>
+                                <TableHead className="text-center px-1 sm:px-4 hidden sm:table-cell">GF</TableHead>
+                                <TableHead className="text-center px-1 sm:px-4 hidden sm:table-cell">GC</TableHead>
                                 <TableHead className="text-center px-1 sm:px-4 hidden sm:table-cell">DG</TableHead>
                               </TableRow>
                             </TableHeader>
