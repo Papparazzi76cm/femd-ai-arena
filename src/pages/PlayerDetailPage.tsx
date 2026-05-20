@@ -492,7 +492,7 @@ export const PlayerDetailPage = () => {
                       <Tooltip contentStyle={{ backgroundColor: 'hsl(var(--background))', border: '1px solid hsl(var(--border))' }} />
                       <Legend />
                       <Bar dataKey="goles" fill="hsl(var(--primary))" name="Goles" />
-                      <Bar dataKey="partidos" fill="hsl(142, 76%, 36%)" name="Partidos" />
+
                     </BarChart>
                   </ResponsiveContainer>
                 </CardContent>
