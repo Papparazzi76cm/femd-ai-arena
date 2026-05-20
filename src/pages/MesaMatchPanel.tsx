@@ -11,9 +11,10 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { GoalScorersDialog } from '@/components/referee/GoalScorersDialog';
 import { CardManagerDialog } from '@/components/referee/CardManagerDialog';
+import { MatchTimer } from '@/components/referee/MatchTimer';
 import { 
   Loader2, CheckCircle, XCircle, Calendar, MapPin, Trophy, 
-  Play, Square, Save, Goal, Clock, Building2, Phone, Edit2, RotateCcw, Star, Upload, Camera, CreditCard
+  Play, Square, Save, Goal, Clock, Building2, Phone, Edit2, RotateCcw, Star, Upload, Camera, CreditCard, Undo2
 } from 'lucide-react';
 
 interface AssignmentData {
@@ -300,6 +301,33 @@ export const MesaMatchPanel = () => {
         },
       });
       toast({ title: '🔄 Partido reiniciado' });
+      loadData();
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleResetToScheduled = async () => {
+    if (!confirm('¿Seguro? Esto borrará goles, tarjetas y MVP y dejará el partido como "Programado".')) return;
+    setSaving(true);
+    try {
+      const result = await callAction('reset_match');
+      if (result.success) {
+        toast({ title: '↩️ Partido devuelto a "Programado"' });
+        loadData();
+      } else {
+        toast({ title: 'Error', description: result.error || 'No se pudo resetear', variant: 'destructive' });
+      }
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleStartSecondHalf = async () => {
+    setSaving(true);
+    try {
+      await callAction('update_match', { updates: { started_at: new Date().toISOString() } });
+      toast({ title: '▶️ 2ª Parte iniciada' });
       loadData();
     } finally {
       setSaving(false);
