@@ -913,6 +913,42 @@ export type Database = {
         }
         Relationships: []
       }
+      sponsor_events: {
+        Row: {
+          created_at: string
+          event_id: string
+          id: string
+          sponsor_id: string
+        }
+        Insert: {
+          created_at?: string
+          event_id: string
+          id?: string
+          sponsor_id: string
+        }
+        Update: {
+          created_at?: string
+          event_id?: string
+          id?: string
+          sponsor_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sponsor_events_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sponsor_events_sponsor_id_fkey"
+            columns: ["sponsor_id"]
+            isOneToOne: false
+            referencedRelation: "sponsors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       sponsors: {
         Row: {
           created_at: string | null
