@@ -726,6 +726,10 @@ export const LiveTournamentPage = () => {
                         Vista reducida. Gira el móvil para ver E, GF, GC y DG.
                       </p>
                     </Card>
+                    {((gIdx + 1) % 2 === 0) && (gIdx < arr.length - 1) && selectedEventId && (
+                      <SponsorsBanner eventId={selectedEventId} />
+                    )}
+                    </div>
                   ))}
                 </div>
               </TabsContent>
