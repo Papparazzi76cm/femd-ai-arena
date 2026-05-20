@@ -208,6 +208,38 @@ serve(async (req: Request) => {
         );
       }
 
+      if (action === "reset_match") {
+        if (assignment.status !== "accepted") {
+          return new Response(
+            JSON.stringify({ error: "Debes aceptar la asignación primero" }),
+            { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+        // Delete all child records for this match
+        await supabaseAdmin.from("match_goals").delete().eq("match_id", assignment.match_id);
+        await supabaseAdmin.from("match_cards").delete().eq("match_id", assignment.match_id);
+        await supabaseAdmin.from("match_mvps").delete().eq("match_id", assignment.match_id);
+        // Reset the match itself
+        const { error } = await supabaseAdmin
+          .from("matches")
+          .update({
+            status: "scheduled",
+            home_score: null,
+            away_score: null,
+            home_yellow_cards: 0,
+            home_red_cards: 0,
+            away_yellow_cards: 0,
+            away_red_cards: 0,
+            started_at: null,
+          })
+          .eq("id", assignment.match_id);
+        if (error) throw error;
+        return new Response(
+          JSON.stringify({ success: true }),
+          { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
       return new Response(
         JSON.stringify({ error: "Acción no válida" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }

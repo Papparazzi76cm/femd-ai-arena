@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Match } from '@/types/tournament';
-import { Calendar, MapPin, Save, Play, Square, Check, Goal, RotateCcw, Star, Upload, CreditCard } from 'lucide-react';
+import { Calendar, MapPin, Save, Play, Square, Check, Goal, RotateCcw, Star, Upload, CreditCard, Undo2 } from 'lucide-react';
 import { MatchTimer } from './MatchTimer';
 import { useGoalSound } from '@/hooks/useGoalSound';
 import { useMatchNotifications } from '@/hooks/useMatchNotifications';
@@ -169,6 +169,53 @@ export const MatchCard = ({
     } finally {
       setSaving(false);
     }
+  };
+
+  // Devuelve el partido a su estado inicial: programado, marcadores a nulo,
+  // sin started_at, y elimina goles/tarjetas/MVP asociados. Útil para pruebas.
+  const handleResetToScheduled = async () => {
+    if (!confirm('¿Seguro? Esto borrará goles, tarjetas y MVP de este partido y lo dejará como "Programado".')) return;
+    setSaving(true);
+    try {
+      await Promise.all([
+        supabase.from('match_goals').delete().eq('match_id', match.id),
+        supabase.from('match_cards').delete().eq('match_id', match.id),
+        supabase.from('match_mvps').delete().eq('match_id', match.id),
+      ]);
+      await onUpdate(match.id, {
+        status: 'scheduled',
+        home_score: null as any,
+        away_score: null as any,
+        home_yellow_cards: 0,
+        home_red_cards: 0,
+        away_yellow_cards: 0,
+        away_red_cards: 0,
+        started_at: null as any,
+      });
+      setIsEditing(false);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // Handlers para partidos con 2 tiempos
+  const handleStartSecondHalf = async () => {
+    setSaving(true);
+    try {
+      // Reinicia el cronómetro guardando started_at justo ahora;
+      // el timer ya ofrece visualización del 2º tiempo internamente.
+      await onUpdate(match.id, { started_at: new Date().toISOString() });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // Marca el final de la 1ª parte sin finalizar el partido: simplemente
+  // dejamos started_at intacto y el árbitro pulsará "Iniciar 2ª parte" cuando reanude.
+  const handleEndFirstHalf = async () => {
+    // No hay cambio de estado en DB necesario; el timer auto-pausa al final del 1er tiempo.
+    // Mantenemos el botón como confirmación explícita y por simetría visual.
+    return;
   };
 
   const handleScoreChange = (team: 'home' | 'away', newScore: number) => {
@@ -499,7 +546,7 @@ export const MatchCard = ({
                 className="bg-green-600 hover:bg-green-700 text-white col-span-2 h-11"
               >
                 <Play className="w-4 h-4 mr-2" />
-                {saving ? 'Iniciando...' : 'Iniciar Partido'}
+                {saving ? 'Iniciando...' : (match.match_halves === 2 ? 'Iniciar Primera Parte' : 'Iniciar Partido')}
               </Button>
             )}
 
@@ -525,13 +572,24 @@ export const MatchCard = ({
                   <Save className="w-4 h-4 mr-2" />
                   {saving ? 'Guardando...' : 'Guardar'}
                 </Button>
+                {match.match_halves === 2 && (
+                  <Button
+                    variant="outline"
+                    onClick={handleStartSecondHalf}
+                    disabled={saving}
+                    className="h-11 border-blue-500 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20"
+                  >
+                    <Play className="w-4 h-4 mr-2" />
+                    Iniciar 2ª Parte
+                  </Button>
+                )}
                 <Button 
                   onClick={handleEndMatch} 
                   disabled={saving}
                   className="bg-red-600 hover:bg-red-700 text-white h-11"
                 >
                   <Square className="w-4 h-4 mr-2" />
-                  {saving ? 'Finalizando...' : 'Finalizar'}
+                  {saving ? 'Finalizando...' : 'Finalizar Partido'}
                 </Button>
               </>
             )}
@@ -565,6 +623,16 @@ export const MatchCard = ({
                 >
                   <Star className="w-4 h-4 mr-1" />
                   MVP
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleResetToScheduled}
+                  disabled={saving}
+                  className="h-10 border-amber-500 text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-900/20"
+                >
+                  <Undo2 className="w-4 h-4 mr-1" />
+                  Partido sin iniciar
                 </Button>
               </>
             )}
