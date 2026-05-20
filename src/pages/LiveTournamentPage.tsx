@@ -13,6 +13,7 @@ import { Team, Participant } from '@/types/database';
 import { useMatchNotifications } from '@/hooks/useMatchNotifications';
 import { useGoalSound } from '@/hooks/useGoalSound';
 import { TeamLogo } from '@/components/TeamLogo';
+import { buildGroupStandings, GroupMatch } from '@/services/tournamentEngine';
 
 interface EventTeam {
   id: string;
