@@ -53,23 +53,17 @@ export const SponsorsBanner = ({ eventId, minSponsors = 1 }: Props) => {
   const durationSec = Math.max(20, sponsors.length * 6);
 
   const renderItem = (s: Sponsor, i: number) => {
+    if (!s.logo_url) return null;
     const content = (
-      <div className="flex items-center gap-3 px-6 sm:px-10 shrink-0">
-        {s.logo_url ? (
-          <img
-            src={s.logo_url}
-            alt={s.name}
-            className="h-[72px] sm:h-24 w-auto max-w-[270px] sm:max-w-[360px] object-contain"
-            loading="lazy"
-          />
-        ) : null}
-        <span className="text-sm sm:text-base font-semibold text-foreground whitespace-nowrap">
-          {s.name}
-        </span>
-      </div>
+      <img
+        src={s.logo_url}
+        alt={s.name}
+        className="h-[72px] sm:h-24 w-auto max-w-[270px] sm:max-w-[360px] object-contain"
+        loading="lazy"
+      />
     );
     return (
-      <div key={`${s.id}-${i}`} className="shrink-0">
+      <div key={`${s.id}-${i}`} className="shrink-0 px-6 sm:px-10 flex items-center">
         {s.website ? (
           <a href={s.website} target="_blank" rel="noopener noreferrer" className="block hover:opacity-80 transition-opacity">
             {content}
