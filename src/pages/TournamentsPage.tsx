@@ -221,16 +221,18 @@ export function TournamentsPage() {
 
                   <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
                     {events.map((event, index) => {
-                      const isPast = new Date(event.date) < new Date();
+                      const status = getTournamentStatus(event);
+                      const isFinished = status === 'finished';
+                      const isLive = status === 'live';
                       return (
                         <Link key={event.id} to={`/torneos/${event.id}`}>
                           <Card
                             className={`hover-lift animate-fade-in cursor-pointer h-full transition-all overflow-hidden ${
-                              isPast ? "opacity-80 hover:opacity-100" : "hover-glow"
+                              isFinished ? "opacity-80 hover:opacity-100" : "hover-glow"
                             }`}
                             style={{ animationDelay: `${index * 50}ms` }}
                           >
-                            {!isPast && <div className="h-1 gradient-gold" />}
+                            {!isFinished && <div className="h-1 gradient-gold" />}
                             <div className="flex">
                               {/* Miniatura del cartel */}
                               <div className="w-16 h-20 sm:w-20 sm:h-24 flex-shrink-0 overflow-hidden">
@@ -244,8 +246,8 @@ export function TournamentsPage() {
                                     <CardTitle className="text-sm sm:text-base line-clamp-2">
                                       {event.title.replace(selectedBrand.name, "").trim()}
                                     </CardTitle>
-                                    <Badge variant={isPast ? "outline" : "default"} className="shrink-0 text-[10px] sm:text-xs">
-                                      {isPast ? "Finalizado" : "Próximo"}
+                                    <Badge variant={isLive ? "default" : isFinished ? "outline" : "secondary"} className={`shrink-0 text-[10px] sm:text-xs ${isLive ? 'animate-pulse' : ''}`}>
+                                      {getTournamentStatusLabel(status)}
                                     </Badge>
                                   </div>
                                 </CardHeader>
