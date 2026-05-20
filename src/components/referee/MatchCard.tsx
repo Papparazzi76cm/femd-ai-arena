@@ -546,7 +546,7 @@ export const MatchCard = ({
                 className="bg-green-600 hover:bg-green-700 text-white col-span-2 h-11"
               >
                 <Play className="w-4 h-4 mr-2" />
-                {saving ? 'Iniciando...' : 'Iniciar Partido'}
+                {saving ? 'Iniciando...' : (match.match_halves === 2 ? 'Iniciar Primera Parte' : 'Iniciar Partido')}
               </Button>
             )}
 
