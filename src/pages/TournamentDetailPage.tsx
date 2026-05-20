@@ -15,6 +15,7 @@ import { es } from "date-fns/locale";
 import { TournamentGalleryDisplay } from "@/components/TournamentGalleryDisplay";
 import { TournamentGalleryManager } from "@/components/admin/TournamentGalleryManager";
 import { TeamLogo } from "@/components/TeamLogo";
+import { buildGroupStandings, GroupMatch } from "@/services/tournamentEngine";
 
 interface EventTeam {
   id: string;
@@ -360,121 +361,65 @@ export function TournamentDetailPage() {
     };
   }, [id]);
 
-  // Calculate team statistics from match results
+  // Calculate sorted group standings from match results using the shared tournament engine.
   const calculatedStandings = useMemo(() => {
-    // Filter group stage matches (grupo/jornada) that are already finalizados
-    const groupMatches = matches.filter(m => isGroupStagePhase(m.phase) && isCompletedStatus(m.status));
-    
-    // Initialize stats for each team
-    const statsMap = new Map<string, CalculatedTeamStats>();
-    eventTeams.forEach(et => {
-      statsMap.set(et.team_id, {
-        team_id: et.team_id,
-        group_name: et.group_name,
-        matches_played: 0,
-        wins: 0,
-        draws: 0,
-        losses: 0,
-        goals_for: 0,
-        goals_against: 0,
-        goal_difference: 0,
-        points: 0,
-        yellow_cards: 0,
-        red_cards: 0,
-        teams: et.teams
+    const groupMatchData: GroupMatch[] = matches
+      .filter(m =>
+        isGroupStagePhase(m.phase) &&
+        isCompletedStatus(m.status) &&
+        m.home_team_id &&
+        m.away_team_id &&
+        m.home_score !== null &&
+        m.away_score !== null
+      )
+      .map(m => ({
+        id: m.id,
+        homeTeamId: m.home_team_id!,
+        awayTeamId: m.away_team_id!,
+        homeScore: m.home_score!,
+        awayScore: m.away_score!,
+        homeYellowCards: m.home_yellow_cards || 0,
+        homeRedCards: m.home_red_cards || 0,
+        awayYellowCards: m.away_yellow_cards || 0,
+        awayRedCards: m.away_red_cards || 0,
+        phase: m.phase,
+        groupName: m.group_name || undefined,
+        status: m.status || 'finished',
+      }));
+
+    const standingsByGroup = buildGroupStandings(
+      eventTeams.map(et => ({ id: et.id, team_id: et.team_id, group_name: et.group_name })),
+      groupMatchData,
+    );
+
+    const orderedStandings: CalculatedTeamStats[] = [];
+    standingsByGroup.forEach(groupStandings => {
+      groupStandings.forEach(standing => {
+        const eventTeam = eventTeams.find(et => et.id === standing.eventTeamId) || eventTeams.find(et => et.team_id === standing.teamId);
+        if (!eventTeam) return;
+        orderedStandings.push({
+          team_id: standing.teamId,
+          group_name: eventTeam.group_name,
+          matches_played: standing.matchesPlayed,
+          wins: standing.wins,
+          draws: standing.draws,
+          losses: standing.losses,
+          goals_for: standing.goalsFor,
+          goals_against: standing.goalsAgainst,
+          goal_difference: standing.goalDifference,
+          points: standing.points,
+          yellow_cards: standing.yellowCards,
+          red_cards: standing.redCards,
+          teams: eventTeam.teams,
+        });
       });
     });
 
-    // Calculate stats from matches
-    groupMatches.forEach(match => {
-      const homeStats = statsMap.get(match.home_team_id);
-      const awayStats = statsMap.get(match.away_team_id);
-
-      if (!homeStats || !awayStats) return;
-      if (match.home_score === null || match.away_score === null) return;
-
-      homeStats.matches_played++;
-      awayStats.matches_played++;
-
-      homeStats.goals_for += match.home_score;
-      homeStats.goals_against += match.away_score;
-      awayStats.goals_for += match.away_score;
-      awayStats.goals_against += match.home_score;
-
-      homeStats.yellow_cards += match.home_yellow_cards || 0;
-      homeStats.red_cards += match.home_red_cards || 0;
-      awayStats.yellow_cards += match.away_yellow_cards || 0;
-      awayStats.red_cards += match.away_red_cards || 0;
-
-      if (match.home_score > match.away_score) {
-        homeStats.wins++;
-        homeStats.points += 3;
-        awayStats.losses++;
-      } else if (match.home_score < match.away_score) {
-        awayStats.wins++;
-        awayStats.points += 3;
-        homeStats.losses++;
-      } else {
-        homeStats.draws++;
-        awayStats.draws++;
-        homeStats.points += 1;
-        awayStats.points += 1;
-      }
-
-      homeStats.goal_difference = homeStats.goals_for - homeStats.goals_against;
-      awayStats.goal_difference = awayStats.goals_for - awayStats.goals_against;
-    });
-
-    return Array.from(statsMap.values());
+    return orderedStandings;
   }, [eventTeams, matches]);
 
-  // Helper function to get head-to-head result between two teams
-  const getHeadToHeadResult = (teamAId: string, teamBId: string, groupMatches: Match[]): number => {
-    // Find direct matches between the two teams
-    const directMatches = groupMatches.filter(m => 
-      (m.home_team_id === teamAId && m.away_team_id === teamBId) ||
-      (m.home_team_id === teamBId && m.away_team_id === teamAId)
-    );
-
-    if (directMatches.length === 0) return 0;
-
-    let teamAGoals = 0;
-    let teamBGoals = 0;
-    let teamAPoints = 0;
-    let teamBPoints = 0;
-
-    directMatches.forEach(match => {
-      if (match.home_score === null || match.away_score === null) return;
-
-      if (match.home_team_id === teamAId) {
-        teamAGoals += match.home_score;
-        teamBGoals += match.away_score;
-        if (match.home_score > match.away_score) teamAPoints += 3;
-        else if (match.home_score < match.away_score) teamBPoints += 3;
-        else { teamAPoints += 1; teamBPoints += 1; }
-      } else {
-        teamBGoals += match.home_score;
-        teamAGoals += match.away_score;
-        if (match.home_score > match.away_score) teamBPoints += 3;
-        else if (match.home_score < match.away_score) teamAPoints += 3;
-        else { teamAPoints += 1; teamBPoints += 1; }
-      }
-    });
-
-    // 1. Points in head-to-head
-    if (teamAPoints !== teamBPoints) return teamBPoints - teamAPoints;
-    // 2. Goal difference in head-to-head
-    const teamAGD = teamAGoals - teamBGoals;
-    const teamBGD = teamBGoals - teamAGoals;
-    if (teamAGD !== teamBGD) return teamBGD - teamAGD;
-    // 3. Goals scored in head-to-head
-    if (teamAGoals !== teamBGoals) return teamBGoals - teamAGoals;
-    return 0;
-  };
-
-  // Group calculated standings by group_name and sort
+  // Group calculated standings by group_name, preserving the engine order inside each group.
   const groupedCalculatedStandings = useMemo(() => {
-    const groupMatches = matches.filter(m => isGroupStagePhase(m.phase) && isCompletedStatus(m.status));
     const grouped = calculatedStandings.reduce((acc, team) => {
       const groupName = team.group_name || "General";
       if (!acc[groupName]) {
@@ -484,30 +429,11 @@ export function TournamentDetailPage() {
       return acc;
     }, {} as Record<string, CalculatedTeamStats[]>);
 
-    // Sort each group by FIFA-style within-group criteria:
-    // 1. Points, 2. Head-to-head, 3. Goal difference, 4. Goals for
-    Object.keys(grouped).forEach(groupName => {
-      grouped[groupName].sort((a, b) => {
-        // 1. Points
-        if (b.points !== a.points) return b.points - a.points;
-        // 2. Head-to-head result (h2h points → h2h GD → h2h GF)
-        const h2h = getHeadToHeadResult(a.team_id, b.team_id, groupMatches);
-        if (h2h !== 0) return h2h;
-        // 3. Goal difference
-        if (b.goal_difference !== a.goal_difference) return b.goal_difference - a.goal_difference;
-        // 4. Goals for
-        if (b.goals_for !== a.goals_for) return b.goals_for - a.goals_for;
-        // 5. Number of wins
-        if (b.wins !== a.wins) return b.wins - a.wins;
-        return 0;
-      });
-    });
-
     // Sort groups alphabetically
     return Object.fromEntries(
       Object.entries(grouped).sort(([a], [b]) => a.localeCompare(b))
     );
-  }, [calculatedStandings, matches]);
+  }, [calculatedStandings]);
 
   // Group matches by phase with proper ordering
   const groupedMatchesByPhase = useMemo(() => {
