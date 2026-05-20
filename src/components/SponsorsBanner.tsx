@@ -84,7 +84,7 @@ export const SponsorsBanner = ({ eventId, minSponsors = 1 }: Props) => {
       <div className="text-[10px] uppercase tracking-wider text-muted-foreground/70 text-center pt-1.5">
         Patrocinadores
       </div>
-      <div className="relative overflow-hidden py-3 sm:py-4">
+      <div className="relative overflow-hidden py-5 sm:py-6">
         <div
           className="flex items-center w-max sponsors-marquee-track"
           style={{ animation: `sponsors-marquee ${durationSec}s linear infinite` }}
