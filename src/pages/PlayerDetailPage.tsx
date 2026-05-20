@@ -478,15 +478,14 @@ export const PlayerDetailPage = () => {
                     <BarChart data={[
                       ...(currentTeam ? [{
                         name: currentTeam.name.slice(0, 15),
-                        goles: player.goals_scored || 0,
-                        partidos: player.matches_played || 0
+                        goles: goals.filter(g => !g.is_own_goal && g.team_id === currentTeam.id).length,
                       }] : []),
                       ...history.map(h => ({
                         name: h.team?.name?.slice(0, 15) || 'N/A',
-                        goles: h.goals_scored || 0,
-                        partidos: h.matches_played || 0
+                        goles: goals.filter(g => !g.is_own_goal && g.team_id === h.team_id).length,
                       }))
                     ]}>
+
                       <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
                       <XAxis dataKey="name" className="text-xs" />
                       <YAxis className="text-xs" />
