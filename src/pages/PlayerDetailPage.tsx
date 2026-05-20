@@ -35,24 +35,23 @@ export const PlayerDetailPage = () => {
   const [history, setHistory] = useState<TeamHistoryWithDetails[]>([]);
   const [matches, setMatches] = useState<any[]>([]);
   const [goals, setGoals] = useState<any[]>([]);
+  const [cards, setCards] = useState<any[]>([]);
+  const [matchesPlayed, setMatchesPlayed] = useState(0);
   const [playerEvents, setPlayerEvents] = useState<{ id: string; title: string; date: string }[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Accumulated stats from history
-  const accumulatedStats = history.reduce((acc, h) => ({
-    matches_played: acc.matches_played + (h.matches_played || 0),
-    goals_scored: acc.goals_scored + (h.goals_scored || 0),
-    yellow_cards: acc.yellow_cards + (h.yellow_cards || 0),
-    red_cards: acc.red_cards + (h.red_cards || 0),
-  }), { matches_played: 0, goals_scored: 0, yellow_cards: 0, red_cards: 0 });
+  // Live stats derived from actual match data (goals, cards, matches played)
+  const liveYellow = cards.filter(c => c.card_type === 'yellow').length;
+  const liveRed = cards.filter(c => c.card_type === 'red').length;
+  const liveGoals = goals.filter(g => !g.is_own_goal).length;
 
-  // Total stats = current + accumulated
   const totalStats = {
-    matches_played: (player?.matches_played || 0) + accumulatedStats.matches_played,
-    goals_scored: (player?.goals_scored || 0) + accumulatedStats.goals_scored,
-    yellow_cards: (player?.yellow_cards || 0) + accumulatedStats.yellow_cards,
-    red_cards: (player?.red_cards || 0) + accumulatedStats.red_cards,
+    matches_played: matchesPlayed,
+    goals_scored: liveGoals,
+    yellow_cards: liveYellow,
+    red_cards: liveRed,
   };
+
 
   useEffect(() => {
     loadPlayerData();
@@ -119,7 +118,14 @@ export const PlayerDetailPage = () => {
         .order('created_at', { ascending: false });
       setGoals(goalsData || []);
 
-      // Fetch FEMD tournament participation via team_rosters → event_teams → events
+      // Fetch player cards
+      const { data: cardsData } = await supabase
+        .from('match_cards')
+        .select('*')
+        .eq('player_id', id);
+      setCards(cardsData || []);
+
+      // Fetch FEMD tournament participation + compute matches played
       const { data: rosterData } = await supabase
         .from('team_rosters')
         .select('event_team_id')
@@ -127,6 +133,15 @@ export const PlayerDetailPage = () => {
 
       if (rosterData && rosterData.length > 0) {
         const etIds = [...new Set(rosterData.map(r => r.event_team_id))];
+
+        // Count finished matches where the player's event_team participated
+        const { data: playedMatches } = await supabase
+          .from('matches')
+          .select('id')
+          .eq('status', 'finished')
+          .or(`home_event_team_id.in.(${etIds.join(',')}),away_event_team_id.in.(${etIds.join(',')})`);
+        setMatchesPlayed(playedMatches?.length || 0);
+
         const { data: etData } = await supabase
           .from('event_teams')
           .select('event_id')
@@ -142,6 +157,7 @@ export const PlayerDetailPage = () => {
           setPlayerEvents(eventsData || []);
         }
       }
+
 
     } catch (error) {
       console.error('Error loading player:', error);
@@ -325,11 +341,11 @@ export const PlayerDetailPage = () => {
                               <Badge className="bg-emerald-500 text-white text-xs">Actual</Badge>
                             </div>
                             <p className="text-sm text-muted-foreground">
-                              PJ: {player.matches_played || 0} | 
-                              Goles: {player.goals_scored || 0} | 
-                              TA: {player.yellow_cards || 0} | 
-                              TR: {player.red_cards || 0}
+                              Goles: {goals.filter(g => !g.is_own_goal && g.team_id === currentTeam.id).length} | 
+                              TA: {cards.filter(c => c.card_type === 'yellow' && c.team_id === currentTeam.id).length} | 
+                              TR: {cards.filter(c => c.card_type === 'red' && c.team_id === currentTeam.id).length}
                             </p>
+
                           </Link>
                         </div>
                       )}
@@ -462,22 +478,21 @@ export const PlayerDetailPage = () => {
                     <BarChart data={[
                       ...(currentTeam ? [{
                         name: currentTeam.name.slice(0, 15),
-                        goles: player.goals_scored || 0,
-                        partidos: player.matches_played || 0
+                        goles: goals.filter(g => !g.is_own_goal && g.team_id === currentTeam.id).length,
                       }] : []),
                       ...history.map(h => ({
                         name: h.team?.name?.slice(0, 15) || 'N/A',
-                        goles: h.goals_scored || 0,
-                        partidos: h.matches_played || 0
+                        goles: goals.filter(g => !g.is_own_goal && g.team_id === h.team_id).length,
                       }))
                     ]}>
+
                       <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
                       <XAxis dataKey="name" className="text-xs" />
                       <YAxis className="text-xs" />
                       <Tooltip contentStyle={{ backgroundColor: 'hsl(var(--background))', border: '1px solid hsl(var(--border))' }} />
                       <Legend />
                       <Bar dataKey="goles" fill="hsl(var(--primary))" name="Goles" />
-                      <Bar dataKey="partidos" fill="hsl(142, 76%, 36%)" name="Partidos" />
+
                     </BarChart>
                   </ResponsiveContainer>
                 </CardContent>
