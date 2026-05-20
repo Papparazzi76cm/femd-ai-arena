@@ -118,7 +118,14 @@ export const PlayerDetailPage = () => {
         .order('created_at', { ascending: false });
       setGoals(goalsData || []);
 
-      // Fetch FEMD tournament participation via team_rosters → event_teams → events
+      // Fetch player cards
+      const { data: cardsData } = await supabase
+        .from('match_cards')
+        .select('*')
+        .eq('player_id', id);
+      setCards(cardsData || []);
+
+      // Fetch FEMD tournament participation + compute matches played
       const { data: rosterData } = await supabase
         .from('team_rosters')
         .select('event_team_id')
@@ -126,6 +133,15 @@ export const PlayerDetailPage = () => {
 
       if (rosterData && rosterData.length > 0) {
         const etIds = [...new Set(rosterData.map(r => r.event_team_id))];
+
+        // Count finished matches where the player's event_team participated
+        const { data: playedMatches } = await supabase
+          .from('matches')
+          .select('id')
+          .eq('status', 'finished')
+          .or(`home_event_team_id.in.(${etIds.join(',')}),away_event_team_id.in.(${etIds.join(',')})`);
+        setMatchesPlayed(playedMatches?.length || 0);
+
         const { data: etData } = await supabase
           .from('event_teams')
           .select('event_id')
@@ -141,6 +157,7 @@ export const PlayerDetailPage = () => {
           setPlayerEvents(eventsData || []);
         }
       }
+
 
     } catch (error) {
       console.error('Error loading player:', error);
