@@ -1074,14 +1074,22 @@ export function TournamentDetailPage() {
                 </CardHeader>
                 <CardContent>
                   {(() => {
-                    const teamGoals = calculatedStandings
-                      .map(team => ({
-                        team: team.teams.name,
-                        logo: team.teams.logo_url,
-                        goals: team.goals_for
-                      }))
-                      .sort((a, b) => b.goals - a.goals)
-                      .slice(0, 10);
+                    // Count goals across ALL phases (groups + knockout: gold/silver/bronze)
+                    const teamMap = new Map<string, { team: string; logo: string | null; goals: number }>();
+                    matches.forEach((m: any) => {
+                      if (m.home_score == null || m.away_score == null) return;
+                      if (m.home_team_id && m.home_team) {
+                        const entry = teamMap.get(m.home_team_id) || { team: m.home_team.name, logo: m.home_team.logo_url, goals: 0 };
+                        entry.goals += m.home_score;
+                        teamMap.set(m.home_team_id, entry);
+                      }
+                      if (m.away_team_id && m.away_team) {
+                        const entry = teamMap.get(m.away_team_id) || { team: m.away_team.name, logo: m.away_team.logo_url, goals: 0 };
+                        entry.goals += m.away_score;
+                        teamMap.set(m.away_team_id, entry);
+                      }
+                    });
+                    const teamGoals = Array.from(teamMap.values()).sort((a, b) => b.goals - a.goals).slice(0, 10);
                     return teamGoals.length > 0 ? (
                       <div className="space-y-3">
                         {teamGoals.map((scorer, index) => (
