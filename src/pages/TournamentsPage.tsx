@@ -8,6 +8,7 @@ import { eventService } from "@/services/eventService";
 import { Event } from "@/types/database";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
+import { getTournamentStatus, getTournamentStatusLabel } from "@/lib/tournamentStatus";
 
 // Component for image with fallback
 const TournamentThumbnail = ({ src, alt }: { src: string | null; alt: string }) => {
