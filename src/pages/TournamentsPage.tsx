@@ -8,6 +8,7 @@ import { eventService } from "@/services/eventService";
 import { Event } from "@/types/database";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
+import { getTournamentStatus, getTournamentStatusLabel } from "@/lib/tournamentStatus";
 
 // Component for image with fallback
 const TournamentThumbnail = ({ src, alt }: { src: string | null; alt: string }) => {
@@ -220,16 +221,18 @@ export function TournamentsPage() {
 
                   <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
                     {events.map((event, index) => {
-                      const isPast = new Date(event.date) < new Date();
+                      const status = getTournamentStatus(event);
+                      const isFinished = status === 'finished';
+                      const isLive = status === 'live';
                       return (
                         <Link key={event.id} to={`/torneos/${event.id}`}>
                           <Card
                             className={`hover-lift animate-fade-in cursor-pointer h-full transition-all overflow-hidden ${
-                              isPast ? "opacity-80 hover:opacity-100" : "hover-glow"
+                              isFinished ? "opacity-80 hover:opacity-100" : "hover-glow"
                             }`}
                             style={{ animationDelay: `${index * 50}ms` }}
                           >
-                            {!isPast && <div className="h-1 gradient-gold" />}
+                            {!isFinished && <div className="h-1 gradient-gold" />}
                             <div className="flex">
                               {/* Miniatura del cartel */}
                               <div className="w-16 h-20 sm:w-20 sm:h-24 flex-shrink-0 overflow-hidden">
@@ -243,8 +246,8 @@ export function TournamentsPage() {
                                     <CardTitle className="text-sm sm:text-base line-clamp-2">
                                       {event.title.replace(selectedBrand.name, "").trim()}
                                     </CardTitle>
-                                    <Badge variant={isPast ? "outline" : "default"} className="shrink-0 text-[10px] sm:text-xs">
-                                      {isPast ? "Finalizado" : "Próximo"}
+                                    <Badge variant={isLive ? "default" : isFinished ? "outline" : "secondary"} className={`shrink-0 text-[10px] sm:text-xs ${isLive ? 'animate-pulse' : ''}`}>
+                                      {getTournamentStatusLabel(status)}
                                     </Badge>
                                   </div>
                                 </CardHeader>
@@ -390,6 +393,62 @@ export function TournamentsPage() {
           </div>
         </section>
 
+        {/* Live Tournaments */}
+        {(() => {
+          const liveEvents = events.filter(e => getTournamentStatus(e) === 'live');
+          if (liveEvents.length === 0) return null;
+          return (
+            <section className="mb-16">
+              <div className="flex items-center gap-3 mb-8">
+                <span className="relative flex h-3 w-3">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-3 w-3 bg-primary"></span>
+                </span>
+                <h2 className="text-3xl font-bold text-foreground">Torneos en juego</h2>
+              </div>
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {liveEvents.map((event, index) => {
+                  const brand = getTournamentBrand(event.title);
+                  return (
+                    <Link key={event.id} to={`/torneos/${event.id}`}>
+                      <Card className="hover-lift hover-glow animate-fade-in overflow-hidden cursor-pointer h-full ring-2 ring-primary/40" style={{ animationDelay: `${index * 80}ms` }}>
+                        <div className="h-2 gradient-gold" />
+                        <CardHeader className="pb-2">
+                          <div className="flex items-start gap-3">
+                            {brand && (
+                              <div className="w-12 h-12 bg-muted rounded-lg p-1 shrink-0 flex items-center justify-center">
+                                <img src={brand.logoUrl} alt={brand.name} className="max-w-full max-h-full object-contain" />
+                              </div>
+                            )}
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2 mb-1">
+                                <Badge className="bg-primary text-primary-foreground animate-pulse text-[10px]">En juego</Badge>
+                              </div>
+                              <CardTitle className="text-lg line-clamp-2">{event.title}</CardTitle>
+                            </div>
+                          </div>
+                        </CardHeader>
+                        <CardContent className="space-y-2 pt-0">
+                          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                            <Calendar className="h-4 w-4 text-primary" />
+                            <span>{format(new Date(event.date), "d 'de' MMMM, yyyy", { locale: es })}</span>
+                          </div>
+                          {event.location && (
+                            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                              <MapPin className="h-4 w-4 text-primary" />
+                              <span className="line-clamp-1">{event.location}</span>
+                            </div>
+                          )}
+                        </CardContent>
+                      </Card>
+                    </Link>
+                  );
+                })}
+              </div>
+            </section>
+          );
+        })()}
+
         {/* Quick Access - Recent Events */}
         <section className="mb-16">
           <div className="flex items-center gap-3 mb-8">
@@ -401,7 +460,7 @@ export function TournamentsPage() {
 
           {(() => {
             const upcomingEvents = events
-              .filter(event => new Date(event.date) >= new Date())
+              .filter(event => getTournamentStatus(event) === 'upcoming')
               .slice(0, 6);
 
             if (upcomingEvents.length === 0) {

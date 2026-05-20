@@ -185,51 +185,110 @@ function getRoundLabel(round: string): string {
 }
 
 /**
- * Within-group tiebreaker (FIFA-style)
- * 1. Points from direct encounters
- * 2. Goal difference in direct encounters
- * 3. Goals scored in direct encounters
- * 4. Global goal difference
- * 5. Global goals scored
- * 6. Number of wins
+ * Within-group tiebreaker
+ * - 2-team tie on points: FIFA-style head-to-head (points → GD h2h → GF h2h)
+ *   then global GD → global GF → wins.
+ * - 3+ team tie on points: mini-league among implicated teams (points entre ellos),
+ *   then diferencia de goles general del grupo → goles a favor general → victorias.
  */
 export function sortGroupStandings(
   teams: TeamStanding[],
   groupMatches: GroupMatch[],
 ): TeamStanding[] {
-  const sorted = [...teams];
-  
-  // Multi-pass sort with h2h resolution
-  sorted.sort((a, b) => {
-    // 1. Total points
-    if (b.points !== a.points) return b.points - a.points;
-    
-    // 2-3. Head-to-head between tied teams
-    const h2h = getHeadToHeadComparison(a, b, groupMatches);
-    if (h2h !== 0) return h2h;
-    
-    // 4. Global goal difference
-    if (b.goalDifference !== a.goalDifference) return b.goalDifference - a.goalDifference;
-    
-    // 5. Global goals scored
-    if (b.goalsFor !== a.goalsFor) return b.goalsFor - a.goalsFor;
-    
-    // 6. Number of wins
-    if (b.wins !== a.wins) return b.wins - a.wins;
-    
-    return 0;
+  const buckets = new Map<number, TeamStanding[]>();
+  teams.forEach(t => {
+    const arr = buckets.get(t.points) ?? [];
+    arr.push(t);
+    buckets.set(t.points, arr);
   });
-  
-  // Assign positions
-  sorted.forEach((t, i) => { t.position = i + 1; });
-  
-  return sorted;
+
+  const ordered: TeamStanding[] = [];
+  const sortedPoints = [...buckets.keys()].sort((a, b) => b - a);
+
+  for (const pts of sortedPoints) {
+    const bucket = buckets.get(pts)!;
+    if (bucket.length === 1) {
+      ordered.push(bucket[0]);
+    } else if (bucket.length === 2) {
+      const [a, b] = bucket;
+      const cmp = compareTwoTeams(a, b, groupMatches);
+      ordered.push(...(cmp <= 0 ? [a, b] : [b, a]));
+    } else {
+      ordered.push(...resolveMultiTie(bucket, groupMatches));
+    }
+  }
+
+  ordered.forEach((t, i) => { t.position = i + 1; });
+  return ordered;
 }
 
 /**
- * Head-to-head comparison between two teams
- * Returns negative if a is better, positive if b is better, 0 if tied
+ * Resolve 3+ team tie:
+ *  1. Puntos en enfrentamientos directos entre los implicados (mini-liga)
+ *  2. Diferencia de goles general (todos los partidos del grupo)
+ *  3. Goles a favor general
+ *  4. Victorias
+ * Si tras el mini-league quedan 2 empatados aislados, se aplica h2h entre ellos.
  */
+function resolveMultiTie(
+  tied: TeamStanding[],
+  groupMatches: GroupMatch[],
+): TeamStanding[] {
+  const ids = new Set(tied.map(t => t.teamId));
+  const miniPts = new Map<string, number>();
+  tied.forEach(t => miniPts.set(t.teamId, 0));
+
+  groupMatches.forEach(m => {
+    if (!ids.has(m.homeTeamId) || !ids.has(m.awayTeamId)) return;
+    if (m.homeScore > m.awayScore) miniPts.set(m.homeTeamId, (miniPts.get(m.homeTeamId) ?? 0) + 3);
+    else if (m.homeScore < m.awayScore) miniPts.set(m.awayTeamId, (miniPts.get(m.awayTeamId) ?? 0) + 3);
+    else {
+      miniPts.set(m.homeTeamId, (miniPts.get(m.homeTeamId) ?? 0) + 1);
+      miniPts.set(m.awayTeamId, (miniPts.get(m.awayTeamId) ?? 0) + 1);
+    }
+  });
+
+  const result = [...tied].sort((a, b) => {
+    const pa = miniPts.get(a.teamId) ?? 0;
+    const pb = miniPts.get(b.teamId) ?? 0;
+    if (pa !== pb) return pb - pa;
+    if (a.goalDifference !== b.goalDifference) return b.goalDifference - a.goalDifference;
+    if (a.goalsFor !== b.goalsFor) return b.goalsFor - a.goalsFor;
+    if (a.wins !== b.wins) return b.wins - a.wins;
+    return 0;
+  });
+
+  for (let i = 0; i < result.length - 1; i++) {
+    const j = i + 1;
+    const pi = miniPts.get(result[i].teamId) ?? 0;
+    const pj = miniPts.get(result[j].teamId) ?? 0;
+    const nextTied = (j + 1 < result.length) && (miniPts.get(result[j + 1].teamId) ?? 0) === pj;
+    if (pi === pj && !nextTied
+        && result[i].goalDifference === result[j].goalDifference
+        && result[i].goalsFor === result[j].goalsFor) {
+      const cmp = compareTwoTeams(result[i], result[j], groupMatches);
+      if (cmp > 0) {
+        const tmp = result[i]; result[i] = result[j]; result[j] = tmp;
+      }
+    }
+  }
+
+  return result;
+}
+
+function compareTwoTeams(
+  a: TeamStanding,
+  b: TeamStanding,
+  groupMatches: GroupMatch[],
+): number {
+  const h2h = getHeadToHeadComparison(a, b, groupMatches);
+  if (h2h !== 0) return h2h;
+  if (b.goalDifference !== a.goalDifference) return b.goalDifference - a.goalDifference;
+  if (b.goalsFor !== a.goalsFor) return b.goalsFor - a.goalsFor;
+  if (b.wins !== a.wins) return b.wins - a.wins;
+  return 0;
+}
+
 function getHeadToHeadComparison(
   a: TeamStanding,
   b: TeamStanding,
@@ -239,46 +298,31 @@ function getHeadToHeadComparison(
     (m.homeTeamId === a.teamId && m.awayTeamId === b.teamId) ||
     (m.homeTeamId === b.teamId && m.awayTeamId === a.teamId)
   );
-  
   if (h2hMatches.length === 0) return 0;
-  
+
   let aPts = 0, bPts = 0;
   let aGF = 0, aGA = 0, bGF = 0, bGA = 0;
-  
+
   h2hMatches.forEach(m => {
     if (m.homeTeamId === a.teamId) {
-      aGF += m.homeScore;
-      aGA += m.awayScore;
-      bGF += m.awayScore;
-      bGA += m.homeScore;
+      aGF += m.homeScore; aGA += m.awayScore;
+      bGF += m.awayScore; bGA += m.homeScore;
       if (m.homeScore > m.awayScore) aPts += 3;
       else if (m.homeScore < m.awayScore) bPts += 3;
       else { aPts += 1; bPts += 1; }
     } else {
-      bGF += m.homeScore;
-      bGA += m.awayScore;
-      aGF += m.awayScore;
-      aGA += m.homeScore;
+      bGF += m.homeScore; bGA += m.awayScore;
+      aGF += m.awayScore; aGA += m.homeScore;
       if (m.homeScore > m.awayScore) bPts += 3;
       else if (m.homeScore < m.awayScore) aPts += 3;
       else { aPts += 1; bPts += 1; }
     }
   });
-  
-  // H2H criterion 1: Points in direct encounters
-  if (aPts !== bPts) return bPts - aPts; // higher is better, so if b > a return positive (b before a... wait)
-  // We want: return negative if a is better (a should come first)
-  // sorted.sort((a, b) => ...) → negative means a comes first
+
   if (aPts !== bPts) return aPts > bPts ? -1 : 1;
-  
-  // H2H criterion 2: Goal difference in direct encounters
-  const aH2hGD = aGF - aGA;
-  const bH2hGD = bGF - bGA;
-  if (aH2hGD !== bH2hGD) return aH2hGD > bH2hGD ? -1 : 1;
-  
-  // H2H criterion 3: Goals scored in direct encounters
+  const aGD = aGF - aGA, bGD = bGF - bGA;
+  if (aGD !== bGD) return aGD > bGD ? -1 : 1;
   if (aGF !== bGF) return aGF > bGF ? -1 : 1;
-  
   return 0;
 }
 

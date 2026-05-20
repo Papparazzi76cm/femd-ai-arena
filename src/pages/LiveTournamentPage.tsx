@@ -13,6 +13,8 @@ import { Team, Participant } from '@/types/database';
 import { useMatchNotifications } from '@/hooks/useMatchNotifications';
 import { useGoalSound } from '@/hooks/useGoalSound';
 import { TeamLogo } from '@/components/TeamLogo';
+import { buildGroupStandings, GroupMatch } from '@/services/tournamentEngine';
+import { SponsorsBanner } from '@/components/SponsorsBanner';
 
 interface EventTeam {
   id: string;
@@ -419,12 +421,46 @@ export const LiveTournamentPage = () => {
     return cat.age_group ? `${cat.name} (${cat.age_group})` : cat.name;
   };
 
-  const groupedStandings = eventTeams.reduce((acc, et) => {
-    const group = et.group_name || 'Sin Grupo';
-    if (!acc[group]) acc[group] = [];
-    acc[group].push(et);
-    return acc;
-  }, {} as Record<string, EventTeam[]>);
+  // Compute standings live from current matches so scores update in real-time
+  const liveGroupMatches: GroupMatch[] = allMatches
+    .filter(m => m.home_team_id && m.away_team_id && m.home_score !== null && m.away_score !== null)
+    .map(m => ({
+      id: m.id,
+      homeTeamId: m.home_team_id as string,
+      awayTeamId: m.away_team_id as string,
+      homeScore: m.home_score ?? 0,
+      awayScore: m.away_score ?? 0,
+      homeYellowCards: m.home_yellow_cards ?? 0,
+      homeRedCards: m.home_red_cards ?? 0,
+      awayYellowCards: m.away_yellow_cards ?? 0,
+      awayRedCards: m.away_red_cards ?? 0,
+      phase: m.phase,
+      groupName: m.group_name ?? undefined,
+      status: m.status,
+    }));
+  const computedStandings = buildGroupStandings(
+    eventTeams.map(et => ({ id: et.id, team_id: et.team_id, group_name: et.group_name })),
+    liveGroupMatches,
+  );
+  const groupedStandings: Record<string, EventTeam[]> = {};
+  computedStandings.forEach((standings, groupName) => {
+    groupedStandings[groupName] = standings.map(s => {
+      const orig = eventTeams.find(et => et.id === s.eventTeamId)!;
+      return {
+        ...orig,
+        points: s.points,
+        matches_played: s.matchesPlayed,
+        wins: s.wins,
+        draws: s.draws,
+        losses: s.losses,
+        goals_for: s.goalsFor,
+        goals_against: s.goalsAgainst,
+        goal_difference: s.goalDifference,
+        yellow_cards: s.yellowCards,
+        red_cards: s.redCards,
+      };
+    });
+  });
 
   const totalGoals = allMatches.reduce((sum, m) => sum + (m.home_score || 0) + (m.away_score || 0), 0);
   const finishedMatches = allMatches.filter(m => m.status === 'finished').length;
@@ -641,8 +677,9 @@ export const LiveTournamentPage = () => {
               {/* Standings Tab */}
               <TabsContent value="standings">
                 <div className="space-y-6">
-                  {Object.entries(groupedStandings).map(([groupName, groupTeams]) => (
-                    <Card key={groupName} className="overflow-hidden">
+                  {Object.entries(groupedStandings).map(([groupName, groupTeams], gIdx, arr) => (
+                    <div key={groupName}>
+                    <Card className="overflow-hidden">
                       <div className="bg-primary/10 px-4 py-2 border-b"><h3 className="font-bold">{groupName}</h3></div>
                       <div className="overflow-x-auto">
                         <table className="w-full text-xs sm:text-sm">
@@ -690,6 +727,10 @@ export const LiveTournamentPage = () => {
                         Vista reducida. Gira el móvil para ver E, GF, GC y DG.
                       </p>
                     </Card>
+                    {((gIdx + 1) % 2 === 0) && (gIdx < arr.length - 1) && selectedEventId && (
+                      <SponsorsBanner eventId={selectedEventId} />
+                    )}
+                    </div>
                   ))}
                 </div>
               </TabsContent>
