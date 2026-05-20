@@ -420,12 +420,46 @@ export const LiveTournamentPage = () => {
     return cat.age_group ? `${cat.name} (${cat.age_group})` : cat.name;
   };
 
-  const groupedStandings = eventTeams.reduce((acc, et) => {
-    const group = et.group_name || 'Sin Grupo';
-    if (!acc[group]) acc[group] = [];
-    acc[group].push(et);
-    return acc;
-  }, {} as Record<string, EventTeam[]>);
+  // Compute standings live from current matches so scores update in real-time
+  const liveGroupMatches: GroupMatch[] = allMatches
+    .filter(m => m.home_team_id && m.away_team_id && m.home_score !== null && m.away_score !== null)
+    .map(m => ({
+      id: m.id,
+      homeTeamId: m.home_team_id as string,
+      awayTeamId: m.away_team_id as string,
+      homeScore: m.home_score ?? 0,
+      awayScore: m.away_score ?? 0,
+      homeYellowCards: m.home_yellow_cards ?? 0,
+      homeRedCards: m.home_red_cards ?? 0,
+      awayYellowCards: m.away_yellow_cards ?? 0,
+      awayRedCards: m.away_red_cards ?? 0,
+      phase: m.phase,
+      groupName: m.group_name ?? undefined,
+      status: m.status,
+    }));
+  const computedStandings = buildGroupStandings(
+    eventTeams.map(et => ({ id: et.id, team_id: et.team_id, group_name: et.group_name })),
+    liveGroupMatches,
+  );
+  const groupedStandings: Record<string, EventTeam[]> = {};
+  computedStandings.forEach((standings, groupName) => {
+    groupedStandings[groupName] = standings.map(s => {
+      const orig = eventTeams.find(et => et.id === s.eventTeamId)!;
+      return {
+        ...orig,
+        points: s.points,
+        matches_played: s.matchesPlayed,
+        wins: s.wins,
+        draws: s.draws,
+        losses: s.losses,
+        goals_for: s.goalsFor,
+        goals_against: s.goalsAgainst,
+        goal_difference: s.goalDifference,
+        yellow_cards: s.yellowCards,
+        red_cards: s.redCards,
+      };
+    });
+  });
 
   const totalGoals = allMatches.reduce((sum, m) => sum + (m.home_score || 0) + (m.away_score || 0), 0);
   const finishedMatches = allMatches.filter(m => m.status === 'finished').length;
