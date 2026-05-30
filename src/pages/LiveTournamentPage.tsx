@@ -373,15 +373,16 @@ export const LiveTournamentPage = () => {
           });
           setMatchCards(cardsMap);
 
-          // Also add card player names to playerNames
-          const cardPlayerIds = cardsData.filter(c => c.player_id).map(c => c.player_id!);
-          const missingIds = cardPlayerIds.filter(id => !playerNames.has(id));
-          if (missingIds.length > 0) {
-            const { data: cardPlayers } = await supabase.from('participants').select('id, name, number').in('id', missingIds);
-            if (cardPlayers) {
-              const updated = new Map(playerNames);
-              cardPlayers.forEach((p: any) => updated.set(p.id, { name: p.name, number: p.number }));
-              setPlayerNames(updated);
+          // Also add card player names to playerNames (merge, don't overwrite goal scorers)
+          const cardPlayerIds = Array.from(new Set(cardsData.filter(c => c.player_id).map(c => c.player_id!)));
+          if (cardPlayerIds.length > 0) {
+            const { data: cardPlayers } = await supabase.from('participants').select('id, name, number').in('id', cardPlayerIds);
+            if (cardPlayers && cardPlayers.length > 0) {
+              setPlayerNames(prev => {
+                const updated = new Map(prev);
+                cardPlayers.forEach((p: any) => updated.set(p.id, { name: p.name, number: p.number }));
+                return updated;
+              });
             }
           }
         } else {
