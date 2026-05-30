@@ -206,9 +206,10 @@ export function Header() {
                 ) : null}
               </div>
             </nav>
-          </div>
-        )}
-      </header>
+        </div>
+      )}
     </>
+  );
+}
   );
 }
