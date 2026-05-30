@@ -25,7 +25,8 @@ export const MatchTimer = ({
   const [seconds, setSeconds] = useState(0);
   const [currentHalf, setCurrentHalf] = useState(1);
 
-  const halfDuration = matchHalves === 2 ? matchDurationMinutes / 2 : matchDurationMinutes;
+  // matchDurationMinutes representa la duración de cada parte (no el total)
+  const halfDuration = matchDurationMinutes;
   const totalSecondsInHalf = halfDuration * 60;
 
   // If startedAt is provided, calculate elapsed time from server
