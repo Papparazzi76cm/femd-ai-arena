@@ -148,9 +148,11 @@ export function Header() {
           </div>
         </div>
 
-        {/* Mobile Menu */}
-        {isMobileMenuOpen && (
-          <div className="md:hidden fixed inset-0 top-16 bg-background z-40 animate-fade-in opacity-100 overflow-y-auto">
+      </header>
+
+      {/* Mobile Menu - rendered outside <header> to avoid backdrop-filter containing-block bug */}
+      {isMobileMenuOpen && (
+        <div className="md:hidden fixed inset-0 top-16 bg-background z-40 animate-fade-in opacity-100 overflow-y-auto">
             <nav className="flex flex-col p-5 space-y-4 bg-background pb-10">
               {navLinks.map((link) => (
                 <NavLink
