@@ -3,13 +3,22 @@ import { Participant } from '@/types/database';
 
 export const participantService = {
   async getAll(): Promise<Participant[]> {
-    const { data, error } = await supabase
-      .from('participants')
-      .select('*')
-      .order('name');
-    
-    if (error) throw error;
-    return data || [];
+    const pageSize = 1000;
+    let from = 0;
+    const all: Participant[] = [];
+    while (true) {
+      const { data, error } = await supabase
+        .from('participants')
+        .select('*')
+        .order('name')
+        .range(from, from + pageSize - 1);
+      if (error) throw error;
+      if (!data || data.length === 0) break;
+      all.push(...data);
+      if (data.length < pageSize) break;
+      from += pageSize;
+    }
+    return all;
   },
 
   async getByTeam(teamId: string): Promise<Participant[]> {
