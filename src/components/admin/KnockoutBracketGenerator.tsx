@@ -112,8 +112,8 @@ function positionToLabel(posKey: string): string {
     const ordinal = rank === '1' ? '1er' : `${rank}º`;
     return `${ordinal} Mejor ${pos}º`;
   }
-  if (type === 'winner') return `Ganador ${rest}`;
-  if (type === 'loser') return `Perdedor ${rest}`;
+  if (type === 'winner') return `Ganador ${rest.includes('::') ? rest.split('::')[1] : rest}`;
+  if (type === 'loser') return `Perdedor ${rest.includes('::') ? rest.split('::')[1] : rest}`;
   return posKey;
 }
 
