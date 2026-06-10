@@ -208,29 +208,40 @@ export const KnockoutBracketGenerator = ({
       }
     }
 
-    // Include existing knockout matches from DB
+    // Determine the active tier prefix to enforce strict category isolation
+    // (Oro only sees Oro, Plata only Plata, Bronce only Bronce).
+    const tierPrefix = selectedTier ? `${selectedTier}_` : '';
+    const seenValues = new Set<string>();
+    const pushUnique = (value: string, label: string) => {
+      if (seenValues.has(value)) return;
+      seenValues.add(value);
+      options.push({ value, label });
+    };
+
+    // Include existing knockout matches from DB — strictly filtered by tier
     knockoutMatches.forEach(m => {
+      if (tierPrefix && !m.phase?.startsWith(tierPrefix)) return;
       const matchLabel = m.group_name || (m.match_number ? `P${m.match_number}` : m.id.slice(0, 4));
       const phaseLabel = PHASE_OPTIONS[m.phase] || m.phase;
-      options.push({ value: `winner:${matchLabel}`, label: `Ganador ${matchLabel} (${phaseLabel})` });
-      options.push({ value: `loser:${matchLabel}`, label: `Perdedor ${matchLabel} (${phaseLabel})` });
+      // Use match id in the value to avoid collisions between tiers using same code (e.g. C1 in Oro and Plata)
+      pushUnique(`winner:${m.id}::${matchLabel}`, `Ganador ${matchLabel} (${phaseLabel})`);
+      pushUnique(`loser:${m.id}::${matchLabel}`, `Perdedor ${m.id.slice(0,4)} (${phaseLabel})`);
     });
 
-    // Include brackets created in this wizard session (not yet in matches prop)
+    // Include brackets created in this wizard session — also strictly filtered by tier
     sessionCreatedBrackets.forEach(b => {
-      // Skip if already in knockoutMatches (avoid duplicates after refresh)
+      if (selectedTier && b.tier !== selectedTier) return;
       const alreadyInDb = knockoutMatches.some(m => m.group_name === b.name && m.phase === b.phase);
-      if (!alreadyInDb) {
-        const tierLabel = b.tier === 'gold' ? 'Oro' : b.tier === 'silver' ? 'Plata' : b.tier === 'bronze' ? 'Bronce' : '';
-        const roundLabel = getRoundLabel(b.round);
-        const fullLabel = tierLabel ? `${tierLabel} - ${roundLabel}` : roundLabel;
-        options.push({ value: `winner:${b.name}`, label: `Ganador ${b.name} (${fullLabel})` });
-        options.push({ value: `loser:${b.name}`, label: `Perdedor ${b.name} (${fullLabel})` });
-      }
+      if (alreadyInDb) return;
+      const tierLabel = b.tier === 'gold' ? 'Oro' : b.tier === 'silver' ? 'Plata' : b.tier === 'bronze' ? 'Bronce' : '';
+      const roundLabel = getRoundLabel(b.round);
+      const fullLabel = tierLabel ? `${tierLabel} - ${roundLabel}` : roundLabel;
+      pushUnique(`winner:${b.name}`, `Ganador ${b.name} (${fullLabel})`);
+      pushUnique(`loser:${b.name}`, `Perdedor ${b.name} (${fullLabel})`);
     });
 
     return options;
-  }, [sortedGroupNames, groupedStandings, teams, knockoutMatches, sessionCreatedBrackets]);
+  }, [sortedGroupNames, groupedStandings, teams, knockoutMatches, sessionCreatedBrackets, selectedTier]);
 
   // Dynamic options that include current batch pairings (for subsequent round references)
   const allPositionOptions = useMemo(() => {
