@@ -97,10 +97,10 @@ export function HomePage() {
 
         {/* Discreet sponsor logos */}
         <div className="absolute bottom-3 sm:bottom-5 left-0 right-0 z-10 px-4">
-          <div className="flex items-center justify-center gap-6 sm:gap-10 opacity-70 hover:opacity-100 transition-opacity">
-            <img src="/sponsors/caramanzana.png" alt="Caramanzana" className="h-16 sm:h-20 md:h-24 w-auto object-contain bg-white/85 rounded-md px-3 py-2" loading="lazy" />
-            <img src="/sponsors/junta-cyl.png" alt="Junta de Castilla y León - Nos Impulsa" className="h-16 sm:h-20 md:h-24 w-auto object-contain bg-white/85 rounded-md px-3 py-2" loading="lazy" />
-            <img src="/sponsors/caja-rural-zamora.png" alt="Caja Rural de Zamora" className="h-16 sm:h-20 md:h-24 w-auto object-contain bg-white/85 rounded-md px-3 py-2" loading="lazy" />
+          <div className="flex items-center justify-center gap-6 sm:gap-10 opacity-90 hover:opacity-100 transition-opacity">
+            <img src="/sponsors/caramanzana.png" alt="Caramanzana" className="h-16 sm:h-20 md:h-24 w-auto object-contain bg-white/90 rounded-md p-1" loading="lazy" />
+            <img src="/sponsors/junta-cyl.png" alt="Junta de Castilla y León - Nos Impulsa" className="h-24 sm:h-32 md:h-36 w-auto object-contain bg-white/90 rounded-md p-1" loading="lazy" />
+            <img src="/sponsors/caja-rural-zamora.png" alt="Caja Rural de Zamora" className="h-16 sm:h-20 md:h-24 w-auto object-contain rounded-md" loading="lazy" />
           </div>
         </div>
       </section>
