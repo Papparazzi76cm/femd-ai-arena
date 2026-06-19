@@ -99,7 +99,7 @@ export function HomePage() {
         <div className="absolute bottom-3 sm:bottom-5 left-0 right-0 z-10 px-4">
           <div className="flex items-center justify-center gap-6 sm:gap-10 opacity-70 hover:opacity-100 transition-opacity">
             <img src="/sponsors/caramanzana.png" alt="Caramanzana" className="h-16 sm:h-20 md:h-24 w-auto object-contain bg-white/85 rounded-md px-3 py-2" loading="lazy" />
-            <img src="/sponsors/junta-cyl.png" alt="Junta de Castilla y León - Nos Impulsa" className="h-16 sm:h-20 md:h-24 w-auto object-contain bg-white/85 rounded-md px-3 py-2" loading="lazy" />
+            <img src="/sponsors/junta-cyl-transparent.png" alt="Junta de Castilla y León - Nos Impulsa" className="h-64 sm:h-80 md:h-96 w-auto object-contain px-3 py-2" loading="lazy" />
             <img src="/sponsors/caja-rural-zamora.png" alt="Caja Rural de Zamora" className="h-16 sm:h-20 md:h-24 w-auto object-contain bg-white/85 rounded-md px-3 py-2" loading="lazy" />
           </div>
         </div>
