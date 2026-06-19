@@ -83,7 +83,7 @@ export function HomePage() {
         </div>
 
         {/* Slide Indicators */}
-        <div className="absolute bottom-20 sm:bottom-24 left-1/2 transform -translate-x-1/2 flex space-x-2 z-10">
+        <div className="absolute bottom-32 sm:bottom-40 left-1/2 transform -translate-x-1/2 flex space-x-2 z-10">
           {heroImages.map((_, index) => (
             <button
               key={index}
@@ -97,10 +97,10 @@ export function HomePage() {
 
         {/* Discreet sponsor logos */}
         <div className="absolute bottom-3 sm:bottom-5 left-0 right-0 z-10 px-4">
-          <div className="flex items-center justify-center gap-4 sm:gap-8 opacity-70 hover:opacity-100 transition-opacity">
-            <img src="/sponsors/caramanzana.png" alt="Caramanzana" className="h-8 sm:h-10 md:h-12 w-auto object-contain bg-white/85 rounded-md px-2 py-1" loading="lazy" />
-            <img src="/sponsors/junta-cyl.png" alt="Junta de Castilla y León - Nos Impulsa" className="h-8 sm:h-10 md:h-12 w-auto object-contain bg-white/85 rounded-md px-2 py-1" loading="lazy" />
-            <img src="/sponsors/caja-rural-zamora.png" alt="Caja Rural de Zamora" className="h-8 sm:h-10 md:h-12 w-auto object-contain bg-white/85 rounded-md px-2 py-1" loading="lazy" />
+          <div className="flex items-center justify-center gap-6 sm:gap-10 opacity-70 hover:opacity-100 transition-opacity">
+            <img src="/sponsors/caramanzana.png" alt="Caramanzana" className="h-16 sm:h-20 md:h-24 w-auto object-contain bg-white/85 rounded-md px-3 py-2" loading="lazy" />
+            <img src="/sponsors/junta-cyl.png" alt="Junta de Castilla y León - Nos Impulsa" className="h-16 sm:h-20 md:h-24 w-auto object-contain bg-white/85 rounded-md px-3 py-2" loading="lazy" />
+            <img src="/sponsors/caja-rural-zamora.png" alt="Caja Rural de Zamora" className="h-16 sm:h-20 md:h-24 w-auto object-contain bg-white/85 rounded-md px-3 py-2" loading="lazy" />
           </div>
         </div>
       </section>
