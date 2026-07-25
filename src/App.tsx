@@ -12,6 +12,7 @@ import { Footer } from "@/components/Footer";
 import { HomePage } from "@/pages/HomePage";
 import { AdminDashboard } from "@/pages/AdminDashboard";
 import { AuthPage } from "@/pages/AuthPage";
+import OAuthConsent from "@/pages/OAuthConsent";
 import { ResetPasswordPage } from "@/pages/ResetPasswordPage";
 import { ProfilePage } from "@/pages/ProfilePage";
 import { MesaDashboard } from "@/pages/MesaDashboard";
@@ -59,6 +60,7 @@ const App = () => (
                       <Route path="/patrocinadores" element={<SponsorsPage />} />
                       <Route path="/contacto" element={<ContactPage />} />
                       <Route path="/auth" element={<AuthPage />} />
+                      <Route path="/.lovable/oauth/consent" element={<OAuthConsent />} />
                       <Route path="/reset-password" element={<ResetPasswordPage />} />
                       <Route path="/perfil" element={<ProfilePage />} />
                       <Route path="/admin" element={<AdminDashboard />} />
