@@ -1,0 +1,150 @@
+{
+  "version": 1,
+  "sdk_version": "0.24.0",
+  "path": "/functions/v1/mcp",
+  "auth": {
+    "type": "oauth",
+    "issuer": "https://zftbjgonactnpkbkdawh.supabase.co/auth/v1",
+    "accepted_audiences": [
+      "authenticated"
+    ]
+  },
+  "mcp": {
+    "server": {
+      "name": "femd-eventos-mcp",
+      "version": "0.1.0",
+      "title": "FEMD Eventos MCP"
+    },
+    "tools": [
+      {
+        "name": "list_tournaments",
+        "title": "Listar torneos",
+        "description": "Devuelve los torneos (eventos) de FEMD Eventos ordenados por fecha descendente. Útil para saber qué torneos existen, cuándo se juegan y dónde.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "limit": {
+              "description": "Máximo de torneos a devolver (por defecto 20).",
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 50
+            },
+            "upcoming_only": {
+              "description": "Si es true, solo devuelve torneos cuya fecha final es hoy o posterior.",
+              "type": "boolean"
+            }
+          }
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "get_tournament_standings",
+        "title": "Clasificación de un torneo",
+        "description": "Devuelve la clasificación (grupos) de un torneo dado por su id. Incluye equipos, puntos, PJ, PG/PE/PP, GF/GC, DG y tarjetas.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "event_id": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "description": "ID del torneo (events.id)."
+            },
+            "category_id": {
+              "description": "ID opcional de categoría para filtrar solo esa categoría.",
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+            }
+          },
+          "required": [
+            "event_id"
+          ]
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "list_live_matches",
+        "title": "Partidos en vivo",
+        "description": "Devuelve los partidos actualmente en juego (status = 'in_progress') con marcador, equipos y torneo. Opcionalmente filtra por evento.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": false,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "event_id": {
+              "description": "ID del torneo para filtrar. Si se omite, devuelve todos los partidos en vivo.",
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+            }
+          }
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "search_teams",
+        "title": "Buscar equipos / clubes",
+        "description": "Busca equipos o clubes por coincidencia parcial en el nombre. Devuelve id, nombre, categoría y logo.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "query": {
+              "type": "string",
+              "minLength": 1,
+              "description": "Texto a buscar en el nombre del equipo."
+            },
+            "limit": {
+              "description": "Máximo de resultados (por defecto 20).",
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 50
+            }
+          },
+          "required": [
+            "query"
+          ]
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "get_my_profile",
+        "title": "Mi perfil",
+        "description": "Devuelve el perfil del usuario autenticado en FEMD Eventos (id, email, nombre) y sus roles asignados (admin, mesa, moderator, user).",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {}
+        },
+        "outputSchema": null
+      }
+    ]
+  }
+}
