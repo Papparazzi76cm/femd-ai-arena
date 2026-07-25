@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { roleService } from "@/services/roleService";
 import { supabase } from "@/integrations/supabase/client";
@@ -22,6 +22,9 @@ import { Shield } from "lucide-react";
 export const AuthPage = () => {
   const { user, signIn, signUp } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const nextParam = searchParams.get("next");
+  const safeNext = nextParam && nextParam.startsWith("/") && !nextParam.startsWith("//") ? nextParam : null;
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [forgotOpen, setForgotOpen] = useState(false);
@@ -83,8 +86,13 @@ export const AuthPage = () => {
     const checkRoleAndRedirect = async () => {
       if (user) {
         try {
+          // If we came from an OAuth consent flow (or any protected page), return there.
+          if (safeNext) {
+            window.location.replace(safeNext);
+            return;
+          }
           const roles = await roleService.getUserRoles(user.id);
-          
+
           // Redirect based on role
           if (roles.includes('admin')) {
             navigate("/admin");
@@ -99,9 +107,9 @@ export const AuthPage = () => {
         }
       }
     };
-    
+
     checkRoleAndRedirect();
-  }, [user, navigate]);
+  }, [user, navigate, safeNext]);
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
