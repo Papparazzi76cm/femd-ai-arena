@@ -181,18 +181,62 @@ serve(async (req: Request) => {
         }
 
         // Only allow specific fields to be updated
-        const allowedFields = [
+        const VALID_STATUSES = [
+          "scheduled", "in_progress", "first_half", "half_time",
+          "second_half", "finished", "cancelled",
+        ];
+        const numericFields = [
           "home_score", "away_score",
           "home_yellow_cards", "home_red_cards",
           "away_yellow_cards", "away_red_cards",
-          "status", "started_at",
         ];
 
         const safeUpdates: Record<string, unknown> = {};
-        for (const key of allowedFields) {
-          if (updates[key] !== undefined) {
-            safeUpdates[key] = updates[key];
+
+        for (const key of numericFields) {
+          const value = updates[key];
+          if (value === undefined) continue;
+          if (value === null) { safeUpdates[key] = null; continue; }
+          if (typeof value !== "number" || !Number.isInteger(value) || value < 0 || value > 99) {
+            return new Response(
+              JSON.stringify({ error: `Valor no válido para ${key}` }),
+              { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+            );
           }
+          safeUpdates[key] = value;
+        }
+
+        if (updates.status !== undefined) {
+          if (typeof updates.status !== "string" || !VALID_STATUSES.includes(updates.status)) {
+            return new Response(
+              JSON.stringify({ error: "Estado no válido" }),
+              { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+            );
+          }
+          safeUpdates.status = updates.status;
+        }
+
+        if (updates.started_at !== undefined) {
+          if (updates.started_at === null) {
+            safeUpdates.started_at = null;
+          } else if (
+            typeof updates.started_at === "string" &&
+            !Number.isNaN(Date.parse(updates.started_at))
+          ) {
+            safeUpdates.started_at = new Date(updates.started_at).toISOString();
+          } else {
+            return new Response(
+              JSON.stringify({ error: "Fecha de inicio no válida" }),
+              { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+            );
+          }
+        }
+
+        if (Object.keys(safeUpdates).length === 0) {
+          return new Response(
+            JSON.stringify({ error: "No hay actualizaciones válidas" }),
+            { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
         }
 
         const { error } = await supabaseAdmin
