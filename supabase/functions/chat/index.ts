@@ -11,9 +11,37 @@ serve(async (req) => {
   }
 
   try {
-    const { messages } = await req.json();
+    const body = await req.json().catch(() => null);
+    const rawMessages = body?.messages;
+
+    if (!Array.isArray(rawMessages) || rawMessages.length === 0 || rawMessages.length > 40) {
+      return new Response(
+        JSON.stringify({ error: "Formato de mensajes no válido" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Only allow user/assistant turns with reasonable text content.
+    // This prevents callers from injecting their own `system` prompt.
+    const messages: { role: string; content: string }[] = [];
+    for (const m of rawMessages) {
+      if (!m || typeof m !== "object") continue;
+      const role = (m as { role?: unknown }).role;
+      const content = (m as { content?: unknown }).content;
+      if (role !== "user" && role !== "assistant") continue;
+      if (typeof content !== "string" || content.trim().length === 0) continue;
+      messages.push({ role, content: content.slice(0, 4000) });
+    }
+
+    if (messages.length === 0) {
+      return new Response(
+        JSON.stringify({ error: "Formato de mensajes no válido" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    
+
     if (!LOVABLE_API_KEY) {
       throw new Error("LOVABLE_API_KEY is not configured");
     }
