@@ -96,6 +96,7 @@ export const TournamentManager = ({ eventId }: TournamentManagerProps) => {
   const loadData = async () => {
     try {
       setLoading(true);
+      await tournamentService.resolveKnockoutPlaceholders(eventId);
       const [
         allTeams,
         tournamentTeams,
@@ -363,8 +364,8 @@ export const TournamentManager = ({ eventId }: TournamentManagerProps) => {
       const eventTeam = eventTeams.find(et => et.id === teamId);
       if (!eventTeam) throw new Error('Equipo del torneo no encontrado');
       await tournamentService.updateMatch(matchId, side === 'home'
-        ? { home_team_id: eventTeam.team_id, home_event_team_id: eventTeam.id }
-        : { away_team_id: eventTeam.team_id, away_event_team_id: eventTeam.id }
+        ? { home_team_id: eventTeam.team_id, home_event_team_id: eventTeam.id, home_placeholder: null }
+        : { away_team_id: eventTeam.team_id, away_event_team_id: eventTeam.id, away_placeholder: null }
       );
       toast({ title: 'Equipo asignado', description: 'Se asignó el equipo manualmente al cruce.' });
       await loadData();

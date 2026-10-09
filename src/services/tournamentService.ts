@@ -1,6 +1,6 @@
 import { supabase } from '@/integrations/supabase/client';
 import { EventTeam, Match, MatchScheduleConflict } from '@/types/tournament';
-import { buildGroupStandings, buildCrossGroupRankings, sortCrossGroupRanking, GroupMatch } from '@/services/tournamentEngine';
+import { isGroupPhase, resolveBracketSlot } from './knockoutResolver';
 
 export const tournamentService = {
   // Event Teams
@@ -92,20 +92,28 @@ export const tournamentService = {
       .single();
     
     if (error) throw error;
+    await this.resolveKnockoutPlaceholders(match.event_id);
     return data as Match;
   },
 
   async updateMatch(id: string, updates: Partial<Match>): Promise<void> {
     const safeUpdates: any = { ...updates };
+    const { data: original, error: readError } = await supabase.from('matches').select('*').eq('id', id).single();
+    if (readError) throw readError;
+    for (const side of ['home', 'away'] as const) {
+      if (updates[`${side}_team_id`] !== undefined && updates[`${side}_team_id`] !== original[`${side}_team_id`] && updates[`${side}_placeholder`] === undefined) {
+        safeUpdates[`${side}_placeholder`] = null;
+      }
+    }
     if (updates.home_team_id !== undefined || updates.away_team_id !== undefined || updates.category_id !== undefined) {
       const { data: currentMatch } = await supabase.from('matches').select('*').eq('id', id).single();
       if (currentMatch) {
         const eventId = updates.event_id ?? currentMatch.event_id;
         const categoryId = updates.category_id !== undefined ? updates.category_id : currentMatch.category_id;
-        if (updates.home_team_id !== undefined) {
+        if (updates.home_team_id !== undefined && updates.home_event_team_id === undefined) {
           safeUpdates.home_event_team_id = await this.resolveEventTeamId(eventId, updates.home_team_id, categoryId);
         }
-        if (updates.away_team_id !== undefined) {
+        if (updates.away_team_id !== undefined && updates.away_event_team_id === undefined) {
           safeUpdates.away_event_team_id = await this.resolveEventTeamId(eventId, updates.away_team_id, categoryId);
         }
       }
@@ -117,6 +125,7 @@ export const tournamentService = {
       .eq('id', id);
     
     if (error) throw error;
+    await this.resolveKnockoutPlaceholders(original.event_id);
   },
 
   async assignReferee(matchId: string, refereeUserId: string): Promise<void> {
@@ -402,226 +411,51 @@ export const tournamentService = {
     return data || [];
   },
 
-  // Resolve knockout placeholders to actual team IDs
+  // Recalculate automatic slots only in matches which have not started.
   async resolveKnockoutPlaceholders(eventId: string): Promise<number> {
-    // Get all event teams
-    const { data: eventTeams } = await supabase
-      .from('event_teams')
-      .select('*, team:teams(*)')
-      .eq('event_id', eventId);
-
-    if (!eventTeams || eventTeams.length === 0) return 0;
-
-    // Get all matches
-    const { data: allMatches } = await supabase
-      .from('matches')
-      .select('*')
-      .eq('event_id', eventId);
-
-    if (!allMatches) return 0;
-
-    // Convert to GroupMatch format for the engine
-    const groupMatchData: GroupMatch[] = allMatches
-      .filter((m: any) =>
-        (m.phase === 'group' || m.phase === 'Fase de Grupos' || m.phase?.startsWith('Jornada') || m.phase?.toLowerCase().includes('grupo')) &&
-        m.status === 'finished' && m.home_score != null && m.away_score != null
-      )
-      .map((m: any) => ({
-        id: m.id,
-        homeTeamId: m.home_team_id,
-        awayTeamId: m.away_team_id,
-        homeScore: m.home_score,
-        awayScore: m.away_score,
-        homeYellowCards: m.home_yellow_cards || 0,
-        homeRedCards: m.home_red_cards || 0,
-        awayYellowCards: m.away_yellow_cards || 0,
-        awayRedCards: m.away_red_cards || 0,
-        phase: m.phase,
-        groupName: m.group_name,
-        status: m.status,
-      }));
-
-    // Use engine to build standings with proper tiebreakers
-    const standings = buildGroupStandings(
-      eventTeams.map((et: any) => ({ id: et.id, team_id: et.team_id, group_name: et.group_name })),
-      groupMatchData,
-    );
-
-    // Build cross-group rankings with average-based criteria
-    const rankings = buildCrossGroupRankings(standings);
-
-    // Build groups map for position lookup (groupName → sorted team list)
-    const groups: Record<string, any[]> = {};
-    standings.forEach((teamsList, groupName) => {
-      if (groupName === 'Sin grupo') return;
-      groups[groupName] = teamsList;
-    });
-
-    // Build "best Nth" rankings
-    const bestByPosition: Record<number, any[]> = {};
-    rankings.forEach((teams, pos) => {
-      bestByPosition[pos] = teams;
-    });
-
-    // Resolve function: placeholder text → event_team_id (using et.id not team_id)
-    const resolveTeamId = (placeholder: string | null): string | null => {
-      if (!placeholder) return null;
-
-      // "1º Grupo A" format
-      const groupMatch = placeholder.match(/^(\d+)º Grupo (.+)$/);
-      if (groupMatch) {
-        const pos = parseInt(groupMatch[1]);
-        const groupName = groupMatch[2];
-        const groupTeams = groups[groupName];
-        if (groupTeams && groupTeams[pos - 1]) return groupTeams[pos - 1].eventTeamId;
-      }
-
-      // "1er Mejor 2º" or "2º Mejor 1º" format
-      const bestMatch = placeholder.match(/^(?:1er|(\d+)º) Mejor (\d+)º$/);
-      if (bestMatch) {
-        const rank = bestMatch[1] ? parseInt(bestMatch[1]) : 1;
-        const pos = parseInt(bestMatch[2]);
-        const ranked = bestByPosition[pos];
-        if (ranked && ranked[rank - 1]) return ranked[rank - 1].eventTeamId;
-      }
-
-      // "Ganador O1" format — find finished match with that bracket name
-      const winnerMatch = placeholder.match(/^Ganador (.+)$/);
-      if (winnerMatch) {
-        const bracketName = winnerMatch[1];
-        const finishedMatch = allMatches.find((m: any) => m.group_name === bracketName && m.status === 'finished' && m.home_score != null);
-        if (finishedMatch) {
-          return finishedMatch.home_score > finishedMatch.away_score
-            ? finishedMatch.home_team_id
-            : finishedMatch.away_team_id;
-        }
-      }
-
-      // "Perdedor O1" format
-      const loserMatch = placeholder.match(/^Perdedor (.+)$/);
-      if (loserMatch) {
-        const bracketName = loserMatch[1];
-        const finishedMatch = allMatches.find((m: any) => m.group_name === bracketName && m.status === 'finished' && m.home_score != null);
-        if (finishedMatch) {
-          return finishedMatch.home_score > finishedMatch.away_score
-            ? finishedMatch.away_team_id
-            : finishedMatch.home_team_id;
-        }
-      }
-
-      return null;
-    };
-
-    // Find knockout matches with unresolved placeholders
-    const knockoutMatches = allMatches.filter((m: any) =>
-      m.phase !== 'group' && !m.phase?.startsWith('Jornada') &&
-      ((m.home_placeholder && !m.home_team_id) || (m.away_placeholder && !m.away_team_id))
-    );
-
+    const [teamsResult, matchesResult] = await Promise.all([
+      supabase.from('event_teams').select('*').eq('event_id', eventId),
+      supabase.from('matches').select('*').eq('event_id', eventId),
+    ]);
+    if (teamsResult.error) throw teamsResult.error;
+    if (matchesResult.error) throw matchesResult.error;
+    const teams = (teamsResult.data || []) as EventTeam[];
+    const matches = (matchesResult.data || []) as Match[];
     let resolved = 0;
-    for (const m of knockoutMatches) {
-      const updates: any = {};
-      if (m.home_placeholder && !m.home_team_id) {
-        const resolvedId = resolveTeamId(m.home_placeholder);
-        if (resolvedId) {
-          // resolvedId could be an eventTeamId or a teamId depending on the placeholder type
-          // For group/best placeholders it's eventTeamId, for winner/loser it's teamId
-          if (m.home_placeholder.startsWith('Ganador') || m.home_placeholder.startsWith('Perdedor')) {
-            updates.home_team_id = resolvedId;
-            updates.home_event_team_id = await this.resolveEventTeamId(eventId, resolvedId, m.category_id);
-          } else {
-            // It's an eventTeamId, need to get the team_id
-            const et = eventTeams.find((e: any) => e.id === resolvedId);
-            if (et) {
-              updates.home_team_id = et.team_id;
-              updates.home_event_team_id = et.id;
-            }
-          }
-          resolved++;
-        }
+    for (const match of matches) {
+      if (isGroupPhase(match.phase) || match.status !== 'scheduled') continue;
+      const updates: Partial<Match> = {};
+      for (const side of ['home', 'away'] as const) {
+        const label = match[`${side}_placeholder`];
+        if (!label) continue; // Manual overrides remove the automatic source.
+        const slot = resolveBracketSlot(match, label, teams, matches);
+        if ((match[`${side}_team_id`] || null) === (slot?.teamId || null) &&
+            (match[`${side}_event_team_id`] || null) === (slot?.eventTeamId || null)) continue;
+        updates[`${side}_team_id`] = slot?.teamId || null;
+        updates[`${side}_event_team_id`] = slot?.eventTeamId || null;
       }
-      if (m.away_placeholder && !m.away_team_id) {
-        const resolvedId = resolveTeamId(m.away_placeholder);
-        if (resolvedId) {
-          if (m.away_placeholder.startsWith('Ganador') || m.away_placeholder.startsWith('Perdedor')) {
-            updates.away_team_id = resolvedId;
-            updates.away_event_team_id = await this.resolveEventTeamId(eventId, resolvedId, m.category_id);
-          } else {
-            const et = eventTeams.find((e: any) => e.id === resolvedId);
-            if (et) {
-              updates.away_team_id = et.team_id;
-              updates.away_event_team_id = et.id;
-            }
+      if (Object.keys(updates).length) {
+        // Protect a match started concurrently and avoid silently ignoring DB failures.
+        let query = supabase.from('matches').update(updates).eq('id', match.id).eq('status', 'scheduled');
+        for (const side of ['home', 'away'] as const) {
+          for (const suffix of ['placeholder', 'team_id', 'event_team_id'] as const) {
+            const column = `${side}_${suffix}` as const;
+            query = match[column] == null ? query.is(column, null) : query.eq(column, match[column]!);
           }
-          resolved++;
         }
-      }
-      if (Object.keys(updates).length > 0) {
-        await supabase.from('matches').update(updates).eq('id', m.id);
+        const { data, error } = await query.select('id');
+        if (error) throw error;
+        if (data?.length) {
+          Object.assign(match, updates);
+          resolved += Object.keys(updates).length / 2;
+        }
       }
     }
-
     return resolved;
   },
 
-  // Auto-resolve winner/loser placeholders when a specific knockout match finishes
-  async resolveWinnerForFinishedMatch(eventId: string, matchId: string): Promise<number> {
-    const { data: finishedMatch } = await supabase
-      .from('matches')
-      .select('*')
-      .eq('id', matchId)
-      .single();
-
-    if (!finishedMatch || finishedMatch.status !== 'finished' || !finishedMatch.group_name) return 0;
-    if (finishedMatch.home_score == null || finishedMatch.away_score == null) return 0;
-
-    const bracketName = finishedMatch.group_name;
-    const homeWon = finishedMatch.home_score > finishedMatch.away_score;
-    const winnerId = homeWon ? finishedMatch.home_team_id : finishedMatch.away_team_id;
-    const loserId = homeWon ? finishedMatch.away_team_id : finishedMatch.home_team_id;
-    const winnerEventTeamId = homeWon ? finishedMatch.home_event_team_id : finishedMatch.away_event_team_id;
-    const loserEventTeamId = homeWon ? finishedMatch.away_event_team_id : finishedMatch.home_event_team_id;
-
-    if (!winnerId || !loserId) return 0;
-
-    // Find matches with placeholders referencing this bracket name
-    const { data: dependentMatches } = await supabase
-      .from('matches')
-      .select('*')
-      .eq('event_id', eventId)
-      .neq('id', matchId);
-
-    if (!dependentMatches) return 0;
-
-    let resolved = 0;
-    for (const m of dependentMatches) {
-      const updates: any = {};
-      if (m.home_placeholder === `Ganador ${bracketName}` && !m.home_team_id) {
-        updates.home_team_id = winnerId;
-        updates.home_event_team_id = winnerEventTeamId || await this.resolveEventTeamId(eventId, winnerId, m.category_id);
-        resolved++;
-      }
-      if (m.away_placeholder === `Ganador ${bracketName}` && !m.away_team_id) {
-        updates.away_team_id = winnerId;
-        updates.away_event_team_id = winnerEventTeamId || await this.resolveEventTeamId(eventId, winnerId, m.category_id);
-        resolved++;
-      }
-      if (m.home_placeholder === `Perdedor ${bracketName}` && !m.home_team_id) {
-        updates.home_team_id = loserId;
-        updates.home_event_team_id = loserEventTeamId || await this.resolveEventTeamId(eventId, loserId, m.category_id);
-        resolved++;
-      }
-      if (m.away_placeholder === `Perdedor ${bracketName}` && !m.away_team_id) {
-        updates.away_team_id = loserId;
-        updates.away_event_team_id = loserEventTeamId || await this.resolveEventTeamId(eventId, loserId, m.category_id);
-        resolved++;
-      }
-      if (Object.keys(updates).length > 0) {
-        await supabase.from('matches').update(updates).eq('id', m.id);
-      }
-    }
-
-    return resolved;
+  async resolveWinnerForFinishedMatch(eventId: string, _matchId: string): Promise<number> {
+    return this.resolveKnockoutPlaceholders(eventId);
   },
 
   // Manually assign a team to a match slot
@@ -629,9 +463,11 @@ export const tournamentService = {
     const { data: match } = await supabase.from('matches').select('*').eq('id', matchId).single();
     const updates: any = {};
     if (side === 'home') {
+      updates.home_placeholder = null;
       updates.home_team_id = teamId;
       updates.home_event_team_id = match ? await this.resolveEventTeamId(match.event_id, teamId, match.category_id) : null;
     } else {
+      updates.away_placeholder = null;
       updates.away_team_id = teamId;
       updates.away_event_team_id = match ? await this.resolveEventTeamId(match.event_id, teamId, match.category_id) : null;
     }
