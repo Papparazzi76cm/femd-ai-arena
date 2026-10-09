@@ -1,6 +1,6 @@
-import { fetchAllRows } from '../../../src/services/fetchAllRows.ts';
-import { isGroupPhase, resolveBracketSlot } from '../../../src/services/knockoutResolver.ts';
-import type { EventTeam, Match } from '../../../src/types/tournament.ts';
+import { fetchAllRows } from './fetchAllRows.ts';
+import { isGroupPhase, resolveBracketSlot } from './knockoutResolver.ts';
+import type { EventTeam, Match } from './tournamentTypes.ts';
 
 // Runs with the mesa endpoint's server client after its token authorization succeeds.
 export async function synchronizeKnockoutSlots(client: { from(table: string): any }, eventId: string): Promise<number> {
