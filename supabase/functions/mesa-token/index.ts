@@ -285,8 +285,12 @@ serve(async (req: Request) => {
           })
           .eq("id", assignment.match_id);
         if (error) throw error;
+        const { data: resetMatch, error: matchReadError } = await supabaseAdmin
+          .from('matches').select('event_id').eq('id', assignment.match_id).single();
+        if (matchReadError) throw matchReadError;
+        const resolved = await synchronizeKnockoutSlots(supabaseAdmin, resetMatch.event_id);
         return new Response(
-          JSON.stringify({ success: true }),
+          JSON.stringify({ success: true, resolved }),
           { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
