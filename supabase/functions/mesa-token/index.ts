@@ -1,7 +1,9 @@
+import { synchronizeKnockoutSlots } from '../_shared/knockoutSync.ts';
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
+  "X-Automatic-Brackets": "enabled",
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
@@ -246,8 +248,13 @@ serve(async (req: Request) => {
 
         if (error) throw error;
 
+        const { data: savedMatch, error: matchReadError } = await supabaseAdmin
+          .from('matches').select('event_id').eq('id', assignment.match_id).single();
+        if (matchReadError) throw matchReadError;
+        const resolved = await synchronizeKnockoutSlots(supabaseAdmin, savedMatch.event_id);
+
         return new Response(
-          JSON.stringify({ success: true }),
+          JSON.stringify({ success: true, resolved }),
           { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }

@@ -1,4 +1,4 @@
-import { buildGroupStandings, buildCrossGroupRankings, GroupMatch } from './tournamentEngine';
+import { buildGroupStandings, buildCrossGroupRankings, GroupMatch } from './tournamentEngine.ts';
 import type { Match, EventTeam } from '../types/tournament';
 
 export function isGroupPhase(phase: string): boolean {

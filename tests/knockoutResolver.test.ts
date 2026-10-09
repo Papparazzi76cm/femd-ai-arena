@@ -174,3 +174,23 @@ test('Calendar save normalizes the submitted time before updating the database',
   assert.equal(database.matches[0].match_date, '2026-10-09T08:00:00.000Z');
   assert.equal(matchDateToInput(database.matches[0].match_date), '2026-10-09T10:00');
 });
+
+import { synchronizeKnockoutSlots } from '../supabase/functions/_shared/knockoutSync';
+import { supabase as serverClient } from './supabaseMock';
+test('mesa server automatically assigns closed groups without a Calendar visit', async () => {
+  setup();
+  assert.equal(await synchronizeKnockoutSlots(serverClient, 'event'), 2);
+  assert.equal(database.matches[2].home_team_id, 'a1');
+  assert.equal(database.matches[2].away_team_id, 'b1');
+});
+test('mesa server corrects pending brackets and preserves manual and started assignments', async () => {
+  setup();
+  await synchronizeKnockoutSlots(serverClient, 'event');
+  database.matches[0].home_score = 0; database.matches[0].away_score = 3;
+  await synchronizeKnockoutSlots(serverClient, 'event');
+  assert.equal(database.matches[2].home_team_id, 'a2');
+  database.matches[2].home_placeholder = null;
+  database.matches[0].home_score = 4;
+  await synchronizeKnockoutSlots(serverClient, 'event');
+  assert.equal(database.matches[2].home_team_id, 'a2');
+});
