@@ -1,3 +1,4 @@
+import { fetchAllRows } from '@/services/fetchAllRows';
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -75,19 +76,19 @@ export const MesaDashboard = () => {
     if (!user) return;
 
     try {
-      let query = supabase.from('matches').select('*').order('match_date', { ascending: true });
-      if (!userIsAdmin) {
-        query = query.eq('referee_user_id', user.id);
-      }
+      const matchesQuery = () => {
+        let query = supabase.from('matches').select('*').order('match_date', { ascending: true });
+        if (!userIsAdmin) query = query.eq('referee_user_id', user.id);
+        return query;
+      };
 
       const [matchesRes, teamsData, eventsRes] = await Promise.all([
-        query,
+        fetchAllRows(matchesQuery),
         teamService.getAll(),
         supabase.from('events').select('id, title').order('date', { ascending: false }),
       ]);
 
-      if (matchesRes.error) throw matchesRes.error;
-      setMatches((matchesRes.data || []) as Match[]);
+      setMatches(matchesRes as Match[]);
       setTeams(teamsData);
       setEvents((eventsRes.data || []) as EventInfo[]);
     } catch (error) {

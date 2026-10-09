@@ -91,3 +91,30 @@ test('database failures are reported instead of claiming successful resolution',
   await assert.rejects(tournamentService.resolveKnockoutPlaceholders('event'), /database failed/);
   database.fail = false;
 });
+
+import { fetchAllRows } from '../src/services/fetchAllRows';
+test('pagination loads 2,501 rows, including the match beyond row 1,000', async () => {
+  setup();
+  database.matches = Array.from({ length: 2501 }, (_, i) => match(`m${i}`, 'group', { match_date: '2026-01-01', status: i === 2000 ? 'in_progress' : 'finished' }));
+  const loaded = await tournamentService.getMatches('event');
+  assert.equal(loaded.length, 2501);
+  assert.equal(loaded.find(m => m.id === 'm2000')?.status, 'in_progress');
+  await tournamentService.updateMatch('m2000', { status: 'finished' });
+  assert.equal((await tournamentService.getMatches('event')).find(m => m.id === 'm2000')?.status, 'finished');
+});
+test('pagination continues when server returns fewer than requested rows', async () => {
+  const source = Array.from({ length: 1234 }, (_, id) => ({ id }));
+  const loaded = await fetchAllRows(() => ({ order: () => ({ range: async (from, to) => ({ data: source.slice(from, Math.min(to + 1, from + 100)), error: null }) }) }));
+  assert.deepEqual(loaded, source);
+});
+test('pagination handles exactly full pages and empty sets', async () => {
+  for (const size of [0, 500, 1000]) {
+    const source = Array.from({ length: size }, (_, id) => ({ id }));
+    const loaded = await fetchAllRows(() => ({ order: () => ({ range: async (from, to) => ({ data: source.slice(from, to + 1), error: null }) }) }));
+    assert.deepEqual(loaded, source);
+  }
+});
+test('pagination rejects a later page error rather than returning incomplete data', async () => {
+  await assert.rejects(fetchAllRows(() => ({ order: () => ({ range: async from => from === 0 ?
+    { data: [{ id: 1 }], error: null } : { data: null, error: new Error('page failed') } }) })), /page failed/);
+});

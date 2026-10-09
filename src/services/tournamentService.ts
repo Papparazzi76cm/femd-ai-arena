@@ -1,3 +1,4 @@
+import { fetchAllRows } from './fetchAllRows';
 import { supabase } from '@/integrations/supabase/client';
 import { EventTeam, Match, MatchScheduleConflict } from '@/types/tournament';
 import { isGroupPhase, resolveBracketSlot } from './knockoutResolver';
@@ -5,14 +6,13 @@ import { isGroupPhase, resolveBracketSlot } from './knockoutResolver';
 export const tournamentService = {
   // Event Teams
   async getEventTeams(eventId: string): Promise<EventTeam[]> {
-    const { data, error } = await supabase
+    const data = await fetchAllRows(() => supabase
       .from('event_teams')
       .select('*')
       .eq('event_id', eventId)
       .order('group_name')
-      .order('points', { ascending: false });
+      .order('points', { ascending: false }));
     
-    if (error) throw error;
     return data || [];
   },
 
@@ -65,15 +65,10 @@ export const tournamentService = {
   },
 
   async getMatches(eventId: string): Promise<Match[]> {
-    const { data, error } = await supabase
-      .from('matches')
-      .select('*')
-      .eq('event_id', eventId)
-      .order('phase')
-      .order('match_number');
-    
-    if (error) throw error;
-    return (data || []) as Match[];
+    const data = await fetchAllRows(() => supabase
+      .from('matches').select('*').eq('event_id', eventId)
+      .order('phase').order('match_number'));
+    return data as Match[];
   },
 
   async createMatch(match: Omit<Match, 'id' | 'created_at'>): Promise<Match> {
@@ -167,14 +162,12 @@ export const tournamentService = {
   // Update team statistics based on match results
   async updateTeamStatistics(eventId: string): Promise<void> {
     // Get all group stage matches for this event (including Jornada phases)
-    const { data: matches, error: matchesError } = await supabase
+    const matches = await fetchAllRows(() => supabase
       .from('matches')
       .select('*')
       .eq('event_id', eventId)
       .not('home_score', 'is', null)
-      .not('away_score', 'is', null);
-
-    if (matchesError) throw matchesError;
+      .not('away_score', 'is', null));
     if (!matches || matches.length === 0) return;
 
     // Filter only group stage matches (phase = 'group', 'Fase de Grupos', or starts with 'Jornada')
@@ -261,13 +254,13 @@ export const tournamentService = {
 
   // Get head-to-head result between two teams
   async getHeadToHeadResult(eventId: string, teamId1: string, teamId2: string): Promise<number> {
-    const { data: allMatches } = await supabase
+    const allMatches = await fetchAllRows(() => supabase
       .from('matches')
       .select('*')
       .eq('event_id', eventId)
       .or(`and(home_team_id.eq.${teamId1},away_team_id.eq.${teamId2}),and(home_team_id.eq.${teamId2},away_team_id.eq.${teamId1})`)
       .not('home_score', 'is', null)
-      .not('away_score', 'is', null);
+      .not('away_score', 'is', null));
 
     // Filter only group stage matches
     const matches = (allMatches || []).filter((m: any) => 
@@ -413,14 +406,10 @@ export const tournamentService = {
 
   // Recalculate automatic slots only in matches which have not started.
   async resolveKnockoutPlaceholders(eventId: string): Promise<number> {
-    const [teamsResult, matchesResult] = await Promise.all([
-      supabase.from('event_teams').select('*').eq('event_id', eventId),
-      supabase.from('matches').select('*').eq('event_id', eventId),
+    const [teams, matches] = await Promise.all([
+      this.getEventTeams(eventId),
+      this.getMatches(eventId),
     ]);
-    if (teamsResult.error) throw teamsResult.error;
-    if (matchesResult.error) throw matchesResult.error;
-    const teams = (teamsResult.data || []) as EventTeam[];
-    const matches = (matchesResult.data || []) as Match[];
     let resolved = 0;
     for (const match of matches) {
       if (isGroupPhase(match.phase) || match.status !== 'scheduled') continue;

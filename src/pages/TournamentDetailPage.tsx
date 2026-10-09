@@ -1,3 +1,4 @@
+import { fetchAllRows } from '@/services/fetchAllRows';
 import { useEffect, useState, useMemo } from "react";
 import { useParams, Link } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -220,7 +221,7 @@ export function TournamentDetailPage() {
         setEventTeams(teamsData || []);
 
         // Load matches
-        const { data: matchesData, error: matchesError } = await supabase
+        const matchesData = await fetchAllRows(() => supabase
           .from("matches")
           .select(`
             *,
@@ -245,9 +246,8 @@ export function TournamentDetailPage() {
             )
           `)
           .eq("event_id", id)
-          .order("match_number", { ascending: true });
+          .order("match_number", { ascending: true }));
 
-        if (matchesError) throw matchesError;
         setMatches(matchesData || []);
 
         // Load top goal scorers

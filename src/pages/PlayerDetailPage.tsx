@@ -1,3 +1,4 @@
+import { fetchAllRows } from '@/services/fetchAllRows';
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -135,11 +136,11 @@ export const PlayerDetailPage = () => {
         const etIds = [...new Set(rosterData.map(r => r.event_team_id))];
 
         // Count finished matches where the player's event_team participated
-        const { data: playedMatches } = await supabase
+        const playedMatches = await fetchAllRows(() => supabase
           .from('matches')
           .select('id')
           .eq('status', 'finished')
-          .or(`home_event_team_id.in.(${etIds.join(',')}),away_event_team_id.in.(${etIds.join(',')})`);
+          .or(`home_event_team_id.in.(${etIds.join(',')}),away_event_team_id.in.(${etIds.join(',')})`));
         setMatchesPlayed(playedMatches?.length || 0);
 
         const { data: etData } = await supabase

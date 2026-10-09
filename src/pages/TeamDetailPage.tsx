@@ -1,3 +1,4 @@
+import { fetchAllRows } from '@/services/fetchAllRows';
 import { useEffect, useState, useMemo } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { teamService } from '@/services/teamService';
@@ -89,7 +90,7 @@ export const TeamDetailPage = () => {
       setEvents(teamEvents);
 
       // Load matches with facility/field info
-      const { data: matchesData } = await supabase
+      const matchesData = await fetchAllRows(() => supabase
         .from('matches')
         .select(`
           *,
@@ -99,7 +100,7 @@ export const TeamDetailPage = () => {
           field:fields!matches_field_id_fkey(id, name, facility:facilities(id, name))
         `)
         .or(`home_team_id.eq.${id},away_team_id.eq.${id}`)
-        .order('match_date', { ascending: false });
+        .order('match_date', { ascending: false }));
 
       setMatches(matchesData || []);
 

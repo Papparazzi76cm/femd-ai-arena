@@ -1,3 +1,4 @@
+import { fetchAllRows } from '@/services/fetchAllRows';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Card } from '@/components/ui/card';
@@ -184,7 +185,7 @@ export const LiveTournamentPage = () => {
         }
 
         // Check which events have live matches
-        const { data: liveMatchesCheck } = await supabase.from('matches').select('event_id').eq('status', 'in_progress');
+        const liveMatchesCheck = await fetchAllRows(() => supabase.from('matches').select('event_id').eq('status', 'in_progress'));
         const liveEventIds = new Set((liveMatchesCheck || []).map(m => m.event_id));
 
         const eventOptions: EventOption[] = events.map(e => ({
@@ -277,7 +278,7 @@ export const LiveTournamentPage = () => {
       const { data: liveCheck } = await supabase.from('matches').select('id').eq('event_id', eventId).eq('status', 'in_progress').limit(1);
       setIsLiveEvent((liveCheck || []).length > 0);
 
-      const { data: matchesData } = await supabase.from('matches').select('*').eq('event_id', eventId).order('match_date', { ascending: true });
+      const matchesData = await fetchAllRows(() => supabase.from('matches').select('*').eq('event_id', eventId).order('match_date', { ascending: true }));
       const typedMatches = (matchesData || []) as Match[];
       setAllMatches(typedMatches);
       const live = typedMatches.filter(m => m.status === 'in_progress');
