@@ -1,3 +1,4 @@
+import { matchDateToInput } from '@/lib/matchDateTime';
 import { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -188,8 +189,8 @@ export const HistoricalTournamentManager = ({ eventId }: HistoricalTournamentMan
 
   const handleEditMatch = (match: Match) => {
     setEditingMatch(match);
-    // Extraer los primeros 16 caracteres para adaptarlo al input datetime-local (YYYY-MM-DDTHH:mm)
-    const dateFormatted = match.match_date ? match.match_date.substring(0, 16) : '';
+    // Edit schedules in the same tournament timezone used when saving.
+    const dateFormatted = match.match_date ? matchDateToInput(match.match_date) : '';
     setMatchForm({
       home_team_id: match.home_team_id,
       away_team_id: match.away_team_id,

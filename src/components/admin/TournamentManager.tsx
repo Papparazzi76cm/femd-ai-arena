@@ -1,3 +1,4 @@
+import { matchDateToInput, matchDateToUTC } from '@/lib/matchDateTime';
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -308,7 +309,7 @@ export const TournamentManager = ({ eventId }: TournamentManagerProps) => {
       const { data } = await supabase.rpc('check_match_schedule_conflict', {
         p_event_id: eventId,
         p_field_id: fieldId,
-        p_match_date: matchDate,
+        p_match_date: matchDateToUTC(matchDate),
         p_duration_minutes: totalDuration,
       });
       if (data && data.length > 0) {
@@ -384,7 +385,7 @@ export const TournamentManager = ({ eventId }: TournamentManagerProps) => {
       return;
     }
     if (!newMatchDate) {
-      toast({ title: 'Error', description: 'La fecha y hora son obligatorias', variant: 'destructive' });
+      toast({ title: 'Error', description: 'La fecha y hora de España son obligatorias', variant: 'destructive' });
       return;
     }
     if (!newMatchFieldId) {
@@ -460,10 +461,7 @@ export const TournamentManager = ({ eventId }: TournamentManagerProps) => {
     setEditMatchFieldId(match.field_id || '');
     // Convert stored date to datetime-local format
     if (match.match_date) {
-      const d = new Date(match.match_date);
-      const pad = (n: number) => String(n).padStart(2, '0');
-      const localStr = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
-      setEditMatchDate(localStr);
+      setEditMatchDate(matchDateToInput(match.match_date));
     } else {
       setEditMatchDate('');
     }
@@ -533,10 +531,9 @@ export const TournamentManager = ({ eventId }: TournamentManagerProps) => {
     }))
   );
 
-  // Format match date properly — stored dates from datetime-local should be displayed as-is
+  // Display the stored instant in the tournament timezone.
   const formatMatchDate = (dateStr: string) => {
     if (!dateStr) return '';
-    // Parse ISO string but display without timezone conversion
     const d = new Date(dateStr);
     return d.toLocaleString('es-ES', { 
       day: '2-digit', month: '2-digit', year: 'numeric',
@@ -1286,7 +1283,7 @@ export const TournamentManager = ({ eventId }: TournamentManagerProps) => {
                 </div>
 
                 <div>
-                  <Label>Fecha y hora</Label>
+                  <Label>Fecha y hora (España)</Label>
                   <Input
                     type="datetime-local"
                     value={editMatchDate}

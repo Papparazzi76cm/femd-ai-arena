@@ -1,3 +1,4 @@
+import { matchDateToUTC } from '@/lib/matchDateTime';
 import { fetchAllRows } from './fetchAllRows';
 import { supabase } from '@/integrations/supabase/client';
 import { EventTeam, Match, MatchScheduleConflict } from '@/types/tournament';
@@ -72,7 +73,7 @@ export const tournamentService = {
   },
 
   async createMatch(match: Omit<Match, 'id' | 'created_at'>): Promise<Match> {
-    const matchWithEventTeams: any = { ...match };
+    const matchWithEventTeams: any = { ...match, match_date: match.match_date ? matchDateToUTC(match.match_date) : null };
     if (match.home_team_id && !match.home_event_team_id) {
       matchWithEventTeams.home_event_team_id = await this.resolveEventTeamId(match.event_id, match.home_team_id, match.category_id);
     }
@@ -93,6 +94,7 @@ export const tournamentService = {
 
   async updateMatch(id: string, updates: Partial<Match>): Promise<void> {
     const safeUpdates: any = { ...updates };
+    if (updates.match_date !== undefined) safeUpdates.match_date = updates.match_date ? matchDateToUTC(updates.match_date) : null;
     const { data: original, error: readError } = await supabase.from('matches').select('*').eq('id', id).single();
     if (readError) throw readError;
     for (const side of ['home', 'away'] as const) {
@@ -375,7 +377,7 @@ export const tournamentService = {
       .rpc('check_match_schedule_conflict', {
         p_event_id: eventId,
         p_field_id: fieldId,
-        p_match_date: matchDate,
+        p_match_date: matchDateToUTC(matchDate),
         p_duration_minutes: durationMinutes,
         p_exclude_match_id: excludeMatchId || null,
       });

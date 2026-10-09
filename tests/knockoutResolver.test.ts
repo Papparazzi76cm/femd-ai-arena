@@ -145,3 +145,32 @@ test('roster stores normalized names, upper-case DNI and null for no DNI', () =>
   assert.equal(registrationPayload([member({ dni: '12345678a' })])[0].dni, '12345678A');
   assert.equal(registrationPayload([member({ no_dni: true })])[0].dni, null);
 });
+
+import { matchDateToInput, matchDateToUTC } from '../src/lib/matchDateTime';
+test('10:00 Spanish summer and winter time survives save and edit unchanged', () => {
+  assert.equal(matchDateToUTC('2026-10-09T10:00'), '2026-10-09T08:00:00.000Z');
+  assert.equal(matchDateToUTC('2026-12-09T10:00'), '2026-12-09T09:00:00.000Z');
+  for (const input of ['2026-10-09T10:00', '2026-12-09T10:00', '2026-07-01T00:15']) assert.equal(matchDateToInput(matchDateToUTC(input)), input);
+});
+test('schedule conversion is independent of browser timezone and preserves explicit instants', () => {
+  const original = process.env.TZ;
+  try {
+    for (const zone of ['UTC', 'America/Asuncion', 'Europe/Madrid']) {
+      process.env.TZ = zone;
+      assert.equal(matchDateToUTC('2026-10-09T10:00'), '2026-10-09T08:00:00.000Z');
+    }
+  } finally { if (original === undefined) delete process.env.TZ; else process.env.TZ = original; }
+  assert.equal(matchDateToUTC('2026-10-09T10:00:00+02:00'), '2026-10-09T08:00:00.000Z');
+  assert.equal(matchDateToUTC('2026-10-09T08:00:00Z'), '2026-10-09T08:00:00.000Z');
+});
+test('schedule conversion rejects invalid dates and daylight-saving gaps', () => {
+  assert.throws(() => matchDateToUTC('2026-02-30T10:00'));
+  assert.throws(() => matchDateToUTC('2026-03-29T02:30'), /no existe/);
+  assert.equal(matchDateToUTC('2026-10-25T02:30'), '2026-10-25T00:30:00.000Z');
+});
+test('Calendar save normalizes the submitted time before updating the database', async () => {
+  setup();
+  await tournamentService.updateMatch('a', { match_date: '2026-10-09T10:00' });
+  assert.equal(database.matches[0].match_date, '2026-10-09T08:00:00.000Z');
+  assert.equal(matchDateToInput(database.matches[0].match_date), '2026-10-09T10:00');
+});

@@ -1,3 +1,4 @@
+import { matchDateToUTC } from '@/lib/matchDateTime';
 import { useState, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -346,7 +347,7 @@ export const KnockoutBracketGenerator = ({
             const conflicts = await tournamentService.checkScheduleConflict(
               eventId,
               pairing.fieldId,
-              new Date(pairing.matchDate).toISOString(),
+              matchDateToUTC(pairing.matchDate),
               totalDuration
             );
             if (conflicts.length > 0) {
@@ -375,7 +376,7 @@ export const KnockoutBracketGenerator = ({
           status: 'scheduled',
           match_halves: pairing.matchHalves,
           match_duration_minutes: pairing.matchDuration,
-          match_date: new Date(pairing.matchDate).toISOString(),
+          match_date: matchDateToUTC(pairing.matchDate),
           field_id: pairing.fieldId,
           match_number: matches.length + created + 1,
         };
@@ -485,7 +486,7 @@ export const KnockoutBracketGenerator = ({
             const conflicts = await tournamentService.checkScheduleConflict(
               eventId,
               pairing.fieldId,
-              new Date(pairing.matchDate).toISOString(),
+              matchDateToUTC(pairing.matchDate),
               totalDuration
             );
             if (conflicts.length > 0) {
@@ -514,7 +515,7 @@ export const KnockoutBracketGenerator = ({
           status: 'scheduled',
           match_halves: pairing.matchHalves,
           match_duration_minutes: pairing.matchDuration,
-          match_date: new Date(pairing.matchDate).toISOString(),
+          match_date: matchDateToUTC(pairing.matchDate),
           field_id: pairing.fieldId,
           match_number: matches.length + created + 1,
         };
