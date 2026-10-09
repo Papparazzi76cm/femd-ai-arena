@@ -1,3 +1,4 @@
+import { RosterRegistrationPage } from '@/pages/RosterRegistrationPage';
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -64,6 +65,7 @@ const App = () => (
                       <Route path="/reset-password" element={<ResetPasswordPage />} />
                       <Route path="/perfil" element={<ProfilePage />} />
                       <Route path="/admin" element={<AdminDashboard />} />
+                      <Route path="/registro-plantilla" element={<RosterRegistrationPage />} />
                       <Route path="/mesa" element={<MesaDashboard />} />
                       <Route path="/mesa/partido/:token" element={<MesaMatchPanel />} />
                       {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

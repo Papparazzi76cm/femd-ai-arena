@@ -1103,6 +1103,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      create_roster_registration_link: { Args: { p_event_team_id: string }; Returns: Json }
+      revoke_roster_registration_link: { Args: { p_event_team_id: string }; Returns: undefined }
+      get_roster_registration_context: { Args: { p_token: string }; Returns: Json }
+      submit_roster_registration: { Args: { p_token: string; p_members: Json }; Returns: Json }
       check_match_schedule_conflict: {
         Args: {
           p_duration_minutes: number

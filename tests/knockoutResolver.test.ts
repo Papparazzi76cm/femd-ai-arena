@@ -118,3 +118,30 @@ test('pagination rejects a later page error rather than returning incomplete dat
   await assert.rejects(fetchAllRows(() => ({ order: () => ({ range: async from => from === 0 ?
     { data: [{ id: 1 }], error: null } : { data: null, error: new Error('page failed') } }) })), /page failed/);
 });
+
+import { RegistrationMember, titleCase, validateRoster, registrationPayload } from '../src/services/rosterRegistrationValidation';
+const member = (changes: Partial<RegistrationMember> = {}): RegistrationMember => ({ key: '1', first_name: 'JUAN', last_name: 'PÉREZ GARCÍA', birth_date: '2010-01-01', jersey_number: '7', dni: '12345678A', no_dni: false, roster_role: 'player', staff_position: '', ...changes });
+test('roster requires all fields and rejects duplicate numeric jerseys', () => {
+  assert.deepEqual(validateRoster([member()]), []);
+  for (const field of ['first_name', 'last_name', 'birth_date', 'jersey_number', 'dni'] as const) assert.ok(validateRoster([member({ [field]: '' })]).length);
+  assert.ok(validateRoster([member(), member({ key: '2', jersey_number: '007', dni: 'X1234567A' })]).some(error => error.includes('dorsal')));
+  assert.ok(validateRoster([member()], [7]).length);
+});
+test('roster DNI/NIE format, no-DNI option and duplicate documents', () => {
+  assert.deepEqual(validateRoster([member({ dni: 'X1234567A' })]), []);
+  assert.deepEqual(validateRoster([member({ dni: '', no_dni: true })]), []);
+  for (const dni of ['12345678', '123456789', '1234567-A', '1234567 A', 'XX234567A', '123456789A']) assert.ok(validateRoster([member({ dni })]).length);
+  assert.ok(validateRoster([member(), member({ key: '2', jersey_number: '8', dni: '12345678a' })]).some(error => error.includes('DNI/NIE ya')));
+});
+test('roster staff positions and valid birth dates', () => {
+  assert.ok(validateRoster([member({ roster_role: 'staff' })]).length);
+  for (const staff_position of ['primer_entrenador', 'segundo_entrenador', 'delegado', 'auxiliar']) assert.deepEqual(validateRoster([member({ roster_role: 'staff', staff_position })]), []);
+  assert.ok(validateRoster([member({ birth_date: '2010-02-30' })]).length);
+  assert.ok(validateRoster([member({ birth_date: '2099-01-01' })]).length);
+});
+test('roster stores normalized names, upper-case DNI and null for no DNI', () => {
+  assert.equal(titleCase("  MARÍA   JOSÉ O'NEILL-GARCÍA  "), "María José O'Neill-García");
+  assert.equal(registrationPayload([member()])[0].last_name, 'Pérez García');
+  assert.equal(registrationPayload([member({ dni: '12345678a' })])[0].dni, '12345678A');
+  assert.equal(registrationPayload([member({ no_dni: true })])[0].dni, null);
+});

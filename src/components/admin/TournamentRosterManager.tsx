@@ -1,3 +1,4 @@
+import { RegistrationLinkPanel } from './RegistrationLinkPanel';
 import { useState, useEffect, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -308,6 +309,7 @@ export const TournamentRosterManager = ({
 
                         {isExpanded && isSelected && (
                           <div className="mt-2 ml-2 border-l-2 border-accent pl-4 pb-4 space-y-3">
+                            <RegistrationLinkPanel key={et.id} eventTeamId={et.id} onRefresh={() => loadRoster(et.id)} />
                             <div className="flex items-center justify-between">
                               <span className="text-sm font-medium">
                                 Plantilla ({roster.length} miembros)
