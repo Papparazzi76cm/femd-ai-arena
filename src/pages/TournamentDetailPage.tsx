@@ -199,9 +199,11 @@ export function TournamentDetailPage() {
           .from("events")
           .select("*")
           .eq("id", id)
-          .single();
+          .eq("is_public", true)
+          .maybeSingle();
 
         if (eventError) throw eventError;
+        if (!eventData) throw new Error('Torneo no encontrado o no publicado.');
         setEvent(eventData);
 
         // Load event teams with team details

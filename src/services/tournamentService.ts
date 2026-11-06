@@ -412,6 +412,11 @@ export const tournamentService = {
       this.getEventTeams(eventId),
       this.getMatches(eventId),
     ]);
+    const groupMatches = matches.filter(match => isGroupPhase(match.phase));
+    if (!groupMatches.length || groupMatches.some(match =>
+      match.status !== 'finished' || match.home_score == null || match.away_score == null
+    )) return 0;
+
     let resolved = 0;
     for (const match of matches) {
       if (isGroupPhase(match.phase) || match.status !== 'scheduled') continue;

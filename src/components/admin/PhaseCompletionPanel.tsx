@@ -1,24 +1,25 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { tournamentService } from '@/services/tournamentService';
 import { Match, EventTeam } from '@/types/tournament';
+import { EventCategory } from '@/types/database';
 import {
   buildGroupStandings,
   buildCrossGroupRankings,
   determineBracketStructure,
-  analyzeFromGroups,
   GroupMatch,
   TeamStanding,
 } from '@/services/tournamentEngine';
-import { CheckCircle2, AlertCircle, Loader2, Zap, Info, Trophy, Users } from 'lucide-react';
+import { CheckCircle2, AlertCircle, Loader2, Zap, Info, Trophy } from 'lucide-react';
 
 interface PhaseCompletionPanelProps {
   matches: Match[];
   eventId: string;
   eventTeams: EventTeam[];
+  eventCategories: EventCategory[];
   teams: Array<{ id: string; name: string }>;
   onResolved: () => void;
 }
@@ -49,10 +50,15 @@ function getPhaseLabel(phase: string): string {
   return PHASE_LABELS[phase] || phase;
 }
 
-export const PhaseCompletionPanel = ({ matches, eventId, eventTeams, teams, onResolved }: PhaseCompletionPanelProps) => {
+function isGroupMatch(phase?: string): boolean {
+  return !!phase && (phase === 'group' || phase.startsWith('Jornada') || phase.toLowerCase().includes('grupo'));
+}
+
+export const PhaseCompletionPanel = ({ matches, eventId, eventTeams, eventCategories, teams, onResolved }: PhaseCompletionPanelProps) => {
   const { toast } = useToast();
   const [resolving, setResolving] = useState(false);
   const [showAnalysis, setShowAnalysis] = useState(false);
+  const autoResolutionKey = useRef('');
 
   // Group matches by phase and compute completion status
   const phaseStatus = useMemo(() => {
@@ -69,7 +75,7 @@ export const PhaseCompletionPanel = ({ matches, eventId, eventTeams, teams, onRe
         phases[normalizedPhase] = { total: 0, finished: 0, phase: normalizedPhase };
       }
       phases[normalizedPhase].total++;
-      if (m.status === 'finished') {
+      if (m.status === 'finished' && m.home_score != null && m.away_score != null) {
         phases[normalizedPhase].finished++;
       }
     });
@@ -93,6 +99,31 @@ export const PhaseCompletionPanel = ({ matches, eventId, eventTeams, teams, onRe
       ((m.home_placeholder && !m.home_team_id) || (m.away_placeholder && !m.away_team_id))
     ).length;
   }, [matches]);
+
+  useEffect(() => {
+    if (!groupPhaseComplete || unresolvedCount === 0) return;
+    const key = `${eventId}:${unresolvedCount}:${matches.filter(m => isGroupMatch(m.phase)).map(m => `${m.id}:${m.status}:${m.home_score}:${m.away_score}`).join('|')}`;
+    if (autoResolutionKey.current === key) return;
+    autoResolutionKey.current = key;
+    const resolve = async () => {
+      try {
+        setResolving(true);
+        await tournamentService.updateTeamStatistics(eventId);
+        const resolved = await tournamentService.resolveKnockoutPlaceholders(eventId);
+        if (resolved > 0) {
+          toast({ title: 'Cruces generados automáticamente', description: `Se asignaron ${resolved} equipo(s) según la clasificación final.` });
+          onResolved();
+        }
+      } catch (error) {
+        autoResolutionKey.current = '';
+        console.error('Error en la generación automática de cruces:', error);
+        toast({ title: 'Error', description: 'No se pudieron generar automáticamente los cruces', variant: 'destructive' });
+      } finally {
+        setResolving(false);
+      }
+    };
+    void resolve();
+  }, [eventId, groupPhaseComplete, unresolvedCount, matches, onResolved]);
 
   // Dynamic bracket analysis
   const bracketAnalysis = useMemo(() => {
@@ -125,30 +156,36 @@ export const PhaseCompletionPanel = ({ matches, eventId, eventTeams, teams, onRe
 
     const rankings = buildCrossGroupRankings(standings);
 
-    // Count total teams
-    const totalTeams = eventTeams.filter(et => et.group_name).length;
-    const numGroups = new Set(eventTeams.filter(et => et.group_name).map(et => et.group_name)).size;
-
-    // Determine how many qualify based on existing knockout structure
-    const knockoutTeamSlots = matches
-      .filter(m => m.phase !== 'group' && !m.phase?.startsWith('Jornada'))
-      .reduce((count, m) => {
-        if (m.home_placeholder) count++;
-        if (m.away_placeholder) count++;
-        return count;
-      }, 0);
-
-    const analysis = determineBracketStructure(knockoutTeamSlots || totalTeams);
+    const roundOrder = ['round_of_16', 'round_of_8', 'quarter_final', 'semi_final', 'final'];
+    const tierDetails = [
+      { key: 'gold', label: 'Fase Oro' },
+      { key: 'silver', label: 'Fase Plata' },
+      { key: 'bronze', label: 'Fase Bronce' },
+    ].flatMap(tier => {
+      const tierMatches = matches.filter(m => m.phase?.startsWith(`${tier.key}_`));
+      const categories = [...new Set(tierMatches.map(match => match.category_id || '__none__'))];
+      return categories.map(categoryId => {
+        const categoryMatches = tierMatches.filter(match => (match.category_id || '__none__') === categoryId);
+        const firstRoundIndex = Math.min(...categoryMatches.map(m => roundOrder.indexOf(m.phase.slice(tier.key.length + 1))).filter(index => index >= 0));
+        const firstRoundMatches = Number.isFinite(firstRoundIndex)
+          ? categoryMatches.filter(m => roundOrder.indexOf(m.phase.slice(tier.key.length + 1)) === firstRoundIndex)
+          : [];
+        const category = eventCategories.find(item => item.id === categoryId)?.category?.name;
+        return {
+          key: `${tier.key}:${categoryId}`,
+          label: category ? `${tier.label} · ${category}` : tier.label,
+          slotCount: firstRoundMatches.length * 2,
+          analysis: firstRoundMatches.length ? determineBracketStructure(firstRoundMatches.length * 2) : null,
+        };
+      });
+    }).filter(tier => tier.analysis);
 
     return {
       standings,
       rankings,
-      analysis,
-      totalTeams,
-      numGroups,
-      knockoutTeamSlots,
+      tierDetails,
     };
-  }, [groupPhaseComplete, matches, eventTeams]);
+  }, [groupPhaseComplete, matches, eventTeams, eventCategories]);
 
   const getTeamName = (teamId: string) => {
     const team = teams.find(t => t.id === teamId);
@@ -238,19 +275,9 @@ export const PhaseCompletionPanel = ({ matches, eventId, eventTeams, teams, onRe
                 {showAnalysis ? 'Ocultar' : 'Ver detalle'}
               </Button>
             </div>
-            <p className="text-sm text-muted-foreground">
-              {bracketAnalysis.analysis.summary}
-            </p>
-            {bracketAnalysis.analysis.isOptimal && (
-              <Badge className="mt-2 bg-green-600">
-                ✅ Cuadro directo — sin ronda previa
-              </Badge>
-            )}
-            {bracketAnalysis.analysis.preliminaryNeeded && (
-              <Badge variant="secondary" className="mt-2">
-                ⚠️ Ronda previa necesaria — {bracketAnalysis.analysis.preliminaryMatchCount} partido(s)
-              </Badge>
-            )}
+            {bracketAnalysis.tierDetails.length > 0 ? <div className="space-y-1">
+              {bracketAnalysis.tierDetails.map(tier => <p key={tier.key} className="text-sm text-muted-foreground"><strong>{tier.label}:</strong> {tier.analysis?.summary}</p>)}
+            </div> : <p className="text-sm text-muted-foreground">No hay cruces eliminatorios configurados para analizar. Se respetarán las rondas creadas manualmente en cada fase.</p>}
           </div>
 
           {/* Detailed cross-group rankings */}
@@ -296,7 +323,7 @@ export const PhaseCompletionPanel = ({ matches, eventId, eventTeams, teams, onRe
             </p>
             <p className="text-xs text-muted-foreground mt-0.5">
               {groupPhaseComplete
-                ? 'La fase de grupos está completa. Genera los cruces automáticamente según la clasificación.'
+                ? 'La fase de grupos está completa. Los cruces se asignan automáticamente según la clasificación.'
                 : 'Finaliza todos los partidos de la fase de grupos para poder generar los cruces.'}
             </p>
           </div>
@@ -312,7 +339,7 @@ export const PhaseCompletionPanel = ({ matches, eventId, eventTeams, teams, onRe
               ) : (
                 <Zap className="w-4 h-4 mr-2" />
               )}
-              Generar cruces
+              Recalcular cruces
             </Button>
           </div>
         </div>

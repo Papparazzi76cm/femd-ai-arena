@@ -12,7 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Checkbox } from '@/components/ui/checkbox';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, Edit, Trash2, Save, X, Calendar, Upload, Trophy, Users, Tag } from 'lucide-react';
+import { Plus, Edit, Trash2, Save, X, Calendar, Upload, Trophy, Users, Tag, Eye, EyeOff } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { supabase } from '@/integrations/supabase/client';
 import { TournamentManager } from './TournamentManager';
@@ -41,7 +41,9 @@ export const EventManager = () => {
     date: '',
     end_date: '',
     location: '',
-    poster_url: ''
+    poster_url: '',
+    edition: 2026 as 2025 | 2026 | 2027,
+    is_public: true,
   });
   const { toast } = useToast();
 
@@ -49,15 +51,14 @@ export const EventManager = () => {
     { slug: 'copa-cyl', name: 'Copa CyL', logoUrl: '/logos-torneos/copa-cyl.png' },
     { slug: 'copa-rioseco', name: 'Copa Internacional Rioseco Caramanzana', logoUrl: '/logos-torneos/copa-rioseco.png' },
     { slug: 'villa-aranda', name: 'Torneo Internacional Villa de Aranda', logoUrl: '/logos-torneos/villa-aranda.png' },
-    { slug: 'medina-cup', name: 'Medina International Cup', logoUrl: '/logos-torneos/medina-cup.png' },
+    { slug: 'medina-cup', name: 'Clarios Medina International Cup', logoUrl: '/logos-torneos/medina-cup.png' },
   ];
 
-  const updateTitleFromBrand = (brandSlug: string, date: string) => {
+  const updateTitleFromBrand = (brandSlug: string, edition: number) => {
     if (brandSlug === '__none__') return;
     const brand = tournamentBrands.find(b => b.slug === brandSlug);
     if (!brand) return;
-    const year = date ? new Date(date).getFullYear() : new Date().getFullYear();
-    setFormData(prev => ({ ...prev, title: `${brand.name} ${year}` }));
+    setFormData(prev => ({ ...prev, title: `${brand.name} ${edition}` }));
   };
 
   useEffect(() => {
@@ -95,6 +96,8 @@ export const EventManager = () => {
         end_date: formData.end_date ? new Date(formData.end_date).toISOString() : null,
         location: formData.location.trim() || null,
         poster_url: formData.poster_url.trim() || null,
+        edition: formData.edition,
+        is_public: formData.is_public,
         team_ids: selectedTeamIds.length > 0 ? selectedTeamIds : []
       };
 
@@ -184,21 +187,25 @@ export const EventManager = () => {
   };
 
   const handleEdit = async (event: Event) => {
+    const titleEdition = event.title.match(/202[5-7]/)?.[0];
+    const dateEdition = event.date.match(/^202[5-7]/)?.[0];
+    const initialEdition = event.edition || Number(titleEdition || dateEdition || 2026);
     setFormData({
       title: event.title,
       description: event.description || '',
       date: event.date.split('T')[0],
       end_date: (event as any).end_date ? (event as any).end_date.split('T')[0] : '',
       location: event.location || '',
-      poster_url: (event as any).poster_url || ''
+      poster_url: (event as any).poster_url || '',
+      edition: (initialEdition === 2025 || initialEdition === 2027 ? initialEdition : 2026) as 2025 | 2026 | 2027,
+      is_public: event.is_public ?? true,
     });
     setSelectedTeamIds((event as any).team_ids || []);
 
     // Detect brand from title
     const titleLower = event.title.toLowerCase();
-    const matchedBrand = tournamentBrands.find(b => 
-      titleLower.includes(b.name.toLowerCase())
-    );
+    const matchedBrand = tournamentBrands.find(b => titleLower.includes(b.name.toLowerCase()))
+      || (titleLower.includes('medina') ? tournamentBrands.find(b => b.slug === 'medina-cup') : undefined);
     setSelectedBrand(matchedBrand ? matchedBrand.slug : '__none__');
 
     // Load existing categories for this event
@@ -241,6 +248,16 @@ export const EventManager = () => {
         description: 'No se pudo eliminar el evento',
         variant: 'destructive'
       });
+    }
+  };
+
+  const handleToggleVisibility = async (event: Event) => {
+    try {
+      await eventService.update(event.id, { is_public: !(event.is_public ?? true) });
+      toast({ title: event.is_public === false ? 'Torneo publicado' : 'Torneo oculto', description: event.title });
+      await loadData();
+    } catch (error: any) {
+      toast({ title: 'Error', description: error?.message || 'No se pudo cambiar la visibilidad', variant: 'destructive' });
     }
   };
 
@@ -302,7 +319,7 @@ export const EventManager = () => {
   };
 
   const resetForm = () => {
-    setFormData({ title: '', description: '', date: '', end_date: '', location: '', poster_url: '' });
+    setFormData({ title: '', description: '', date: '', end_date: '', location: '', poster_url: '', edition: 2026, is_public: true });
     setSelectedTeamIds([]);
     setSelectedCategoryIds([]);
     setTeamGroups({});
@@ -364,7 +381,7 @@ export const EventManager = () => {
                     if (val === '__none__') {
                       setFormData(prev => ({ ...prev, title: 'Evento Nuevo' }));
                     } else {
-                      updateTitleFromBrand(val, formData.date);
+                      updateTitleFromBrand(val, formData.edition);
                     }
                   }}
                 >
@@ -395,6 +412,22 @@ export const EventManager = () => {
                   maxLength={200}
                 />
               </div>
+              <div className="grid sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium mb-1" htmlFor="event-edition">Edición *</label>
+                  <Select value={String(formData.edition)} onValueChange={(value) => setFormData(prev => ({ ...prev, edition: Number(value) as 2025 | 2026 | 2027 }))}>
+                    <SelectTrigger id="event-edition"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      {[2025, 2026, 2027].map(year => <SelectItem key={year} value={String(year)}>Edición {year}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-muted-foreground mt-1">La edición no cambia aunque el torneo se celebre en otro año.</p>
+                </div>
+                <label className="flex items-center gap-3 rounded-md border p-3 cursor-pointer self-end">
+                  <Checkbox checked={formData.is_public} onCheckedChange={(checked) => setFormData(prev => ({ ...prev, is_public: checked === true }))} />
+                  <span><span className="block text-sm font-medium">Visible en la web pública</span><span className="block text-xs text-muted-foreground">Desactívalo para preparar o probar el torneo en privado.</span></span>
+                </label>
+              </div>
               <div>
                 <label className="block text-sm font-medium mb-1">Descripción</label>
                 <Textarea
@@ -411,9 +444,6 @@ export const EventManager = () => {
                     value={formData.date}
                     onChange={(e) => {
                       setFormData(prev => ({ ...prev, date: e.target.value }));
-                      if (selectedBrand !== '__none__') {
-                        updateTitleFromBrand(selectedBrand, e.target.value);
-                      }
                     }}
                     type="date"
                     required
@@ -678,6 +708,10 @@ export const EventManager = () => {
                   <Button size="sm" variant="ghost" onClick={() => handleEdit(event)}>
                     <Edit className="w-4 h-4" />
                   </Button>
+                  <Button size="sm" variant="outline" onClick={() => handleToggleVisibility(event)} aria-label={event.is_public === false ? 'Publicar torneo' : 'Ocultar torneo'}>
+                    {event.is_public === false ? <Eye className="w-4 h-4 mr-1" /> : <EyeOff className="w-4 h-4 mr-1" />}
+                    {event.is_public === false ? 'Publicar' : 'Ocultar'}
+                  </Button>
                   <Button size="sm" variant="ghost" onClick={() => handleDelete(event.id)}>
                     <Trash2 className="w-4 h-4 text-red-600" />
                   </Button>
@@ -687,6 +721,8 @@ export const EventManager = () => {
             <CardContent className="space-y-4">
               <div className="grid md:grid-cols-2 gap-4">
                 <div className="space-y-2">
+                  <p className="text-sm"><strong>Edición:</strong> {event.edition ? `Edición ${event.edition}` : 'Sin asignar'}</p>
+                  <p className="text-sm"><strong>Visibilidad:</strong> {event.is_public === false ? 'Oculto en la web' : 'Visible en la web'}</p>
                   {(event as any).poster_url && (
                     <img src={(event as any).poster_url} alt={event.title} className="w-full h-48 object-cover rounded" />
                   )}

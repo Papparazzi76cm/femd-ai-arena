@@ -130,7 +130,7 @@ export function EventCarousel3D() {
   useEffect(() => {
     const loadEvents = async () => {
       try {
-        const data = await eventService.getAll();
+        const data = await eventService.getPublicAll();
         const eventsWithPosters = data.filter(event => (event as any).poster_url);
         setEvents(eventsWithPosters as EventWithPoster[]);
       } catch (error) {

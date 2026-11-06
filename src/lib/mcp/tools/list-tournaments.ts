@@ -35,7 +35,8 @@ export default defineTool({
     const supabase = supabaseForUser(ctx);
     let query = supabase
       .from("events")
-      .select("id, title, date, end_date, location, description, poster_url")
+      .select("id, title, date, end_date, location, description, poster_url, edition")
+      .eq("is_public", true)
       .order("date", { ascending: false })
       .limit(limit ?? 20);
 

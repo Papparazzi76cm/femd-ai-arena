@@ -1490,6 +1490,7 @@ export const TournamentManager = ({ eventId }: TournamentManagerProps) => {
           <TournamentRosterManager
             eventId={eventId}
             eventTeams={eventTeams}
+            eventCategories={eventCategories}
             teams={teams}
             eventCategories={eventCategories}
           />
@@ -1502,6 +1503,7 @@ export const TournamentManager = ({ eventId }: TournamentManagerProps) => {
             matches={matches}
             eventId={eventId}
             eventTeams={eventTeams}
+            eventCategories={eventCategories}
             teams={teams}
             onResolved={() => loadData()}
           />

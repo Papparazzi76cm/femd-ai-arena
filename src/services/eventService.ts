@@ -12,6 +12,29 @@ export const eventService = {
     return data || [];
   },
 
+  async getPublicAll(): Promise<Event[]> {
+    const { data, error } = await supabase
+      .from('events')
+      .select('*')
+      .eq('is_public', true)
+      .order('date', { ascending: false });
+
+    if (error) throw error;
+    return data || [];
+  },
+
+  async getPublicById(id: string): Promise<Event | null> {
+    const { data, error } = await supabase
+      .from('events')
+      .select('*')
+      .eq('id', id)
+      .eq('is_public', true)
+      .maybeSingle();
+
+    if (error) throw error;
+    return data;
+  },
+
   async create(event: Omit<Event, 'id' | 'created_at'>): Promise<Event> {
     const { data, error } = await supabase
       .from('events')
