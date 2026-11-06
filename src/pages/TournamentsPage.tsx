@@ -55,7 +55,7 @@ const tournamentBrands: TournamentBrand[] = [
   },
   {
     slug: "medina-cup",
-    name: "Medina International Cup",
+    name: "Clarios Medina International Cup",
     logoUrl: "/logos-torneos/medina-cup.png",
     keywords: ["medina"],
   },
@@ -89,25 +89,30 @@ function extractSeason(eventTitle: string): string {
 
 // Agrupar eventos por temporada
 interface SeasonGroup {
-  season: string;
+  edition: string;
   events: Event[];
 }
 
-function groupEventsBySeason(events: Event[]): SeasonGroup[] {
+function getEventEdition(event: Event): string {
+  if (event.edition) return String(event.edition);
+  return extractSeason(event.title) || String(new Date(event.date).getFullYear());
+}
+
+function groupEventsByEdition(events: Event[]): SeasonGroup[] {
   const groups: Record<string, Event[]> = {};
   
   events.forEach(event => {
-    const season = extractSeason(event.title) || "Sin temporada";
-    if (!groups[season]) {
-      groups[season] = [];
+    const edition = getEventEdition(event);
+    if (!groups[edition]) {
+      groups[edition] = [];
     }
-    groups[season].push(event);
+    groups[edition].push(event);
   });
   
   // Ordenar por temporada descendente
   return Object.entries(groups)
     .sort(([a], [b]) => b.localeCompare(a))
-    .map(([season, events]) => ({ season, events }));
+    .map(([edition, events]) => ({ edition, events }));
 }
 
 export function TournamentsPage() {
@@ -121,7 +126,7 @@ export function TournamentsPage() {
   useEffect(() => {
     const loadEvents = async () => {
       try {
-        const data = await eventService.getAll();
+        const data = await eventService.getPublicAll();
         setEvents(data);
       } catch (error) {
         console.error("Error loading events:", error);
@@ -144,7 +149,7 @@ export function TournamentsPage() {
       })
     : events;
 
-  const seasonGroups = groupEventsBySeason(filteredEvents);
+  const seasonGroups = groupEventsByEdition(filteredEvents);
 
   const nextBrand = () => {
     setCurrentBrandIndex((prev) => (prev + 1) % tournamentBrands.length);
@@ -209,12 +214,12 @@ export function TournamentsPage() {
           {/* Ediciones por temporada */}
           {seasonGroups.length > 0 ? (
             <div className="space-y-8 sm:space-y-12">
-              {seasonGroups.map(({ season, events }) => (
-                <section key={season} className="animate-fade-in">
+              {seasonGroups.map(({ edition, events }) => (
+                <section key={edition} className="animate-fade-in">
                   <div className="flex items-center gap-2 sm:gap-3 mb-4 sm:mb-6 flex-wrap">
                     <Trophy className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
                     <h2 className="text-xl sm:text-2xl font-bold text-foreground">
-                      Temporada {season}
+                      Edición {edition}
                     </h2>
                     <Badge variant="secondary" className="text-xs">{events.length} categorías</Badge>
                   </div>

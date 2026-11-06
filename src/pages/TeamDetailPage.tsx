@@ -62,7 +62,7 @@ export const TeamDetailPage = () => {
       const [teamData, participantsData, eventsData, childTeamsData] = await Promise.all([
         teamService.getById(id),
         participantService.getByTeam(id),
-        eventService.getAll(),
+        eventService.getPublicAll(),
         teamService.getChildTeams(id)
       ]);
 

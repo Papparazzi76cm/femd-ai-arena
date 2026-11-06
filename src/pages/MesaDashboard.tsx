@@ -85,7 +85,7 @@ export const MesaDashboard = () => {
       const [matchesRes, teamsData, eventsRes] = await Promise.all([
         fetchAllRows(matchesQuery),
         teamService.getAll(),
-        supabase.from('events').select('id, title').order('date', { ascending: false }),
+        supabase.from('events').select('id, title').eq('is_public', true).order('date', { ascending: false }),
       ]);
 
       setMatches(matchesRes as Match[]);

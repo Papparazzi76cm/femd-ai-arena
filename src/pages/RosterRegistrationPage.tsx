@@ -4,10 +4,10 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card } from '@/components/ui/card';
-import { RegistrationContext, RegistrationResult, rosterRegistrationService } from '@/services/rosterRegistrationService';
+import { ParticipantMatch, RegistrationContext, RegistrationResult, rosterRegistrationService } from '@/services/rosterRegistrationService';
 import { RegistrationMember, STAFF_POSITIONS, titleCase, validateRoster } from '@/services/rosterRegistrationValidation';
 
-const newMember = (): RegistrationMember => ({ key: crypto.randomUUID(), first_name: '', last_name: '', birth_date: '', jersey_number: '', dni: '', no_dni: false, roster_role: 'player', staff_position: '' });
+const newMember = (): RegistrationMember => ({ key: crypto.randomUUID(), first_name: '', last_name: '', birth_date: '', jersey_number: '', dni: '', no_dni: false, roster_role: 'player', staff_position: '', identity_resolution: undefined, matched_participant_id: null });
 
 export function RosterRegistrationPage() {
   const location = useLocation();
@@ -19,6 +19,8 @@ export function RosterRegistrationPage() {
   const [failure, setFailure] = useState('');
   const [errors, setErrors] = useState<string[]>([]);
   const [result, setResult] = useState<RegistrationResult | null>(null);
+  const [participantMatches, setParticipantMatches] = useState<Record<string, ParticipantMatch[]>>({});
+  const [matchingMember, setMatchingMember] = useState<string | null>(null);
   useEffect(() => {
     let active = true;
     setLoading(true); setFailure(''); setContext(null); setResult(null); setMembers([newMember()]);
@@ -27,15 +29,48 @@ export function RosterRegistrationPage() {
       .catch(error => { if (active) setFailure(error.message); }).finally(() => { if (active) setLoading(false); });
     return () => { active = false; };
   }, [token]);
-  const update = (key: string, patch: Partial<RegistrationMember>) => setMembers(previous => previous.map(member => member.key === key ? { ...member, ...patch } : member));
+  const update = (key: string, patch: Partial<RegistrationMember>) => {
+    const identityChanged = 'first_name' in patch || 'last_name' in patch || 'no_dni' in patch;
+    if (identityChanged) setParticipantMatches(previous => { const next = { ...previous }; delete next[key]; return next; });
+    setMembers(previous => previous.map(member => member.key === key ? {
+      ...member,
+      ...patch,
+      ...(identityChanged ? { identity_resolution: undefined, matched_participant_id: null } : {}),
+    } : member));
+  };
+
+  const lookupParticipant = async (member: RegistrationMember): Promise<ParticipantMatch[] | null> => {
+    if (!member.no_dni || !member.first_name.trim() || !member.last_name.trim()) return [];
+    setMatchingMember(member.key);
+    try {
+      const matches = await rosterRegistrationService.findParticipantMatches(token, member.first_name, member.last_name);
+      setParticipantMatches(previous => ({ ...previous, [member.key]: matches }));
+      if (!matches.length) update(member.key, { identity_resolution: 'new', matched_participant_id: null });
+      return matches;
+    } catch (error) {
+      setFailure((error as Error).message);
+      return null;
+    } finally {
+      setMatchingMember(current => current === member.key ? null : current);
+    }
+  };
   const submit = async (event: React.FormEvent) => {
     event.preventDefault();
     if (!context || saving) return;
     const problems = validateRoster(members, context.occupied_numbers);
     setErrors(problems);
     if (problems.length) return;
+    const membersToSubmit = [...members];
+    for (let index = 0; index < membersToSubmit.length; index++) {
+      const member = membersToSubmit[index];
+      if (member.no_dni && !member.identity_resolution) {
+        const matches = await lookupParticipant(member);
+        if (matches === null || matches.length) return;
+        membersToSubmit[index] = { ...member, identity_resolution: 'new', matched_participant_id: null };
+      }
+    }
     setSaving(true); setFailure('');
-    try { setResult(await rosterRegistrationService.submit(token, members)); }
+    try { setResult(await rosterRegistrationService.submit(token, membersToSubmit)); }
     catch (error) { setFailure((error as Error).message); }
     finally { setSaving(false); }
   };
@@ -60,6 +95,25 @@ export function RosterRegistrationPage() {
             <div className="space-y-1"><Label htmlFor={`${member.key}-date`}>Fecha de nacimiento *</Label><Input id={`${member.key}-date`} required type="date" max={new Date().toISOString().slice(0, 10)} value={member.birth_date} onChange={event => update(member.key, { birth_date: event.target.value })} /></div>
             <div className="space-y-2"><Label htmlFor={`${member.key}-dni`}>DNI/NIE *</Label><Input id={`${member.key}-dni`} required={!member.no_dni} disabled={member.no_dni} maxLength={9} autoComplete="off" value={member.dni} placeholder="12345678A / X1234567A" onChange={event => update(member.key, { dni: event.target.value.toUpperCase() })} /><label className="flex gap-2 items-center text-sm"><input type="checkbox" checked={member.no_dni} onChange={event => update(member.key, { no_dni: event.target.checked, dni: '' })} />No tiene DNI/NIE</label></div>
           </div>
+          {member.no_dni && (member.first_name.trim() || member.last_name.trim()) && <div className="space-y-2">
+            <Button type="button" variant="outline" size="sm" disabled={!member.first_name.trim() || !member.last_name.trim() || matchingMember === member.key} onClick={() => lookupParticipant(member)}>
+              {matchingMember === member.key ? 'Buscando coincidencias…' : 'Comprobar participante existente'}
+            </Button>
+            {(participantMatches[member.key] || []).length > 0 && <div className="rounded-md border p-3 space-y-3" role="status">
+              <p className="font-medium text-sm">Existe un participante en la base de datos con el mismo nombre y apellidos.</p>
+              {(participantMatches[member.key] || []).map(candidate => <div key={candidate.participant_id} className="flex items-center gap-3 rounded bg-muted/40 p-2">
+                {candidate.last_team_logo_url && <img src={candidate.last_team_logo_url} alt="" className="w-9 h-9 object-contain" />}
+                <div className="flex-1 text-sm">
+                  <p className="font-medium">{candidate.participant_name}</p>
+                  <p className="text-muted-foreground">Último torneo: {candidate.last_event_title || 'Sin participación registrada'} · Club: {candidate.last_team_name || 'No disponible'}</p>
+                </div>
+                <Button type="button" size="sm" variant="outline" onClick={() => update(member.key, { identity_resolution: 'same', matched_participant_id: candidate.participant_id })}>Sí, es la misma persona</Button>
+              </div>)}
+              <Button type="button" size="sm" variant="ghost" onClick={() => update(member.key, { identity_resolution: 'new', matched_participant_id: null })}>No, crear una ficha nueva</Button>
+            </div>}
+            {member.identity_resolution === 'same' && <p className="text-sm text-green-700" role="status">Se vinculará al historial existente.</p>}
+            {member.identity_resolution === 'new' && (participantMatches[member.key] || []).length > 0 && <p className="text-sm text-amber-700" role="status">Se creará una ficha nueva.</p>}
+          </div>}
         </Card>)}
         <Button type="button" variant="outline" disabled={members.length >= 200} onClick={() => setMembers(previous => [...previous, newMember()])}>Añadir miembro</Button>
       </fieldset>

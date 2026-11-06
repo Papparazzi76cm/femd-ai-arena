@@ -15,6 +15,8 @@ export interface RegistrationMember {
   no_dni: boolean;
   roster_role: 'player' | 'staff';
   staff_position: string;
+  identity_resolution?: 'same' | 'new';
+  matched_participant_id?: string | null;
 }
 
 export function titleCase(value: string): string {
@@ -54,5 +56,7 @@ export function registrationPayload(members: RegistrationMember[]) {
     jersey_number: Number(member.jersey_number), dni: member.no_dni ? null : member.dni.toUpperCase(),
     no_dni: member.no_dni, roster_role: member.roster_role,
     staff_position: member.roster_role === 'staff' ? member.staff_position : null,
+    matched_participant_id: member.no_dni && member.identity_resolution === 'same' ? member.matched_participant_id : null,
+    confirm_new_participant: member.no_dni && member.identity_resolution === 'new',
   }));
 }

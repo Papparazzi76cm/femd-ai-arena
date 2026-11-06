@@ -35,9 +35,12 @@ export interface Event {
   title: string;
   description?: string;
   date: string;
+  end_date?: string | null;
   location?: string;
   team_ids?: string[];
   poster_url?: string;
+  edition?: number | null;
+  is_public?: boolean;
   created_at: string;
 }
 

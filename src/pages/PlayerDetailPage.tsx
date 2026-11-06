@@ -152,8 +152,9 @@ export const PlayerDetailPage = () => {
           const eventIds = [...new Set(etData.map(e => e.event_id))];
           const { data: eventsData } = await supabase
             .from('events')
-            .select('id, title, date')
+            .select('id, title, date, edition')
             .in('id', eventIds)
+            .eq('is_public', true)
             .order('date', { ascending: false });
           setPlayerEvents(eventsData || []);
         }

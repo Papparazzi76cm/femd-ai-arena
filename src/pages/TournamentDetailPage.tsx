@@ -1,3 +1,6 @@
+Warning: truncated output (original token count: 18356)
+Total output lines: 1560
+
 import { fetchAllRows } from '@/services/fetchAllRows';
 import { useEffect, useState, useMemo } from "react";
 import { useParams, Link } from "react-router-dom";
@@ -199,9 +202,11 @@ export function TournamentDetailPage() {
           .from("events")
           .select("*")
           .eq("id", id)
-          .single();
+          .eq("is_public", true)
+          .maybeSingle();
 
         if (eventError) throw eventError;
+        if (!eventData) throw new Error('Torneo no encontrado o no publicado.');
         setEvent(eventData);
 
         // Load event teams with team details
@@ -718,228 +723,7 @@ export function TournamentDetailPage() {
                       <div className="space-y-6">
                         {(() => {
                           // Helper function to determine jornada from phase field
-                          const getMatchJornada = (match: Match): string => {
-                            if (match.phase?.startsWith("Jornada")) {
-                              return match.phase;
-                            }
-                            return "";
-                          };
-
-                          const filteredMatches = matches
-                            .filter(match => {
-                              const isGroupPhase = match.phase === "group" || match.phase === "Fase de Grupos" || match.phase?.toLowerCase().includes("grupo") || match.phase?.startsWith("Jornada");
-                              const isGold = match.phase?.startsWith("gold_");
-                              const isSilver = match.phase?.startsWith("silver_");
-                              const isBronze = match.phase?.startsWith("bronze_");
-                              
-                              let phaseMatch = selectedPhase === "all";
-                              if (!phaseMatch) {
-                                if (selectedPhase === "Fase de Grupos") phaseMatch = isGroupPhase;
-                                else if (selectedPhase === "Fase Oro") phaseMatch = isGold;
-                                else if (selectedPhase === "Fase Plata") phaseMatch = isSilver;
-                                else if (selectedPhase === "Fase Bronce") phaseMatch = isBronze;
-                                else phaseMatch = match.phase === selectedPhase;
-                              }
-                              
-                              // Group filter
-                              const groupMatch = selectedBracketGroup === "all" || 
-                                (isGroupPhase ? match.group_name === selectedBracketGroup : true);
-                              
-                              // Jornada/Round filter
-                              let jornadaMatch = true;
-                              if (selectedJornada !== "all") {
-                                if (isGroupPhase) {
-                                  jornadaMatch = match.phase === `Jornada ${selectedJornada}`;
-                                } else {
-                                  // Map round filter to DB phase
-                                  const roundMap: Record<string, string[]> = {
-                                    '1/16 de final': ['round_of_16', 'gold_round_of_16', 'silver_round_of_16', 'bronze_round_of_16'],
-                                    '1/8 de final': ['round_of_8', 'gold_round_of_8', 'silver_round_of_8', 'bronze_round_of_8'],
-                                    '1/4 de final': ['quarter_final', 'gold_quarter_final', 'silver_quarter_final', 'bronze_quarter_final'],
-                                    'Semifinal': ['semi_final', 'gold_semi_final', 'silver_semi_final', 'bronze_semi_final'],
-                                    'Final': ['final', 'gold_final', 'silver_final', 'bronze_final', 'third_place', 'gold_third_place', 'silver_third_place', 'bronze_third_place'],
-                                  };
-                                  const matchingPhases = roundMap[selectedJornada] || [];
-                                  jornadaMatch = matchingPhases.includes(match.phase);
-                                }
-                              }
-                              
-                              return phaseMatch && groupMatch && jornadaMatch;
-                            })
-                            .sort((a, b) => {
-                              // Sort by phase order first (groups → gold knockout → silver → bronze)
-                              const phaseOrderA = getPhaseOrderIndex(a.phase);
-                              const phaseOrderB = getPhaseOrderIndex(b.phase);
-                              if (phaseOrderA !== phaseOrderB) return phaseOrderA - phaseOrderB;
-                              // Within same phase, sort by group_name
-                              if (a.group_name && b.group_name && a.group_name !== b.group_name) {
-                                return a.group_name.localeCompare(b.group_name);
-                              }
-                              // Then by match date
-                              if (a.match_date && b.match_date && a.match_date !== b.match_date) {
-                                return new Date(a.match_date).getTime() - new Date(b.match_date).getTime();
-                              }
-                              return (a.match_number || 0) - (b.match_number || 0);
-                            });
-
-                          if (filteredMatches.length === 0) {
-                            return (
-                              <p className="text-center text-muted-foreground py-8">
-                                No hay partidos con los filtros seleccionados.
-                              </p>
-                            );
-                          }
-
-                          // Group matches by phase+group for display
-                          const matchesBySectionKey: { key: string; label: string; matches: Match[] }[] = [];
-                          const sectionMap = new Map<string, Match[]>();
-
-                          filteredMatches.forEach(match => {
-                            let sectionKey: string;
-                            if (isGroupStagePhase(match.phase)) {
-                              sectionKey = `group_${match.group_name || 'General'}`;
-                            } else {
-                              sectionKey = `phase_${match.phase}_${match.group_name || 'none'}`;
-                            }
-                            if (!sectionMap.has(sectionKey)) sectionMap.set(sectionKey, []);
-                            sectionMap.get(sectionKey)!.push(match);
-                          });
-
-                          // Build sorted section list
-                          const sectionEntries = Array.from(sectionMap.entries()).map(([key, sectionMatches]) => {
-                            const firstMatch = sectionMatches[0];
-                            let label: string;
-                            if (key.startsWith('group_')) {
-                              label = `Grupo ${key.replace('group_', '')}`;
-                            } else {
-                              const phaseLabel = getPhaseDisplayLabel(firstMatch.phase);
-                              label = firstMatch.group_name ? `${phaseLabel} - ${firstMatch.group_name}` : phaseLabel;
-                            }
-                            return { key, label, matches: sectionMatches, orderIndex: getPhaseOrderIndex(firstMatch.phase), groupName: firstMatch.group_name || '' };
-                          });
-
-                          sectionEntries.sort((a, b) => {
-                            if (a.orderIndex !== b.orderIndex) return a.orderIndex - b.orderIndex;
-                            return a.groupName.localeCompare(b.groupName);
-                          });
-
-                          return sectionEntries.map(({ key, label, matches: sectionMatches }) => (
-                            <div key={key} className="space-y-3">
-                              <div className="flex items-center gap-2 border-l-4 border-primary pl-3 py-1 bg-muted/30 rounded-r">
-                                <h4 className="font-bold text-base">{label}</h4>
-                                <Badge variant="secondary" className="text-xs">
-                                  {sectionMatches.length} partidos
-                                </Badge>
-                              </div>
-                              <div className="space-y-2 pl-4">
-                                {sectionMatches.map((match) => (
-                                  <ResultRow key={match.id} match={match} onClick={() => setSelectedMatchDetail(match)} />
-                                ))}
-                              </div>
-                            </div>
-                          ));
-                        })()}
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-          </TabsContent>
-
-          {/* Participating Teams Tab */}
-          <TabsContent value="teams" className="space-y-6">
-            <Card className="animate-fade-in">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Users className="h-5 w-5 text-primary" />
-                  Equipos participantes ({eventTeams.length})
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
-                  {eventTeams.map((eventTeam) => (
-                    <Link
-                      key={eventTeam.id}
-                      to={`/equipos/${eventTeam.team_id}`}
-                      className="flex flex-col items-center p-4 rounded-lg border bg-card hover:bg-accent/50 hover:border-primary/50 transition-all group"
-                    >
-                      <div className="w-16 h-16 mb-3 flex items-center justify-center">
-                        <TeamLogo
-                          src={eventTeam.teams.logo_url}
-                          alt={eventTeam.teams.name}
-                          size="xl"
-                          className="group-hover:scale-110 transition-transform"
-                        />
-                      </div>
-                      <span className="text-sm font-medium text-center line-clamp-2 group-hover:text-primary transition-colors">
-                        {eventTeam.teams.name}
-                      </span>
-                      {eventTeam.group_name && (
-                        <Badge variant="outline" className="mt-2 text-xs">
-                          Grupo {eventTeam.group_name}
-                        </Badge>
-                      )}
-                    </Link>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* Standings Tab - Calculated from match results */}
-          <TabsContent value="standings" className="space-y-6">
-            {Object.entries(groupedCalculatedStandings).length === 0 ? (
-              <Card>
-                <CardContent className="py-8 text-center text-muted-foreground">
-                  No hay datos de clasificación disponibles.
-                </CardContent>
-              </Card>
-            ) : (
-              <Card className="animate-fade-in">
-                <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                  <CardTitle className="flex items-center gap-2">
-                    <Trophy className="h-5 w-5 text-primary" />
-                    CLASIFICACIÓN
-                  </CardTitle>
-                  <div className="flex items-center gap-2 w-full sm:w-auto">
-                    <Select value={selectedGroup} onValueChange={setSelectedGroup}>
-                      <SelectTrigger className="w-full sm:w-[180px] bg-background">
-                        <SelectValue placeholder="Seleccionar grupo" />
-                      </SelectTrigger>
-                      <SelectContent className="bg-background z-50">
-                        <SelectItem value="all">TODOS LOS GRUPOS</SelectItem>
-                        {Object.keys(groupedCalculatedStandings).map((groupName) => (
-                          <SelectItem key={groupName} value={groupName}>
-                            GRUPO {groupName}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </CardHeader>
-                <CardContent className="space-y-6 px-2 sm:px-6">
-                  {Object.entries(groupedCalculatedStandings)
-                    .filter(([groupName]) => selectedGroup === "all" || groupName === selectedGroup)
-                    .map(([groupName, teams]) => (
-                      <div key={groupName} className="space-y-4">
-                        <div className="flex items-center gap-2 border-l-4 border-primary pl-3">
-                          <h3 className="text-lg font-bold">GRUPO {groupName}</h3>
-                        </div>
-                        <div className="overflow-x-auto -mx-2 sm:mx-0">
-                          <Table>
-                            <TableHeader>
-                              <TableRow className="bg-muted/50">
-                                <TableHead className="w-8 px-1 sm:px-4 text-center">#</TableHead>
-                                <TableHead className="font-bold px-2 sm:px-4">EQUIPO</TableHead>
-                                <TableHead className="text-center font-bold px-1 sm:px-4">PTS</TableHead>
-                                <TableHead className="text-center px-1 sm:px-4">PJ</TableHead>
-                                <TableHead className="text-center px-1 sm:px-4">G</TableHead>
-                                <TableHead className="text-center px-1 sm:px-4 hidden sm:table-cell">E</TableHead>
-                                <TableHead className="text-center px-1 sm:px-4">P</TableHead>
-                                <TableHead className="text-center px-1 sm:px-4 hidden sm:table-cell">GF</TableHead>
-                                <TableHead className="text-center px-1 sm:px-4 hidden sm:table-cell">GC</TableHead>
-                                <TableHead className="text-center px-1 sm:px-4 hidden sm:table-cell">DG</TableHead>
+                          const getMatchJornad…3356 tokens truncated…px-4 hidden sm:table-cell">DG</TableHead>
                               </TableRow>
                             </TableHeader>
                             <TableBody>

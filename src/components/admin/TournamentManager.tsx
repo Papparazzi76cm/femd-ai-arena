@@ -1,3 +1,6 @@
+Warning: truncated output (original token count: 17090)
+Total output lines: 1527
+
 import { matchDateToInput, matchDateToUTC } from '@/lib/matchDateTime';
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
@@ -747,184 +750,7 @@ export const TournamentManager = ({ eventId }: TournamentManagerProps) => {
                       </span>
                     </div>
                     <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleRemoveCategory(ec.id)}
-                    >
-                      <Trash2 className="w-4 h-4 text-destructive" />
-                    </Button>
-                  </div>
-                ))}
-              </div>
-            )}
-          </Card>
-        </TabsContent>
-
-        {/* Equipos */}
-        <TabsContent value="equipos" className="mt-6 space-y-6">
-          <div className="flex gap-4 flex-wrap">
-            <Dialog open={teamDialogOpen} onOpenChange={setTeamDialogOpen}>
-              <DialogTrigger asChild>
-                <Button>
-                  <Users className="w-4 h-4 mr-2" />
-                  Añadir Clubes
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
-                <DialogHeader>
-                  <DialogTitle>Seleccionar Clubes</DialogTitle>
-                </DialogHeader>
-                <div className="space-y-4">
-                  {eventCategories.length > 0 && (
-                    <div>
-                      <Label>Categoría (opcional)</Label>
-                      <Select
-                        value={selectedCategoryId || '__all__'}
-                        onValueChange={(v) => setSelectedCategoryId(v === '__all__' ? '' : v)}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Todas las categorías" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="__all__">Todas</SelectItem>
-                          {eventCategories.map((ec) => (
-                            <SelectItem key={ec.id} value={ec.id}>
-                              {ec.category?.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  )}
-                  <div className="text-sm text-muted-foreground">
-                    Seleccionados: {selectedTeams.length} | En torneo: {eventTeams.length}
-                  </div>
-                  <div className="grid grid-cols-2 gap-4 max-h-[400px] overflow-y-auto">
-                    {teams.map(team => (
-                      <div key={team.id} className="flex items-center space-x-2">
-                        <Checkbox
-                          id={team.id}
-                          checked={selectedTeams.includes(team.id)}
-                          onCheckedChange={(checked) => handleTeamSelection(team.id, checked as boolean)}
-                        />
-                        <label htmlFor={team.id} className="text-sm cursor-pointer">
-                          {team.name}
-                        </label>
-                      </div>
-                    ))}
-                  </div>
-                  <Button onClick={handleAddTeams} disabled={selectedTeams.length === 0 || loading}>
-                    Añadir {selectedTeams.length} club(es)
-                  </Button>
-                </div>
-              </DialogContent>
-            </Dialog>
-
-          </div>
-
-          {eventTeams.length > 0 && (
-            <Card className="p-6">
-              <h3 className="text-xl font-bold mb-4">
-                Clubes Inscritos ({eventTeams.length})
-              </h3>
-              <div className="space-y-2">
-                {eventTeams.map(et => {
-                  const team = teams.find(t => t.id === et.team_id);
-                  const catName = eventCategories.find(ec => ec.id === et.category_id)?.category?.name;
-                  return (
-                    <div key={et.id} className="flex items-center gap-3 p-3 rounded-lg border bg-card">
-                      <div className="flex-1 min-w-0">
-                        <span className="font-medium text-sm">
-                          {team?.name || 'Desconocido'}
-                          {et.team_letter && <span className="text-muted-foreground ml-1">{et.team_letter}</span>}
-                        </span>
-                        {catName && (
-                          <Badge variant="outline" className="ml-2 text-xs">{catName}</Badge>
-                        )}
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Label className="text-xs text-muted-foreground whitespace-nowrap">Grupo:</Label>
-                        <Input
-                          className="w-16 h-8 text-center text-sm"
-                          placeholder="-"
-                          maxLength={2}
-                          value={et.group_name || ''}
-                          onChange={(e) => handleUpdateGroup(et.id, e.target.value.toUpperCase())}
-                        />
-                      </div>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8"
-                        onClick={async () => {
-                          if (!confirm('¿Eliminar este club del torneo?')) return;
-                          await tournamentService.removeTeamFromEvent(et.id);
-                          await loadData();
-                        }}
-                      >
-                        <Trash2 className="w-4 h-4 text-destructive" />
-                      </Button>
-                    </div>
-                  );
-                })}
-              </div>
-
-              {/* Resumen de grupos */}
-              {Object.keys(groupedTeams).filter(g => g !== 'Sin grupo').length > 0 && (
-                <div className="mt-6">
-                  <h4 className="font-bold mb-3">Clasificación por Grupos</h4>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {Object.entries(groupedTeams).filter(([g]) => g !== 'Sin grupo').sort().map(([group, gTeams]) => (
-                      <Card key={group} className="p-4">
-                        <h4 className="font-bold mb-3 text-center">Grupo {group}</h4>
-                        <table className="w-full text-xs">
-                          <thead>
-                            <tr className="border-b">
-                              <th className="text-left py-1">#</th>
-                              <th className="text-left py-1">Equipo</th>
-                              <th className="text-center py-1">PJ</th>
-                              <th className="text-center py-1">Pts</th>
-                              <th className="text-center py-1">DG</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {gTeams.map((et, index) => (
-                              <tr key={et.id} className={`border-b ${index < 2 ? 'bg-green-500/10' : ''}`}>
-                                <td className="py-1">{index + 1}</td>
-                                <td className="py-1">{getTeamName(et.team_id)}</td>
-                                <td className="text-center py-1">{et.matches_played}</td>
-                                <td className="text-center py-1 font-bold">{et.points}</td>
-                                <td className="text-center py-1">{et.goal_difference}</td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </Card>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </Card>
-          )}
-        </TabsContent>
-
-        {/* Calendario */}
-        <TabsContent value="calendario" className="mt-6 space-y-4">
-          <div className="flex justify-end">
-            <Dialog open={matchDialogOpen} onOpenChange={setMatchDialogOpen}>
-              <DialogTrigger asChild>
-                <Button disabled={eventTeams.length < 2}>
-                  <Plus className="w-4 h-4 mr-2" />
-                  Crear Partido
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="max-w-lg">
-                <DialogHeader>
-                  <DialogTitle>Nuevo Partido</DialogTitle>
-                </DialogHeader>
-                <div className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
+                      var…2090 tokens truncated…       <div>
                       <Label>Equipo Local</Label>
                       <Select value={newMatchHomeTeamId} onValueChange={setNewMatchHomeTeamId}>
                         <SelectTrigger><SelectValue placeholder="Seleccionar" /></SelectTrigger>
@@ -1490,6 +1316,7 @@ export const TournamentManager = ({ eventId }: TournamentManagerProps) => {
           <TournamentRosterManager
             eventId={eventId}
             eventTeams={eventTeams}
+            eventCategories={eventCategories}
             teams={teams}
             eventCategories={eventCategories}
           />

@@ -8,6 +8,11 @@ export async function synchronizeKnockoutSlots(client: { from(table: string): an
     fetchAllRows<EventTeam>(() => client.from('event_teams').select('*').eq('event_id', eventId)),
     fetchAllRows<Match>(() => client.from('matches').select('*').eq('event_id', eventId)),
   ]);
+  const groupMatches = matches.filter(match => isGroupPhase(match.phase));
+  const groupPhaseComplete = groupMatches.length > 0 && groupMatches.every(match =>
+    match.status === 'finished' && match.home_score != null && match.away_score != null
+  );
+  if (!groupPhaseComplete) return 0;
   let changed = 0;
   for (const match of matches) {
     if (isGroupPhase(match.phase) || match.status !== 'scheduled') continue;

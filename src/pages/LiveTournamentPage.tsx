@@ -176,7 +176,7 @@ export const LiveTournamentPage = () => {
     const loadEvents = async () => {
       setEventsLoading(true);
       try {
-        const { data: events } = await supabase.from('events').select('*').order('date', { ascending: false });
+        const { data: events } = await supabase.from('events').select('*').eq('is_public', true).order('date', { ascending: false });
         if (!events || events.length === 0) {
           setAllEvents([]);
           setEventsLoading(false);
@@ -271,7 +271,7 @@ export const LiveTournamentPage = () => {
   const loadEventData = async (eventId: string) => {
     setLoading(true);
     try {
-      const { data: eventData } = await supabase.from('events').select('*').eq('id', eventId).single();
+      const { data: eventData } = await supabase.from('events').select('*').eq('id', eventId).eq('is_public', true).maybeSingle();
       if (!eventData) { setActiveEvent(null); setLoading(false); return; }
 
       setActiveEvent(eventData);

@@ -352,8 +352,10 @@ export type Database = {
           created_at: string | null
           date: string
           description: string | null
+          edition: number | null
           end_date: string | null
           id: string
+          is_public: boolean
           location: string | null
           poster_url: string | null
           team_ids: string[] | null
@@ -363,8 +365,10 @@ export type Database = {
           created_at?: string | null
           date: string
           description?: string | null
+          edition?: number | null
           end_date?: string | null
           id?: string
+          is_public?: boolean
           location?: string | null
           poster_url?: string | null
           team_ids?: string[] | null
@@ -374,8 +378,10 @@ export type Database = {
           created_at?: string | null
           date?: string
           description?: string | null
+          edition?: number | null
           end_date?: string | null
           id?: string
+          is_public?: boolean
           location?: string | null
           poster_url?: string | null
           team_ids?: string[] | null
@@ -1164,6 +1170,10 @@ export type Database = {
       }
       create_roster_registration_link: {
         Args: { p_event_team_id: string }
+        Returns: Json
+      }
+      find_roster_participant_matches: {
+        Args: { p_first_name: string; p_last_name: string; p_token: string }
         Returns: Json
       }
       get_roster_registration_context: {
