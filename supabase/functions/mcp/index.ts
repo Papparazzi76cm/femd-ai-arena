@@ -29,7 +29,7 @@ var list_tournaments_default = defineTool({
       return { content: [{ type: "text", text: "No autenticado." }], isError: true };
     }
     const supabase = supabaseForUser(ctx);
-    let query = supabase.from("events").select("id, title, date, end_date, location, description, poster_url").order("date", { ascending: false }).limit(limit ?? 20);
+    let query = supabase.from("events").select("id, title, date, end_date, location, description, poster_url, edition").eq("is_public", true).order("date", { ascending: false }).limit(limit ?? 20);
     if (upcoming_only) {
       const today = (/* @__PURE__ */ new Date()).toISOString().slice(0, 10);
       query = query.gte("date", today);
