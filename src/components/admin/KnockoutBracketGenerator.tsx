@@ -313,17 +313,45 @@ export const KnockoutBracketGenerator = ({
     setPairings(prev => prev.filter(p => p.id !== id));
   };
 
-  // Validate all pairings are complete
+  // Field and time may be assigned later by the organiser. They are not
+  // prerequisites for creating the tournament bracket itself.
   const allPairingsComplete = pairings.length > 0 && pairings.every(p =>
-    p.homePosition && p.awayPosition && p.matchDate && p.fieldId && p.matchDuration > 0
+    p.homePosition && p.awayPosition && p.matchDuration > 0
   );
+
+  // A match must belong to one category: an unscoped bracket cannot be
+  // resolved reliably when the event has several categories.
+  const categoryRequired = eventCategories.length > 1 && selectedCategoryFilter === '__all__';
+
+  const describeGenerationError = (error: unknown): string => {
+    const e = error as { message?: string; details?: string; hint?: string; code?: string } | null;
+    return [e?.message, e?.details, e?.hint, e?.code ? `Código: ${e.code}` : '']
+      .filter(Boolean).join(' · ') || 'Error desconocido al guardar los cruces';
+  };
+
+  const validateExistingPairings = () => {
+    if (categoryRequired) throw new Error('Selecciona una categoría antes de generar los cruces.');
+    const batchKeys = new Set<string>();
+    for (const pairing of pairings) {
+      const categoryId = pairing.categoryId || (eventCategories.length === 1 ? eventCategories[0].id : null);
+      const key = `${pairing.phase}:${categoryId || ''}:${pairing.name}`;
+      if (batchKeys.has(key) || matches.some(m =>
+        m.phase === pairing.phase &&
+        (m.category_id || null) === (categoryId || null) &&
+        m.group_name === pairing.name
+      )) {
+        throw new Error(`El cruce ${pairing.name} ya existe en esa ronda y categoría. No se ha creado ningún duplicado.`);
+      }
+      batchKeys.add(key);
+    }
+  };
 
   // Check for duplicate positions
   const hasDuplicatePositions = pairings.some(p => p.homePosition && p.homePosition === p.awayPosition);
 
   const handleGenerateMatches = async () => {
     if (!allPairingsComplete) {
-      toast({ title: 'Error', description: 'Completa todos los campos de cada cruce antes de generar', variant: 'destructive' });
+      toast({ title: 'Error', description: 'Indica los dos participantes de cada cruce antes de generar', variant: 'destructive' });
       return;
     }
     if (hasDuplicatePositions) {
@@ -332,6 +360,7 @@ export const KnockoutBracketGenerator = ({
     }
 
     try {
+      validateExistingPairings();
       setLoading(true);
       let created = 0;
       const createdNames: string[] = [];
@@ -361,7 +390,8 @@ export const KnockoutBracketGenerator = ({
               return;
             }
           } catch (err) {
-            console.error('Error checking conflict:', err);
+            // A failed conflict check is not evidence that the slot is free.
+            throw new Error(`No se pudo comprobar el horario de ${pairing.name}: ${describeGenerationError(err)}`);
           }
         }
 
@@ -376,11 +406,11 @@ export const KnockoutBracketGenerator = ({
           status: 'scheduled',
           match_halves: pairing.matchHalves,
           match_duration_minutes: pairing.matchDuration,
-          match_date: matchDateToUTC(pairing.matchDate),
-          field_id: pairing.fieldId,
+          match_date: pairing.matchDate ? matchDateToUTC(pairing.matchDate) : null,
+          field_id: pairing.fieldId || null,
           match_number: matches.length + created + 1,
         };
-        if (pairing.categoryId) matchData.category_id = pairing.categoryId;
+        if (pairing.categoryId || eventCategories.length === 1) matchData.category_id = pairing.categoryId || eventCategories[0].id;
 
         await tournamentService.createMatch(matchData);
         createdNames.push(pairing.name);
@@ -423,7 +453,8 @@ export const KnockoutBracketGenerator = ({
       onMatchesCreated();
     } catch (error) {
       console.error('Error generando cruces:', error);
-      toast({ title: 'Error', description: 'No se pudieron crear los cruces', variant: 'destructive' });
+      toast({ title: 'Error al generar cruces', description: describeGenerationError(error), variant: 'destructive' });
+      onMatchesCreated();
     } finally {
       setLoading(false);
     }
@@ -467,7 +498,7 @@ export const KnockoutBracketGenerator = ({
   const handleGenerateNextRound = async () => {
     // Same as handleGenerateMatches but for subsequent rounds
     if (!allPairingsComplete) {
-      toast({ title: 'Error', description: 'Completa todos los campos de cada cruce', variant: 'destructive' });
+      toast({ title: 'Error', description: 'Indica los dos participantes de cada cruce', variant: 'destructive' });
       return;
     }
 
@@ -500,7 +531,8 @@ export const KnockoutBracketGenerator = ({
               return;
             }
           } catch (err) {
-            console.error('Error checking conflict:', err);
+            // A failed conflict check is not evidence that the slot is free.
+            throw new Error(`No se pudo comprobar el horario de ${pairing.name}: ${describeGenerationError(err)}`);
           }
         }
 
@@ -515,11 +547,11 @@ export const KnockoutBracketGenerator = ({
           status: 'scheduled',
           match_halves: pairing.matchHalves,
           match_duration_minutes: pairing.matchDuration,
-          match_date: matchDateToUTC(pairing.matchDate),
-          field_id: pairing.fieldId,
+          match_date: pairing.matchDate ? matchDateToUTC(pairing.matchDate) : null,
+          field_id: pairing.fieldId || null,
           match_number: matches.length + created + 1,
         };
-        if (pairing.categoryId) matchData.category_id = pairing.categoryId;
+        if (pairing.categoryId || eventCategories.length === 1) matchData.category_id = pairing.categoryId || eventCategories[0].id;
 
         await tournamentService.createMatch(matchData);
         createdNames.push(pairing.name);
@@ -547,7 +579,8 @@ export const KnockoutBracketGenerator = ({
       onMatchesCreated();
     } catch (error) {
       console.error('Error generando ronda:', error);
-      toast({ title: 'Error', description: 'No se pudo crear la ronda', variant: 'destructive' });
+      toast({ title: 'Error al generar ronda', description: describeGenerationError(error), variant: 'destructive' });
+      onMatchesCreated();
     } finally {
       setLoading(false);
     }
@@ -800,7 +833,7 @@ export const KnockoutBracketGenerator = ({
                 {/* Match details */}
                 <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
                   <div>
-                    <Label className="text-xs">Campo <span className="text-destructive">*</span></Label>
+                    <Label className="text-xs">Campo (opcional)</Label>
                     <Select value={pairing.fieldId || '__none__'} onValueChange={v => updatePairing(pairing.id, { fieldId: v === '__none__' ? '' : v })}>
                       <SelectTrigger className="h-9"><SelectValue placeholder="Campo..." /></SelectTrigger>
                       <SelectContent>
@@ -816,7 +849,7 @@ export const KnockoutBracketGenerator = ({
                     </Select>
                   </div>
                   <div>
-                    <Label className="text-xs">Fecha/Hora <span className="text-destructive">*</span></Label>
+                    <Label className="text-xs">Fecha/Hora (opcional)</Label>
                     <Input
                       type="datetime-local"
                       className="h-9 text-xs"
@@ -864,15 +897,17 @@ export const KnockoutBracketGenerator = ({
         {pairingsGenerated && pairings.length > 0 && (
           <div className="mt-4 flex justify-between items-center">
             <div className="text-sm text-muted-foreground">
-              {allPairingsComplete ? (
+              {categoryRequired ? (
+                <span className="text-amber-600">Selecciona la categoría del cuadro</span>
+              ) : allPairingsComplete ? (
                 <span className="text-green-600 flex items-center gap-1"><Check className="w-4 h-4" /> Todos los cruces completos</span>
               ) : (
-                <span className="text-amber-600 flex items-center gap-1"><AlertTriangle className="w-4 h-4" /> Completa todos los campos obligatorios</span>
+                <span className="text-amber-600 flex items-center gap-1"><AlertTriangle className="w-4 h-4" /> Indica los dos participantes de cada cruce</span>
               )}
             </div>
             <Button
               onClick={isInSubsequentRound ? handleGenerateNextRound : handleGenerateMatches}
-              disabled={loading || !allPairingsComplete || hasDuplicatePositions}
+              disabled={loading || !allPairingsComplete || hasDuplicatePositions || categoryRequired}
               className="gap-2"
             >
               <Swords className="w-4 h-4" />
