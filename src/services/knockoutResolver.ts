@@ -19,14 +19,14 @@ export function resolveBracketSlot(target: Match, label: string, teams: EventTea
   const scopedMatches = eventMatches.filter(m => (m.category_id || null) === category);
   // Legacy single-category tournaments can have category_id on every match while
   // their event_teams rows remain uncategorized. Recover those registrations only
-  // when ALL matches belong to the same explicit category and no registration
-  // specifies a different one. Never merge teams between multiple categories.
+  // when ALL matches belong to the same explicit category and every registration
+  // lacks category_id. Never merge teams between multiple categories.
   const legacySingleCategory =
     category !== null &&
     eventMatches.length > 0 &&
     eventMatches.every(m => m.category_id === category) &&
     eventTeams.length > 0 &&
-    eventTeams.every(t => !t.category_id || t.category_id === category);
+    eventTeams.every(t => !t.category_id);
   const scopedTeams = eventTeams.filter(t =>
     (t.category_id || null) === category || (legacySingleCategory && !t.category_id)
   );
