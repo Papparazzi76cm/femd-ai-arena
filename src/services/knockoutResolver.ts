@@ -14,8 +14,22 @@ const complete = (m: Match) => m.status === 'finished' && m.home_score != null &
 // Pure calculation: no database writes, one category and tier per destination.
 export function resolveBracketSlot(target: Match, label: string, teams: EventTeam[], matches: Match[]): { teamId: string; eventTeamId: string | null } | null {
   const category = target.category_id || null;
-  const scopedMatches = matches.filter(m => m.event_id === target.event_id && (m.category_id || null) === category);
-  const scopedTeams = teams.filter(t => t.event_id === target.event_id && (t.category_id || null) === category);
+  const eventMatches = matches.filter(m => m.event_id === target.event_id);
+  const eventTeams = teams.filter(t => t.event_id === target.event_id);
+  const scopedMatches = eventMatches.filter(m => (m.category_id || null) === category);
+  // Legacy single-category tournaments can have category_id on every match while
+  // their event_teams rows remain uncategorized. Recover those registrations only
+  // when ALL matches belong to the same explicit category and no registration
+  // specifies a different one. Never merge teams between multiple categories.
+  const legacySingleCategory =
+    category !== null &&
+    eventMatches.length > 0 &&
+    eventMatches.every(m => m.category_id === category) &&
+    eventTeams.length > 0 &&
+    eventTeams.every(t => !t.category_id || t.category_id === category);
+  const scopedTeams = eventTeams.filter(t =>
+    (t.category_id || null) === category || (legacySingleCategory && !t.category_id)
+  );
   const dependency = label.match(/^(Ganador|Perdedor) (.+)$/);
   if (dependency) {
     const sources = scopedMatches.filter(m => m.id !== target.id && !isGroupPhase(m.phase) &&
