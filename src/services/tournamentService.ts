@@ -72,7 +72,7 @@ export const tournamentService = {
     return data as Match[];
   },
 
-  async createMatch(match: Omit<Match, 'id' | 'created_at'>): Promise<Match> {
+  async createMatch(match: Omit<Match, 'id' | 'created_at'>, options: { resolveAfterCreate?: boolean } = {}): Promise<Match> {
     const matchWithEventTeams: any = { ...match, match_date: match.match_date ? matchDateToUTC(match.match_date) : null };
     if (match.home_team_id && !match.home_event_team_id) {
       matchWithEventTeams.home_event_team_id = await this.resolveEventTeamId(match.event_id, match.home_team_id, match.category_id);
@@ -88,7 +88,17 @@ export const tournamentService = {
       .single();
     
     if (error) throw error;
-    await this.resolveKnockoutPlaceholders(match.event_id);
+    // Persisting the match and recalculating other matches are separate operations.
+    // Never report a successfully inserted match as a failed creation when a
+    // legacy placeholder, network timeout, or RLS policy breaks recalculation.
+    // Wizard callers can defer recalculation until their entire batch is inserted.
+    if (options.resolveAfterCreate !== false) {
+      try {
+        await this.resolveKnockoutPlaceholders(match.event_id);
+      } catch (resolutionError) {
+        console.error('El partido se guardó, pero no se pudieron actualizar otros cruces:', resolutionError);
+      }
+    }
     return data as Match;
   },
 

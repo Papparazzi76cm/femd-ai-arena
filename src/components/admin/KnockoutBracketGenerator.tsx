@@ -418,9 +418,18 @@ export const KnockoutBracketGenerator = ({
         };
         if (pairing.categoryId || eventCategories.length === 1) matchData.category_id = pairing.categoryId || eventCategories[0].id;
 
-        await tournamentService.createMatch(matchData);
+        await tournamentService.createMatch(matchData, { resolveAfterCreate: false });
         createdNames.push(pairing.name);
         created++;
+      }
+
+      // Recalculate once per batch instead of once per match. The matches are
+      // already saved if this secondary step fails.
+      try {
+        await tournamentService.resolveKnockoutPlaceholders(eventId);
+      } catch (syncError) {
+        console.warn('Cruces guardados; actualización automática pendiente:', syncError);
+        toast({ title: 'Cruces guardados', description: `Los partidos se crearon, pero no se pudieron asignar automáticamente todos los equipos: ${describeGenerationError(syncError)}` });
       }
 
       // Track created bracket names in session state
@@ -509,6 +518,7 @@ export const KnockoutBracketGenerator = ({
     }
 
     try {
+      validateExistingPairings();
       setLoading(true);
       let created = 0;
       const createdNames: string[] = [];
@@ -559,9 +569,18 @@ export const KnockoutBracketGenerator = ({
         };
         if (pairing.categoryId || eventCategories.length === 1) matchData.category_id = pairing.categoryId || eventCategories[0].id;
 
-        await tournamentService.createMatch(matchData);
+        await tournamentService.createMatch(matchData, { resolveAfterCreate: false });
         createdNames.push(pairing.name);
         created++;
+      }
+
+      // Recalculate once per batch instead of once per match. The matches are
+      // already saved if this secondary step fails.
+      try {
+        await tournamentService.resolveKnockoutPlaceholders(eventId);
+      } catch (syncError) {
+        console.warn('Cruces guardados; actualización automática pendiente:', syncError);
+        toast({ title: 'Cruces guardados', description: `Los partidos se crearon, pero no se pudieron asignar automáticamente todos los equipos: ${describeGenerationError(syncError)}` });
       }
 
       // Track created bracket names in session state  
