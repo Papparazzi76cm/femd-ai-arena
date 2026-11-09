@@ -35,7 +35,7 @@ export const rosterRegistrationService = {
       p_last_name: lastName,
     });
     if (error) throw error;
-    return (data || []) as ParticipantMatch[];
+    return (data || []) as unknown as ParticipantMatch[];
   },
   async submit(token: string, members: RegistrationMember[]): Promise<RegistrationResult> {
     const { data, error } = await supabase.rpc('submit_roster_registration', { p_token: token, p_members: registrationPayload(members) });

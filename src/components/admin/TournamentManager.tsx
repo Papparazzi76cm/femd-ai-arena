@@ -1492,7 +1492,6 @@ export const TournamentManager = ({ eventId }: TournamentManagerProps) => {
             eventTeams={eventTeams}
             eventCategories={eventCategories}
             teams={teams}
-            eventCategories={eventCategories}
           />
         </TabsContent>
 
