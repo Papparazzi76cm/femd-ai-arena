@@ -207,9 +207,13 @@ export const PhaseCompletionPanel = ({ matches, eventId, eventTeams, eventCatego
         onResolved();
       } else {
         toast({
-          title: 'Sin cambios',
-          description: 'No hay placeholders pendientes de resolver o faltan resultados de partidos previos.',
+          title: unresolvedCount > 0 ? 'Cruces todavía pendientes' : 'Cruces actualizados',
+          description: unresolvedCount > 0
+            ? `Quedan ${unresolvedCount} cruces con equipos por asignar. Los puestos de grupos se pueden asignar al cerrar la fase; los cruces que dependen de un ganador deben esperar a que termine su partido anterior. Si faltan equipos en la primera ronda, revisa las categorías de las inscripciones.`
+            : 'No quedan cruces pendientes de asignación.',
+          variant: unresolvedCount > 0 ? 'destructive' : 'default',
         });
+        onResolved();
       }
     } catch (err) {
       console.error('Error resolviendo:', err);
