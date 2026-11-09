@@ -148,8 +148,14 @@ export const KnockoutBracketGenerator = ({
   // Filter teams by category
   const filteredTeams = useMemo(() => {
     if (selectedCategoryFilter === '__all__') return eventTeams;
+    // Legacy single-category events stored registrations without category_id.
+    // The category selector must still offer their group positions.
+    if (eventCategories.length === 1 &&
+        eventCategories[0].id === selectedCategoryFilter &&
+        eventTeams.length > 0 &&
+        eventTeams.every(et => !et.category_id)) return eventTeams;
     return eventTeams.filter(et => et.category_id === selectedCategoryFilter);
-  }, [eventTeams, selectedCategoryFilter]);
+  }, [eventTeams, selectedCategoryFilter, eventCategories]);
 
   // Group teams by group_name, sorted by standings
   const groupedStandings = useMemo(() => {
