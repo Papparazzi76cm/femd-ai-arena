@@ -54,6 +54,30 @@ test('no matches and unknown labels never assign an arbitrary team', () => {
   assert.equal(resolveBracketSlot(target, 'anything', teams, [groupA]), null);
 });
 
+import { resolveBracketSlot as resolveServerBracketSlot } from '../supabase/functions/_shared/knockoutResolver.ts';
+test('single-category legacy Medina fixtures resolve uncategorized registrations in both runtimes', () => {
+  const legacyTeams = [team('a1'), team('a2'), team('b1', 'B'), team('b2', 'B')]
+    .map(t => ({ ...t, category_id: null }));
+  const groupResults = [
+    { ...groupA, category_id: 'junior', home_event_team_id: 'a1', away_event_team_id: 'a2' },
+    { ...groupB, category_id: 'junior', home_event_team_id: 'b1', away_event_team_id: 'b2' },
+  ] as Match[];
+  for (const resolver of [resolveBracketSlot, resolveServerBracketSlot]) {
+    assert.deepEqual(resolver(target, '1º Grupo A', legacyTeams, groupResults), { teamId: 'a1', eventTeamId: 'a1' });
+    assert.deepEqual(resolver(target, '1er Mejor 1º', legacyTeams, groupResults), { teamId: 'a1', eventTeamId: 'a1' });
+    assert.deepEqual(resolver(target, '2º Mejor 1º', legacyTeams, groupResults), { teamId: 'b1', eventTeamId: 'b1' });
+  }
+});
+test('legacy fallback refuses multi-category matches and mixed categorized registrations', () => {
+  const legacyTeams = [team('a1'), team('a2')].map(t => ({ ...t, category_id: null }));
+  const juniorMatch = { ...groupA, category_id: 'junior' };
+  const seniorMatch = { ...groupB, category_id: 'senior' };
+  for (const resolver of [resolveBracketSlot, resolveServerBracketSlot]) {
+    assert.equal(resolver(target, '1º Grupo A', legacyTeams, [juniorMatch, seniorMatch]), null);
+    assert.equal(resolver(target, '1º Grupo A', [legacyTeams[0], team('a2')], [juniorMatch]), null);
+  }
+});
+
 import { tournamentService } from '../src/services/tournamentService';
 import { database } from './supabaseMock';
 const setup = () => {
