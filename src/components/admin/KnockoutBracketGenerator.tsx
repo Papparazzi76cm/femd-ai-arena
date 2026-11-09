@@ -833,7 +833,7 @@ export const KnockoutBracketGenerator = ({
                 {/* Match details */}
                 <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
                   <div>
-                    <Label className="text-xs">Campo <span className="text-destructive">*</span></Label>
+                    <Label className="text-xs">Campo (opcional)</Label>
                     <Select value={pairing.fieldId || '__none__'} onValueChange={v => updatePairing(pairing.id, { fieldId: v === '__none__' ? '' : v })}>
                       <SelectTrigger className="h-9"><SelectValue placeholder="Campo..." /></SelectTrigger>
                       <SelectContent>
@@ -849,7 +849,7 @@ export const KnockoutBracketGenerator = ({
                     </Select>
                   </div>
                   <div>
-                    <Label className="text-xs">Fecha/Hora <span className="text-destructive">*</span></Label>
+                    <Label className="text-xs">Fecha/Hora (opcional)</Label>
                     <Input
                       type="datetime-local"
                       className="h-9 text-xs"
@@ -902,7 +902,7 @@ export const KnockoutBracketGenerator = ({
               ) : allPairingsComplete ? (
                 <span className="text-green-600 flex items-center gap-1"><Check className="w-4 h-4" /> Todos los cruces completos</span>
               ) : (
-                <span className="text-amber-600 flex items-center gap-1"><AlertTriangle className="w-4 h-4" /> Completa todos los campos obligatorios</span>
+                <span className="text-amber-600 flex items-center gap-1"><AlertTriangle className="w-4 h-4" /> Indica los dos participantes de cada cruce</span>
               )}
             </div>
             <Button
