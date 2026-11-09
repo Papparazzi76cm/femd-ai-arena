@@ -1,12 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
-import { defineTool, type ToolContext } from "@lovable.dev/mcp-js";
-
-function supabaseForUser(ctx: ToolContext) {
-  return createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_PUBLISHABLE_KEY!, {
-    global: { headers: { Authorization: `Bearer ${ctx.getToken()}` } },
-    auth: { persistSession: false, autoRefreshToken: false },
-  });
-}
+import { defineTool } from "@lovable.dev/mcp-js";
 
 export default defineTool({
   name: "get_my_profile",
@@ -21,7 +14,13 @@ export default defineTool({
     }
     const userId = ctx.getUserId();
     const email = ctx.getUserEmail();
-    const supabase = supabaseForUser(ctx);
+    const url = process.env.SUPABASE_URL;
+    const key = process.env.SUPABASE_PUBLISHABLE_KEY;
+    if (!url || !key) throw new Error("Falta la configuración de conexión del servidor.");
+    const supabase = createClient(url, key, {
+      global: { headers: { Authorization: `Bearer ${ctx.getToken()}` } },
+      auth: { persistSession: false, autoRefreshToken: false },
+    });
 
     const { data: rolesData } = await supabase
       .from("user_roles")
