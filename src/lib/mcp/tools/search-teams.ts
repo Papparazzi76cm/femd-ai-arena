@@ -1,13 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
-import { defineTool, type ToolContext } from "@lovable.dev/mcp-js";
+import { defineTool } from "@lovable.dev/mcp-js";
 import { z } from "zod";
-
-function supabaseForUser(ctx: ToolContext) {
-  return createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_PUBLISHABLE_KEY!, {
-    global: { headers: { Authorization: `Bearer ${ctx.getToken()}` } },
-    auth: { persistSession: false, autoRefreshToken: false },
-  });
-}
 
 export default defineTool({
   name: "search_teams",
@@ -23,7 +16,13 @@ export default defineTool({
     if (!ctx.isAuthenticated()) {
       return { content: [{ type: "text", text: "No autenticado." }], isError: true };
     }
-    const supabase = supabaseForUser(ctx);
+    const url = process.env.SUPABASE_URL;
+    const key = process.env.SUPABASE_PUBLISHABLE_KEY;
+    if (!url || !key) throw new Error("Falta la configuración de conexión del servidor.");
+    const supabase = createClient(url, key, {
+      global: { headers: { Authorization: `Bearer ${ctx.getToken()}` } },
+      auth: { persistSession: false, autoRefreshToken: false },
+    });
     const { data, error } = await supabase
       .from("teams")
       .select("id, name, logo_url, parent_team_id, team_group")

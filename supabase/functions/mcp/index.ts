@@ -9,12 +9,6 @@ import { auth, defineMcp } from "npm:@lovable.dev/mcp-js@0.24.0";
 import { createClient } from "npm:@supabase/supabase-js@^2.81.1";
 import { defineTool } from "npm:@lovable.dev/mcp-js@0.24.0";
 import { z } from "npm:zod@^4.4.3";
-function supabaseForUser(ctx) {
-  return createClient(process.env.SUPABASE_URL, process.env.SUPABASE_PUBLISHABLE_KEY, {
-    global: { headers: { Authorization: `Bearer ${ctx.getToken()}` } },
-    auth: { persistSession: false, autoRefreshToken: false }
-  });
-}
 var list_tournaments_default = defineTool({
   name: "list_tournaments",
   title: "Listar torneos",
@@ -28,7 +22,13 @@ var list_tournaments_default = defineTool({
     if (!ctx.isAuthenticated()) {
       return { content: [{ type: "text", text: "No autenticado." }], isError: true };
     }
-    const supabase = supabaseForUser(ctx);
+    const url = process.env.SUPABASE_URL;
+    const key = process.env.SUPABASE_PUBLISHABLE_KEY;
+    if (!url || !key) throw new Error("Falta la configuraci\xF3n de conexi\xF3n del servidor.");
+    const supabase = createClient(url, key, {
+      global: { headers: { Authorization: `Bearer ${ctx.getToken()}` } },
+      auth: { persistSession: false, autoRefreshToken: false }
+    });
     let query = supabase.from("events").select("id, title, date, end_date, location, description, poster_url, edition").eq("is_public", true).order("date", { ascending: false }).limit(limit ?? 20);
     if (upcoming_only) {
       const today = (/* @__PURE__ */ new Date()).toISOString().slice(0, 10);
@@ -49,12 +49,6 @@ var list_tournaments_default = defineTool({
 import { createClient as createClient2 } from "npm:@supabase/supabase-js@^2.81.1";
 import { defineTool as defineTool2 } from "npm:@lovable.dev/mcp-js@0.24.0";
 import { z as z2 } from "npm:zod@^4.4.3";
-function supabaseForUser2(ctx) {
-  return createClient2(process.env.SUPABASE_URL, process.env.SUPABASE_PUBLISHABLE_KEY, {
-    global: { headers: { Authorization: `Bearer ${ctx.getToken()}` } },
-    auth: { persistSession: false, autoRefreshToken: false }
-  });
-}
 var get_tournament_standings_default = defineTool2({
   name: "get_tournament_standings",
   title: "Clasificaci\xF3n de un torneo",
@@ -68,7 +62,13 @@ var get_tournament_standings_default = defineTool2({
     if (!ctx.isAuthenticated()) {
       return { content: [{ type: "text", text: "No autenticado." }], isError: true };
     }
-    const supabase = supabaseForUser2(ctx);
+    const url = process.env.SUPABASE_URL;
+    const key = process.env.SUPABASE_PUBLISHABLE_KEY;
+    if (!url || !key) throw new Error("Falta la configuraci\xF3n de conexi\xF3n del servidor.");
+    const supabase = createClient2(url, key, {
+      global: { headers: { Authorization: `Bearer ${ctx.getToken()}` } },
+      auth: { persistSession: false, autoRefreshToken: false }
+    });
     let q = supabase.from("event_teams").select(
       "id, group_name, points, matches_played, wins, draws, losses, goals_for, goals_against, goal_difference, yellow_cards, red_cards, team_id, category_id, teams(name, logo_url), categories(name)"
     ).eq("event_id", event_id).order("group_name", { ascending: true }).order("points", { ascending: false });
@@ -88,12 +88,6 @@ var get_tournament_standings_default = defineTool2({
 import { createClient as createClient3 } from "npm:@supabase/supabase-js@^2.81.1";
 import { defineTool as defineTool3 } from "npm:@lovable.dev/mcp-js@0.24.0";
 import { z as z3 } from "npm:zod@^4.4.3";
-function supabaseForUser3(ctx) {
-  return createClient3(process.env.SUPABASE_URL, process.env.SUPABASE_PUBLISHABLE_KEY, {
-    global: { headers: { Authorization: `Bearer ${ctx.getToken()}` } },
-    auth: { persistSession: false, autoRefreshToken: false }
-  });
-}
 var list_live_matches_default = defineTool3({
   name: "list_live_matches",
   title: "Partidos en vivo",
@@ -106,7 +100,13 @@ var list_live_matches_default = defineTool3({
     if (!ctx.isAuthenticated()) {
       return { content: [{ type: "text", text: "No autenticado." }], isError: true };
     }
-    const supabase = supabaseForUser3(ctx);
+    const url = process.env.SUPABASE_URL;
+    const key = process.env.SUPABASE_PUBLISHABLE_KEY;
+    if (!url || !key) throw new Error("Falta la configuraci\xF3n de conexi\xF3n del servidor.");
+    const supabase = createClient3(url, key, {
+      global: { headers: { Authorization: `Bearer ${ctx.getToken()}` } },
+      auth: { persistSession: false, autoRefreshToken: false }
+    });
     let q = supabase.from("matches").select(
       "id, event_id, phase, group_name, match_date, started_at, status, home_score, away_score, home_team_id, away_team_id, home_placeholder, away_placeholder, events(title), home:teams!matches_home_team_id_fkey(name), away:teams!matches_away_team_id_fkey(name)"
     ).eq("status", "in_progress").order("started_at", { ascending: false }).limit(50);
@@ -126,12 +126,6 @@ var list_live_matches_default = defineTool3({
 import { createClient as createClient4 } from "npm:@supabase/supabase-js@^2.81.1";
 import { defineTool as defineTool4 } from "npm:@lovable.dev/mcp-js@0.24.0";
 import { z as z4 } from "npm:zod@^4.4.3";
-function supabaseForUser4(ctx) {
-  return createClient4(process.env.SUPABASE_URL, process.env.SUPABASE_PUBLISHABLE_KEY, {
-    global: { headers: { Authorization: `Bearer ${ctx.getToken()}` } },
-    auth: { persistSession: false, autoRefreshToken: false }
-  });
-}
 var search_teams_default = defineTool4({
   name: "search_teams",
   title: "Buscar equipos / clubes",
@@ -145,7 +139,13 @@ var search_teams_default = defineTool4({
     if (!ctx.isAuthenticated()) {
       return { content: [{ type: "text", text: "No autenticado." }], isError: true };
     }
-    const supabase = supabaseForUser4(ctx);
+    const url = process.env.SUPABASE_URL;
+    const key = process.env.SUPABASE_PUBLISHABLE_KEY;
+    if (!url || !key) throw new Error("Falta la configuraci\xF3n de conexi\xF3n del servidor.");
+    const supabase = createClient4(url, key, {
+      global: { headers: { Authorization: `Bearer ${ctx.getToken()}` } },
+      auth: { persistSession: false, autoRefreshToken: false }
+    });
     const { data, error } = await supabase.from("teams").select("id, name, logo_url, parent_team_id, team_group").ilike("name", `%${query}%`).order("name", { ascending: true }).limit(limit ?? 20);
     if (error) {
       return { content: [{ type: "text", text: error.message }], isError: true };
@@ -160,12 +160,6 @@ var search_teams_default = defineTool4({
 // src/lib/mcp/tools/get-my-profile.ts
 import { createClient as createClient5 } from "npm:@supabase/supabase-js@^2.81.1";
 import { defineTool as defineTool5 } from "npm:@lovable.dev/mcp-js@0.24.0";
-function supabaseForUser5(ctx) {
-  return createClient5(process.env.SUPABASE_URL, process.env.SUPABASE_PUBLISHABLE_KEY, {
-    global: { headers: { Authorization: `Bearer ${ctx.getToken()}` } },
-    auth: { persistSession: false, autoRefreshToken: false }
-  });
-}
 var get_my_profile_default = defineTool5({
   name: "get_my_profile",
   title: "Mi perfil",
@@ -178,7 +172,13 @@ var get_my_profile_default = defineTool5({
     }
     const userId = ctx.getUserId();
     const email = ctx.getUserEmail();
-    const supabase = supabaseForUser5(ctx);
+    const url = process.env.SUPABASE_URL;
+    const key = process.env.SUPABASE_PUBLISHABLE_KEY;
+    if (!url || !key) throw new Error("Falta la configuraci\xF3n de conexi\xF3n del servidor.");
+    const supabase = createClient5(url, key, {
+      global: { headers: { Authorization: `Bearer ${ctx.getToken()}` } },
+      auth: { persistSession: false, autoRefreshToken: false }
+    });
     const { data: rolesData } = await supabase.from("user_roles").select("role").eq("user_id", userId);
     const profile = {
       id: userId,

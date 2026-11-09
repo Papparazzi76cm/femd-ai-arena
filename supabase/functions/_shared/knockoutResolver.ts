@@ -35,7 +35,7 @@ export function resolveBracketSlot(target: Match, label: string, teams: EventTea
   const best = label.match(/^(\d+)(?:º|°|er|o) Mejor (\d+)(?:º|°|ro|o)$/i);
   if (!group && !best) return null;
   const groupMatches = scopedMatches.filter(m => isGroupPhase(m.phase));
-  const groupNames = [...new Set(scopedTeams.map(t => t.group_name).filter(Boolean))];
+  const groupNames = [...new Set(scopedTeams.map(t => t.group_name).filter((name): name is string => Boolean(name)))];
   const closed = (name: string) => {
     const ids = new Set(scopedTeams.filter(t => t.group_name === name).map(t => t.id));
     const teamIds = new Set(scopedTeams.filter(t => t.group_name === name).map(t => t.team_id));
