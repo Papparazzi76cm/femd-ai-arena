@@ -108,7 +108,10 @@ export const PhaseCompletionPanel = ({ matches, eventId, eventTeams, eventCatego
     const resolve = async () => {
       try {
         setResolving(true);
-        await tournamentService.updateTeamStatistics(eventId);
+        // Standings are calculated from finished matches by the resolver.
+        // Statistics persistence is ancillary: failure must not block the draw.
+        try { await tournamentService.updateTeamStatistics(eventId); }
+        catch (statsError) { console.warn('Estadísticas pendientes de actualización:', statsError); }
         const resolved = await tournamentService.resolveKnockoutPlaceholders(eventId);
         if (resolved > 0) {
           toast({ title: 'Cruces generados automáticamente', description: `Se asignaron ${resolved} equipo(s) según la clasificación final.` });
@@ -117,7 +120,7 @@ export const PhaseCompletionPanel = ({ matches, eventId, eventTeams, eventCatego
       } catch (error) {
         autoResolutionKey.current = '';
         console.error('Error en la generación automática de cruces:', error);
-        toast({ title: 'Error', description: 'No se pudieron generar automáticamente los cruces', variant: 'destructive' });
+        toast({ title: 'Error', description: error instanceof Error ? error.message : 'No se pudieron generar automáticamente los cruces', variant: 'destructive' });
       } finally {
         setResolving(false);
       }
@@ -197,7 +200,8 @@ export const PhaseCompletionPanel = ({ matches, eventId, eventTeams, eventCatego
   const handleAutoResolve = async () => {
     try {
       setResolving(true);
-      await tournamentService.updateTeamStatistics(eventId);
+      try { await tournamentService.updateTeamStatistics(eventId); }
+      catch (statsError) { console.warn('Estadísticas pendientes de actualización:', statsError); }
       const resolved = await tournamentService.resolveKnockoutPlaceholders(eventId);
       if (resolved > 0) {
         toast({
@@ -217,7 +221,7 @@ export const PhaseCompletionPanel = ({ matches, eventId, eventTeams, eventCatego
       }
     } catch (err) {
       console.error('Error resolviendo:', err);
-      toast({ title: 'Error', description: 'No se pudieron resolver los cruces automáticamente', variant: 'destructive' });
+      toast({ title: 'Error', description: err instanceof Error ? err.message : 'No se pudieron resolver los cruces automáticamente', variant: 'destructive' });
     } finally {
       setResolving(false);
     }
