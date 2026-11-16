@@ -9,6 +9,7 @@ import { Event } from "@/types/database";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { getTournamentStatus, getTournamentStatusLabel } from "@/lib/tournamentStatus";
+import { tournamentBrandService, brandForEvent, type TournamentBrand } from '@/services/tournamentBrandService';
 
 // Component for image with fallback
 const TournamentThumbnail = ({ src, alt }: { src: string | null; alt: string }) => {
@@ -32,51 +33,6 @@ const TournamentThumbnail = ({ src, alt }: { src: string | null; alt: string }) 
   );
 };
 
-// Definición de torneos base con sus logos
-interface TournamentBrand {
-  slug: string;
-  name: string;
-  logoUrl: string;
-  keywords: string[]; // Palabras clave para identificar eventos de este torneo
-}
-
-const tournamentBrands: TournamentBrand[] = [
-  {
-    slug: "copa-rioseco",
-    name: "Copa Internacional Rioseco Caramanzana",
-    logoUrl: "/logos-torneos/copa-rioseco.png",
-    keywords: ["rioseco", "caramanzana"],
-  },
-  {
-    slug: "villa-aranda",
-    name: "Torneo Internacional Villa de Aranda",
-    logoUrl: "/logos-torneos/villa-aranda.png",
-    keywords: ["villa de aranda", "aranda"],
-  },
-  {
-    slug: "medina-cup",
-    name: "Clarios Medina International Cup",
-    logoUrl: "/logos-torneos/medina-cup.png",
-    keywords: ["medina"],
-  },
-  {
-    slug: "copa-cyl",
-    name: "Copa CyL",
-    logoUrl: "/logos-torneos/copa-cyl.png",
-    keywords: ["copa cyl", "castilla y león"],
-  },
-];
-
-// Función para identificar a qué torneo pertenece un evento
-function getTournamentBrand(eventTitle: string): TournamentBrand | null {
-  const titleLower = eventTitle.toLowerCase();
-  for (const brand of tournamentBrands) {
-    if (brand.keywords.some(keyword => titleLower.includes(keyword))) {
-      return brand;
-    }
-  }
-  return null;
-}
 
 // Función para extraer la temporada/año del título
 function extractSeason(eventTitle: string): string {
@@ -116,6 +72,8 @@ function groupEventsByEdition(events: Event[]): SeasonGroup[] {
 }
 
 export function TournamentsPage() {
+  const [tournamentBrands, setTournamentBrands] = useState<TournamentBrand[]>([]);
+  const getTournamentBrand = (event: Event) => brandForEvent(event, tournamentBrands);
   const [searchParams, setSearchParams] = useSearchParams();
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
@@ -126,7 +84,8 @@ export function TournamentsPage() {
   useEffect(() => {
     const loadEvents = async () => {
       try {
-        const data = await eventService.getPublicAll();
+        const [data, brands] = await Promise.all([eventService.getPublicAll(), tournamentBrandService.getAll(true)]);
+        setTournamentBrands(brands);
         setEvents(data);
       } catch (error) {
         console.error("Error loading events:", error);
@@ -144,7 +103,7 @@ export function TournamentsPage() {
 
   const filteredEvents = selectedBrand
     ? events.filter(event => {
-        const brand = getTournamentBrand(event.title);
+        const brand = getTournamentBrand(event);
         return brand?.slug === selectedBrand.slug;
       })
     : events;
@@ -152,11 +111,11 @@ export function TournamentsPage() {
   const seasonGroups = groupEventsByEdition(filteredEvents);
 
   const nextBrand = () => {
-    setCurrentBrandIndex((prev) => (prev + 1) % tournamentBrands.length);
+    setCurrentBrandIndex((prev) => tournamentBrands.length ? (prev + 1) % tournamentBrands.length : 0);
   };
 
   const prevBrand = () => {
-    setCurrentBrandIndex((prev) => (prev - 1 + tournamentBrands.length) % tournamentBrands.length);
+    setCurrentBrandIndex((prev) => tournamentBrands.length ? (prev - 1 + tournamentBrands.length) % tournamentBrands.length : 0);
   };
 
   const getSlidePosition = (index: number) => {
@@ -198,7 +157,7 @@ export function TournamentsPage() {
           <div className="text-center mb-8 sm:mb-12 animate-fade-in">
             <div className="w-32 h-32 sm:w-48 sm:h-48 mx-auto mb-4 sm:mb-6 bg-card rounded-2xl p-3 sm:p-4 shadow-lg flex items-center justify-center">
               <img
-                src={selectedBrand.logoUrl}
+                src={selectedBrand.logo_url}
                 alt={selectedBrand.name}
                 className="max-w-full max-h-full object-contain"
               />
@@ -347,7 +306,7 @@ export function TournamentsPage() {
                       group
                     `}>
                       <img
-                        src={brand.logoUrl}
+                        src={brand.logo_url}
                         alt={brand.name}
                         className="max-w-full max-h-full object-contain group-hover:scale-105 transition-transform duration-300"
                       />
@@ -413,7 +372,7 @@ export function TournamentsPage() {
               </div>
               <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {liveEvents.map((event, index) => {
-                  const brand = getTournamentBrand(event.title);
+                  const brand = getTournamentBrand(event);
                   return (
                     <Link key={event.id} to={`/torneos/${event.id}`}>
                       <Card className="hover-lift hover-glow animate-fade-in overflow-hidden cursor-pointer h-full ring-2 ring-primary/40" style={{ animationDelay: `${index * 80}ms` }}>
@@ -422,7 +381,7 @@ export function TournamentsPage() {
                           <div className="flex items-start gap-3">
                             {brand && (
                               <div className="w-12 h-12 bg-muted rounded-lg p-1 shrink-0 flex items-center justify-center">
-                                <img src={brand.logoUrl} alt={brand.name} className="max-w-full max-h-full object-contain" />
+                                <img src={brand.logo_url} alt={brand.name} className="max-w-full max-h-full object-contain" />
                               </div>
                             )}
                             <div className="flex-1 min-w-0">
@@ -479,7 +438,7 @@ export function TournamentsPage() {
             return (
               <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {upcomingEvents.map((event, index) => {
-                  const brand = getTournamentBrand(event.title);
+                  const brand = getTournamentBrand(event);
                   return (
                     <Link key={event.id} to={`/torneos/${event.id}`}>
                       <Card
@@ -492,7 +451,7 @@ export function TournamentsPage() {
                             {brand && (
                               <div className="w-12 h-12 bg-muted rounded-lg p-1 shrink-0 flex items-center justify-center">
                                 <img
-                                  src={brand.logoUrl}
+                                  src={brand.logo_url}
                                   alt={brand.name}
                                   className="max-w-full max-h-full object-contain"
                                 />
