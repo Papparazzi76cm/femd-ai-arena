@@ -36,6 +36,18 @@ const tournamentLogos: TournamentLogo[] = [
     logoUrl: "/logos-torneos/copa-cyl.png",
     slug: "copa-cyl",
   },
+  {
+    id: "memorial-cd-victoria",
+    name: "Memorial CD Victoria",
+    logoUrl: "/__l5e/assets-v1/be09d2c7-0bc0-471b-b580-e18cbb774eaf/memorial-santiago-alvarez.png",
+    slug: "memorial-cd-victoria",
+  },
+  {
+    id: "el-espinar-summit-cup",
+    name: "El Espinar Summit Cup",
+    logoUrl: "/__l5e/assets-v1/2e97353b-0a32-4245-9b96-ed8357fff1bb/el-espinar-summit-cup.png",
+    slug: "el-espinar-summit-cup",
+  },
 ];
 
 export function EventGallery() {
