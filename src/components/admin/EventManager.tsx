@@ -18,8 +18,11 @@ import { supabase } from '@/integrations/supabase/client';
 import { TournamentManager } from './TournamentManager';
 
 import { TournamentGalleryManager } from './TournamentGalleryManager';
+import { TournamentBrandManager } from './TournamentBrandManager';
+import { tournamentBrandService, brandForEvent, type TournamentBrand } from '@/services/tournamentBrandService';
 
 export const EventManager = () => {
+  const [tournamentBrands, setTournamentBrands] = useState<TournamentBrand[]>([]);
   const [events, setEvents] = useState<Event[]>([]);
   const [teams, setTeams] = useState<Team[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -47,12 +50,6 @@ export const EventManager = () => {
   });
   const { toast } = useToast();
 
-  const tournamentBrands = [
-    { slug: 'copa-cyl', name: 'Copa CyL', logoUrl: '/logos-torneos/copa-cyl.png' },
-    { slug: 'copa-rioseco', name: 'Copa Internacional Rioseco Caramanzana', logoUrl: '/logos-torneos/copa-rioseco.png' },
-    { slug: 'villa-aranda', name: 'Torneo Internacional Villa de Aranda', logoUrl: '/logos-torneos/villa-aranda.png' },
-    { slug: 'medina-cup', name: 'Clarios Medina International Cup', logoUrl: '/logos-torneos/medina-cup.png' },
-  ];
 
   const updateTitleFromBrand = (brandSlug: string, edition: number) => {
     if (brandSlug === '__none__') return;
@@ -67,12 +64,13 @@ export const EventManager = () => {
 
   const loadData = async () => {
     try {
-      const [eventsData, teamsData, categoriesData] = await Promise.all([
+      const [eventsData, teamsData, categoriesData, brandsData] = await Promise.all([
         eventService.getAll(),
         teamService.getAll(),
-        categoryService.getAll()
+        categoryService.getAll(), tournamentBrandService.getAll()
       ]);
       setEvents(eventsData);
+      setTournamentBrands(brandsData);
       setTeams(teamsData);
       setCategories(categoriesData);
     } catch (error) {
@@ -90,6 +88,7 @@ export const EventManager = () => {
     e.preventDefault();
     try {
       const eventData: any = {
+        brand_id: tournamentBrands.find(b => b.slug === selectedBrand)?.id ?? null,
         title: formData.title.trim(),
         description: formData.description.trim() || null,
         date: new Date(formData.date).toISOString(),
@@ -203,9 +202,7 @@ export const EventManager = () => {
     setSelectedTeamIds((event as any).team_ids || []);
 
     // Detect brand from title
-    const titleLower = event.title.toLowerCase();
-    const matchedBrand = tournamentBrands.find(b => titleLower.includes(b.name.toLowerCase()))
-      || (titleLower.includes('medina') ? tournamentBrands.find(b => b.slug === 'medina-cup') : undefined);
+    const matchedBrand = brandForEvent(event, tournamentBrands);
     setSelectedBrand(matchedBrand ? matchedBrand.slug : '__none__');
 
     // Load existing categories for this event
@@ -356,6 +353,7 @@ export const EventManager = () => {
 
   return (
     <div className="space-y-6">
+      <TournamentBrandManager onChange={() => void loadData()} />
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold">Gestión de Eventos</h2>
         <Button onClick={() => setShowForm(!showForm)} className="bg-emerald-600 hover:bg-emerald-700">
@@ -393,7 +391,7 @@ export const EventManager = () => {
                     {tournamentBrands.map(brand => (
                       <SelectItem key={brand.slug} value={brand.slug}>
                         <div className="flex items-center gap-2">
-                          <img src={brand.logoUrl} alt={brand.name} className="w-5 h-5 object-contain" />
+                          <img src={brand.logo_url} alt={brand.name} className="w-5 h-5 object-contain" />
                           <span>{brand.name}</span>
                         </div>
                       </SelectItem>

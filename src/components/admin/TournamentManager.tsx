@@ -23,6 +23,7 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { RefereeManager } from './RefereeManager';
 import { Badge } from '@/components/ui/badge';
+import { LocalQualificationManager } from './LocalQualificationManager';
 
 interface TournamentManagerProps {
   eventId: string;
@@ -673,6 +674,7 @@ export const TournamentManager = ({ eventId }: TournamentManagerProps) => {
 
         {/* Configuración */}
         <TabsContent value="config" className="mt-6 space-y-6">
+          <LocalQualificationManager eventId={eventId} categories={eventCategories} />
           <Card className="p-6">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-xl font-bold flex items-center gap-2">

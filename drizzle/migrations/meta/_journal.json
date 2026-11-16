@@ -1,0 +1,13 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1794829749538,
+      "tag": "0000_tournament_brands_and_local_qualification",
+      "breakpoints": true
+    }
+  ]
+}
