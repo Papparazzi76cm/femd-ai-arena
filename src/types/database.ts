@@ -31,6 +31,7 @@ export interface Participant {
 }
 
 export interface Event {
+  brand_id?: string | null;
   id: string;
   title: string;
   description?: string;
