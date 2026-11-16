@@ -61,7 +61,7 @@ export function LocalQualificationManager({ eventId, categories }: { eventId: st
         setPreview(localQualifiers(teams, matches, source, rule.qualifiers_per_group)); setGroups({});
       })}><Trophy />Calcular clasificados</Button>
     </div>
-    {rule && <p className="text-sm text-muted-foreground">{rule.qualifiers_per_group} por grupo · Fase nacional vinculada</p>}
+    {rule && <p className="text-sm text-muted-foreground">{rule.qualifiers_per_group} por grupo · Fase nacional vinculada. Los equipos inscritos directamente se conservan y los clasificados se añaden sin duplicar sus plantillas.</p>}
     {preview.length > 0 && <div className="space-y-3">{preview.map(t => <div key={t.id} className="flex flex-wrap gap-3 items-center border-b border-border pb-3"><span className="flex-1 min-w-0 font-medium">{names[t.id]} · Grupo local {t.group_name}</span><Input className="w-36" aria-label={`Grupo nacional de ${names[t.id]}`} placeholder="Grupo nacional" value={groups[t.id] ?? ''} onChange={e => setGroups({ ...groups, [t.id]: e.target.value })} /></div>)}
       <Button disabled={busy || preview.some(t => !groups[t.id]?.trim())} onClick={() => void run(async () => {
         if (!rule) return;

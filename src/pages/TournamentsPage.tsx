@@ -86,7 +86,10 @@ export function TournamentsPage() {
       try {
         const [data, brands] = await Promise.all([eventService.getPublicAll(), tournamentBrandService.getAll(true)]);
         setTournamentBrands(brands);
-        setEvents(data);
+        const publicBrandIds = new Set(brands.map(brand => brand.id));
+        // A public event linked to a hidden brand must not appear in the
+        // public tournament navigation until that brand is made visible.
+        setEvents(data.filter(event => !event.brand_id || publicBrandIds.has(event.brand_id)));
       } catch (error) {
         console.error("Error loading events:", error);
       } finally {
