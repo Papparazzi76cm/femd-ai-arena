@@ -51,7 +51,7 @@ VALUES
   ('medina-cup', 'Clarios Medina International Cup', '/logos-torneos/medina-cup.png', ARRAY['medina'], true, 2),
   ('copa-cyl', 'Copa CyL', '/logos-torneos/copa-cyl.png', ARRAY['copa cyl', 'castilla y león'], true, 3),
   ('memorial-cd-victoria', 'Memorial CD Victoria', '/__l5e/assets-v1/be09d2c7-0bc0-471b-b580-e18cbb774eaf/memorial-santiago-alvarez.png', ARRAY['memorial cd victoria', 'memorial santiago álvarez'], true, 4),
-  ('el-espinar-summit-cup', 'El Espinar Summit Cup', '/__l5e/assets-v1/2e97353b-0a32-4245-9b96-ed8357fff1bb/el-espinar-summit-cup.png', ARRAY['espinar', 'summit cup'], false, 5)
+  ('el-espinar-summit-cup', 'El Espinar Summit Cup', '/__l5e/assets-v1/2e97353b-0a32-4245-9b96-ed8357fff1bb/el-espinar-summit-cup.png', ARRAY['espinar', 'summit cup'], true, 5)
 ON CONFLICT (slug) DO NOTHING;
 
 CREATE TABLE IF NOT EXISTS public.local_qualification_rules (
