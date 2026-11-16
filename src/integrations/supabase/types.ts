@@ -349,6 +349,7 @@ export type Database = {
       }
       events: {
         Row: {
+          brand_id: string | null
           created_at: string | null
           date: string
           description: string | null
@@ -362,6 +363,7 @@ export type Database = {
           title: string
         }
         Insert: {
+          brand_id?: string | null
           created_at?: string | null
           date: string
           description?: string | null
@@ -375,6 +377,7 @@ export type Database = {
           title: string
         }
         Update: {
+          brand_id?: string | null
           created_at?: string | null
           date?: string
           description?: string | null
@@ -387,7 +390,15 @@ export type Database = {
           team_ids?: string[] | null
           title?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "events_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "tournament_brands"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       facilities: {
         Row: {
@@ -450,6 +461,82 @@ export type Database = {
             columns: ["facility_id"]
             isOneToOne: false
             referencedRelation: "facilities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      local_qualification_rules: {
+        Row: {
+          id: string
+          qualifiers_per_group: number
+          source_category_id: string
+          target_category_id: string
+        }
+        Insert: {
+          id?: string
+          qualifiers_per_group?: number
+          source_category_id: string
+          target_category_id: string
+        }
+        Update: {
+          id?: string
+          qualifiers_per_group?: number
+          source_category_id?: string
+          target_category_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "local_qualification_rules_source_category_id_fkey"
+            columns: ["source_category_id"]
+            isOneToOne: true
+            referencedRelation: "event_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "local_qualification_rules_target_category_id_fkey"
+            columns: ["target_category_id"]
+            isOneToOne: false
+            referencedRelation: "event_categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      local_qualification_transfers: {
+        Row: {
+          rule_id: string
+          source_event_team_id: string
+          target_event_team_id: string
+        }
+        Insert: {
+          rule_id: string
+          source_event_team_id: string
+          target_event_team_id: string
+        }
+        Update: {
+          rule_id?: string
+          source_event_team_id?: string
+          target_event_team_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "local_qualification_transfers_rule_id_fkey"
+            columns: ["rule_id"]
+            isOneToOne: false
+            referencedRelation: "local_qualification_rules"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "local_qualification_transfers_source_event_team_id_fkey"
+            columns: ["source_event_team_id"]
+            isOneToOne: false
+            referencedRelation: "event_teams"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "local_qualification_transfers_target_event_team_id_fkey"
+            columns: ["target_event_team_id"]
+            isOneToOne: false
+            referencedRelation: "event_teams"
             referencedColumns: ["id"]
           },
         ]
@@ -1127,6 +1214,36 @@ export type Database = {
           },
         ]
       }
+      tournament_brands: {
+        Row: {
+          display_order: number
+          id: string
+          is_public: boolean
+          keywords: string[]
+          logo_url: string
+          name: string
+          slug: string
+        }
+        Insert: {
+          display_order?: number
+          id?: string
+          is_public?: boolean
+          keywords?: string[]
+          logo_url?: string
+          name: string
+          slug: string
+        }
+        Update: {
+          display_order?: number
+          id?: string
+          is_public?: boolean
+          keywords?: string[]
+          logo_url?: string
+          name?: string
+          slug?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string | null
@@ -1194,6 +1311,10 @@ export type Database = {
       submit_roster_registration: {
         Args: { p_members: Json; p_token: string }
         Returns: Json
+      }
+      transfer_local_qualifiers: {
+        Args: { p_assignments: Json; p_rule_id: string }
+        Returns: number
       }
     }
     Enums: {
